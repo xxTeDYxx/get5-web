@@ -206,19 +206,31 @@ def match_create():
 
     return render_template(
         'match_create.html', form=form, user=g.user, teams=g.user.teams,
-                           match_text_option=config_setting('CREATE_MATCH_TITLE_TEXT'))
+        match_text_option=config_setting('CREATE_MATCH_TITLE_TEXT'))
 
 
 @match_blueprint.route('/match/<int:matchid>')
 def match(matchid):
     match = Match.query.get_or_404(matchid)
+    server = GameServer.query.get_or_404(match.server_id)
     team1 = Team.query.get_or_404(match.team1_id)
     team2 = Team.query.get_or_404(match.team2_id)
     map_stat_list = match.map_stats.all()
-
+    completed = match.winner
+    try:
+        if server and not completed:
+            command = 'sv_password'
+            response = server.send_rcon_command(command, raise_errors=True)
+            connect_string = str("steam://connect/") + str(server.ip_string) + str(":") + \
+                str(server.port) + str("/password ") + str(response)
+        else:
+            connect_string = ''
+    except util.RconError as e:
+        connect_string = 'Server is currently offline.'
     is_owner = False
     has_admin_access = False
-
+    app.logger.info('Pinged match with server {}'
+                    .format(connect_string))
     if g.user:
         is_owner = (g.user.id == match.user_id)
         has_admin_access = is_owner or (config_setting(
@@ -226,8 +238,8 @@ def match(matchid):
 
     return render_template(
         'match.html', user=g.user, admin_access=has_admin_access,
-                           match=match, team1=team1, team2=team2,
-                           map_stat_list=map_stat_list)
+        match=match, team1=team1, team2=team2,
+        map_stat_list=map_stat_list, completed=completed, connect_string=connect_string)
 
 
 @match_blueprint.route('/match/<int:matchid>/config')
