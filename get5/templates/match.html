@@ -3,58 +3,58 @@
 {% extends "layout.html" %}
 
 {% macro player_stat_table(team, map_stats) %}
-  <td> <b>{{ team.name }}</b> </td>
-  <td></td>
-  <td></td>
-  <td></td>
-  <td></td>
-  <td></td>
-  <td></td>
-  <td></td>
-  <td></td>
-  <td></td>
-  <td></td>
-  <td></td>
+<td> <b>{{ team.name }}</b> </td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
 
-  {% for player in map_stats.player_stats.filter_by(team_id=team.id) %}
-  {% if player.roundsplayed > 0 %}
-    <tr>
-      <td> <a href="{{player.get_steam_url()}}"> {{ player.name }} </a></td>
-      <td class="text-center"> {{ player.kills }}  </td>
-      <td class="text-center"> {{ player.deaths }} </td>
-      <td class="text-center"> {{ player.assists }} </td>
-      <td class="text-center"> {{ player.flashbang_assists }} </td>
+{% for player in map_stats.player_stats.filter_by(team_id=team.id) %}
+{% if player.roundsplayed > 0 %}
+<tr>
+  <td> <a href="{{player.get_steam_url()}}"> {{ player.name }} </a></td>
+  <td class="text-center"> {{ player.kills }} </td>
+  <td class="text-center"> {{ player.deaths }} </td>
+  <td class="text-center"> {{ player.assists }} </td>
+  <td class="text-center"> {{ player.flashbang_assists }} </td>
 
-      <td class="text-center"> {{ player.v1 }} </td>
-      <td class="text-center"> {{ player.v2 }} </td>
-      <td class="text-center"> {{ player.v3 }} </td>
+  <td class="text-center"> {{ player.v1 }} </td>
+  <td class="text-center"> {{ player.v2 }} </td>
+  <td class="text-center"> {{ player.v3 }} </td>
 
-      <td class="text-center"> {{ player.get_rating() | round(2) }} </td>
-      <td class="text-center"> {{ player.get_fpr() | round(2) }} </td>
-      <td class="text-center"> {{ player.get_adr() | round(1) }} </td>
-      <td class="text-center"> {{ player.get_hsp() | round(2) }} </td>
-    </tr>
-  {% endif %}
-  {% endfor %}
+  <td class="text-center"> {{ player.get_rating() | round(2) }} </td>
+  <td class="text-center"> {{ player.get_fpr() | round(2) }} </td>
+  <td class="text-center"> {{ player.get_adr() | round(1) }} </td>
+  <td class="text-center"> {{ player.get_hsp() | round(2) }} </td>
+</tr>
+{% endif %}
+{% endfor %}
 {% endmacro %}
 
 {% block content %}
 
 {% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-  <div class="panel panel-primary">
-    <div class="panel-heading">Command response</div>
+{% if messages %}
+<div class="panel panel-primary">
+  <div class="panel-heading">Command response</div>
 
-    <div class="panel-body">
-      {% for message in messages %}
-      <b>{{ message[1] }}</b>
-      <br>
-      {% endfor %}
-    </div>
-
+  <div class="panel-body">
+    {% for message in messages %}
+    <b>{{ message[1] }}</b>
+    <br>
+    {% endfor %}
   </div>
-  <br>
-  {% endif %}
+
+</div>
+<br>
+{% endif %}
 {% endwith %}
 
 <div id="content">
@@ -70,7 +70,8 @@
 
       {% if admin_access and (match.live() or match.pending()) %}
       <div class="dropdown dropdown-header pull-right">
-        <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+        <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown"
+          aria-haspopup="true" aria-expanded="true">
           Admin tools
           <span class="caret"></span>
         </button>
@@ -98,7 +99,7 @@
     <div class="alert alert-danger" role="alert">
       <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
       <span class="sr-only">Error:</span>
-        This match has been cancelled.
+      This match has been cancelled.
     </div>
     {% endif %}
 
@@ -106,13 +107,17 @@
     <div class="alert alert-warning" role="alert">
       <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
       <span class="sr-only">Error:</span>
-        This match was forfeit by {{match.get_loser()}}.
+      This match was forfeit by {{match.get_loser()}}.
     </div>
     {% endif %}
 
-
+    {% if connect_string is not none and not match.cancelled %}
+    <a type="button" class="btn btn-success" href="{{ connect_string }}">Connect</a>
+    {% endif %}
     {% if match.start_time is not none %}
     <p>Started at {{ match.start_time.strftime('%Y-%m-%d %H:%M') }}</p>
+
+
     {% else %}
     <div class="panel panel-default" role="alert">
       <div class="panel-body">
@@ -160,8 +165,8 @@
             </tr>
           </thead>
           <tbody>
-          {{ player_stat_table(team1, map_stats) }}
-          {{ player_stat_table(team2, map_stats) }}
+            {{ player_stat_table(team1, map_stats) }}
+            {{ player_stat_table(team2, map_stats) }}
           </tbody>
 
         </table>
@@ -177,34 +182,33 @@
 </div>
 
 <script>
-
-jQuery("#addplayer_team1").click(function(e) {
+  jQuery("#addplayer_team1").click(function (e) {
     var input = prompt("Please enter a steamid to add to {{team1.name}}", "");
     if (input != null) {
       window.location.href = "{{request.path}}/adduser?team=team1&auth=" + encodeURIComponent(input);
     }
-});
+  });
 
-jQuery("#addplayer_team2").click(function(e) {
+  jQuery("#addplayer_team2").click(function (e) {
     var input = prompt("Please enter a steamid to add to {{team2.name}}", "");
     if (input != null) {
       window.location.href = "{{request.path}}/adduser?team=team2&auth=" + encodeURIComponent(input);
     }
-});
+  });
 
-jQuery("#addplayer_spec").click(function(e) {
+  jQuery("#addplayer_spec").click(function (e) {
     var input = prompt("Please enter a steamid to add to the spectators list", "");
     if (input != null) {
       window.location.href = "{{request.path}}/adduser?team=spec&auth=" + encodeURIComponent(input);
     }
-});
+  });
 
-jQuery("#rcon_command").click(function(e) {
+  jQuery("#rcon_command").click(function (e) {
     var input = prompt("Enter a command to send", "");
     if (input != null) {
       window.location.href = "{{request.path}}/rcon?command=" + encodeURIComponent(input);
     }
-});
+  });
 </script>
 
 
