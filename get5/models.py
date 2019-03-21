@@ -230,8 +230,7 @@ class Team(db.Model):
 class Match(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    server_id = db.Column(
-        db.Integer, db.ForeignKey('game_server.id'), index=True)
+    server_id = db.Column(db.Integer, db.ForeignKey('game_server.id'), index=True)
     team1_id = db.Column(db.Integer, db.ForeignKey('team.id'))
     team2_id = db.Column(db.Integer, db.ForeignKey('team.id'))
     team1_string = db.Column(db.String(32), default='')
