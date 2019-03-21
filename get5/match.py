@@ -218,13 +218,17 @@ def match(matchid):
     map_stat_list = match.map_stats.all()
     completed = match.winner
     try:
-        if server and not completed:
+        if server and """not completed""":
             command = 'sv_password'
             response = server.send_rcon_command(command, raise_errors=True)
+            password = Markup(response.replace('\n', '<br>')).split(' ', 4)
+            '''Super hack fix for getting password from server, avoids storing in database for connection.
+            Please ignore, as this should be fixed with regex.'''
+            tmpPass = password[2].encode('ascii').replace('"', '')
             connect_string = str("steam://connect/") + str(server.ip_string) + str(":") + \
-                str(server.port) + str("/password ") + str(response)
+                str(server.port) + str("/") + str(tmpPass)
         else:
-            connect_string = ''
+            connect_string = None
     except util.RconError as e:
         connect_string = 'Server is currently offline.'
     is_owner = False

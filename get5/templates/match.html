@@ -111,11 +111,13 @@
     </div>
     {% endif %}
 
-
+    {% if connect_string is not none and not match.cancelled %}
+    <a type="button" class="btn btn-success" href="{{ connect_string }}">Connect</a>
+    {% endif %}
     {% if match.start_time is not none %}
     <p>Started at {{ match.start_time.strftime('%Y-%m-%d %H:%M') }}</p>
-    <button type="button" class="btn btn-success" href="{{ connect_string }}">Connect</button>
-    {{ connect_string }}
+
+
     {% else %}
     <div class="panel panel-default" role="alert">
       <div class="panel-body">
