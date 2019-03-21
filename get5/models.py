@@ -9,6 +9,7 @@ import requests
 import datetime
 import string
 import random
+import json
 
 
 class User(db.Model):
@@ -72,7 +73,7 @@ class GameServer(db.Model):
     def send_rcon_command(self, command, raise_errors=False, num_retries=3, timeout=3.0):
         return util.send_rcon_command(
             self.ip_string, self.port, self.rcon_password,
-                                      command, raise_errors, num_retries, timeout)
+            command, raise_errors, num_retries, timeout)
 
     def get_hostport(self):
         return '{}:{}'.format(self.ip_string, self.port)
@@ -498,19 +499,22 @@ class PlayerStats(db.Model):
     def get_steam_url(self):
         return 'http://steamcommunity.com/profiles/{}'.format(self.steam_id)
 
+    def get_player_name(self):
+        return get_steam_name(self.steam_id)
+
     def get_rating(self):
         AverageKPR = 0.679
         AverageSPR = 0.317
         AverageRMK = 1.277
         KillRating = float(self.kills) / float(self.roundsplayed) / AverageKPR
-        SurvivalRating = float(self.roundsplayed -
-                               self.deaths) / self.roundsplayed / AverageSPR
-        killcount = float(self.k1 + 4 * self.k2 + 9 *
-                          self.k3 + 16 * self.k4 + 25 * self.k5)
+        SurvivalRating = float(self.roundsplayed
+                               - self.deaths) / self.roundsplayed / AverageSPR
+        killcount = float(self.k1 + 4 * self.k2 + 9
+                          * self.k3 + 16 * self.k4 + 25 * self.k5)
         RoundsWithMultipleKillsRating = killcount / \
             self.roundsplayed / AverageRMK
-        rating = (KillRating + 0.7 * SurvivalRating +
-                  RoundsWithMultipleKillsRating) / 2.7
+        rating = (KillRating + 0.7 * SurvivalRating
+                  + RoundsWithMultipleKillsRating) / 2.7
         return rating
 
     def get_kdr(self):
@@ -536,6 +540,14 @@ class PlayerStats(db.Model):
             return 0.0
         else:
             return float(self.kills) / self.roundsplayed
+
+    def get_ind_scoreboard(self):
+        scoreboardData = {'kills': float(self.kills), 'deaths': float(self.deaths), 'assists': float(
+            self.assists), 'rating': float(self.get_rating(self)), 'hsp': float(self.get_hsp(self))}
+        return json.dumps(scoreboardData)
+
+    def get_deaths(self):
+        return float(self.deaths)
 
     @staticmethod
     def get_or_create(matchid, mapnumber, steam_id):

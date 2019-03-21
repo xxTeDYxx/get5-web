@@ -4,3 +4,4 @@
 *.log
 lib/
 venv/
+get5.wsgi

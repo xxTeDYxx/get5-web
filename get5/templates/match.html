@@ -19,7 +19,7 @@
 {% for player in map_stats.player_stats.filter_by(team_id=team.id) %}
 {% if player.roundsplayed > 0 %}
 <tr>
-  <td> <a href="{{player.get_steam_url()}}"> {{ player.name }} </a></td>
+  <td> <a href="{{player.get_steam_url()}}"> {{ player.get_player_name() }} </a></td>
   <td class="text-center"> {{ player.kills }} </td>
   <td class="text-center"> {{ player.deaths }} </td>
   <td class="text-center"> {{ player.assists }} </td>
@@ -97,7 +97,7 @@
     <br>
     {% if match.cancelled %}
     <div class="alert alert-danger" role="alert">
-      <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+      <span class="fa fa-exclamation-circle" aria-hidden="true"></span>
       <span class="sr-only">Error:</span>
       This match has been cancelled.
     </div>
@@ -105,13 +105,13 @@
 
     {% if match.forfeit %}
     <div class="alert alert-warning" role="alert">
-      <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+      <span class="fa fa-exclamation-circle" aria-hidden="true"></span>
       <span class="sr-only">Error:</span>
       This match was forfeit by {{match.get_loser()}}.
     </div>
     {% endif %}
 
-    {% if connect_string is not none and not match.cancelled %}
+    {% if connect_string is not none and not match.finalized() %}
     <a type="button" class="btn btn-success" href="{{ connect_string }}">Connect</a>
     {% endif %}
     {% if match.start_time is not none %}

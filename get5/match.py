@@ -5,6 +5,7 @@ import get5
 from get5 import app, db, BadRequestError, config_setting
 from models import User, Team, Match, GameServer
 import util
+import re
 
 from wtforms import (
     Form, widgets, validators,
@@ -218,15 +219,15 @@ def match(matchid):
     map_stat_list = match.map_stats.all()
     completed = match.winner
     try:
-        if server and """not completed""":
+        if server and not match.finalized():
             command = 'sv_password'
             response = server.send_rcon_command(command, raise_errors=True)
-            password = Markup(response.replace('\n', '<br>')).split(' ', 4)
-            '''Super hack fix for getting password from server, avoids storing in database for connection.
-            Please ignore, as this should be fixed with regex.'''
-            tmpPass = password[2].encode('ascii').replace('"', '')
+            pattern = r'"([A-Za-z0-9_\./\\-]*)"'
+            password = re.split(pattern, Markup(response.replace('\n', '<br>')))
             connect_string = str("steam://connect/") + str(server.ip_string) + str(":") + \
-                str(server.port) + str("/") + str(tmpPass)
+                str(server.port) + str("/") + str(password[3])
+            app.logger.info('Pinged match with server {}'
+                            .format(connect_string))
         else:
             connect_string = None
     except util.RconError as e:
@@ -236,8 +237,6 @@ def match(matchid):
 
     is_owner = False
     has_admin_access = False
-    app.logger.info('Pinged match with server {}'
-                    .format(connect_string))
     if g.user:
         is_owner = (g.user.id == match.user_id)
         has_admin_access = is_owner or (config_setting(
