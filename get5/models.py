@@ -497,7 +497,10 @@ class PlayerStats(db.Model):
 
     def get_steam_url(self):
         return 'http://steamcommunity.com/profiles/{}'.format(self.steam_id)
-
+    
+    def get_player_name(self):
+        return get_steam_name(self.steam_id)
+    
     def get_rating(self):
         AverageKPR = 0.679
         AverageSPR = 0.317
