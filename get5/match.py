@@ -230,7 +230,10 @@ def match(matchid):
         else:
             connect_string = None
     except util.RconError as e:
-        connect_string = 'Server is currently offline.'
+        connect_string = None
+        app.logger.info('Attempted to connect to server {}, but it is offline'
+                        .format(server.ip_string))
+
     is_owner = False
     has_admin_access = False
     app.logger.info('Pinged match with server {}'
