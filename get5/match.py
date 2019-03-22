@@ -268,10 +268,7 @@ def match_scoreboard(matchid):
     tmp_list = {}
     for map_stats in map_stat_list:
         for player in map_stats.player_stats:
-            #player_list.update(player.get_ind_scoreboard())
             player_list = merge(player_list, player.get_ind_scoreboard())
-    # for player in match.map_stats.player_stats.filter_by(team_id=team2.id):
-    #     player_list.append(player.get_ind_scoreboard())
 
     response = jsonify(player_list)
     return response
