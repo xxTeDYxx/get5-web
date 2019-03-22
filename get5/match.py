@@ -189,7 +189,7 @@ def match_create():
                     match.plugin_version = json_reply['plugin_version']
                 else:
                     match.plugin_version = 'unknown'
-
+                # ADD FORM DATA FOR EXTRA GOODIES HERE LIKE CLAN TAG ETC.
                 server.in_use = True
 
                 db.session.commit()
@@ -236,6 +236,7 @@ def match(matchid):
             connect_string = None
     except util.RconError as e:
         connect_string = None
+        gotv_string = None
         app.logger.info('Attempted to connect to server {}, but it is offline'
                         .format(server.ip_string))
 
