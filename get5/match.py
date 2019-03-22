@@ -227,8 +227,11 @@ def match(matchid):
             password = re.split(pattern, Markup(response.replace('\n', '<br>')))
             connect_string = str("steam://connect/") + str(server.ip_string) + str(":") + \
                 str(server.port) + str("/") + str(password[3])
-            app.logger.info('Pinged match with server {}'
-                            .format(connect_string))
+            command = 'tv_port'
+            response = server.send_rcon_command(command, raise_errors=True)
+            gotv_port = re.split(pattern, Markup(response.replace('\n', '<br>')))
+            gotv_string = str("steam://connect/") + str(server.ip_string) + str(":") + \
+                str(gotv_port[3])
         else:
             connect_string = None
     except util.RconError as e:
@@ -246,11 +249,13 @@ def match(matchid):
     return render_template(
         'match.html', user=g.user, admin_access=has_admin_access,
         match=match, team1=team1, team2=team2,
-        map_stat_list=map_stat_list, completed=completed, connect_string=connect_string)
+        map_stat_list=map_stat_list, completed=completed, connect_string=connect_string,
+        gotv_string=gotv_string)
 
 
 @match_blueprint.route('/match/<int:matchid>/scoreboard')
 def match_scoreboard(matchid):
+    playerNum = 1
 
     def merge(a, b):
         if isinstance(b, dict) and isinstance(a, dict):
@@ -268,7 +273,8 @@ def match_scoreboard(matchid):
     tmp_list = {}
     for map_stats in map_stat_list:
         for player in map_stats.player_stats:
-            player_list = merge(player_list, player.get_ind_scoreboard())
+            player_list = merge(player_list, player.get_ind_scoreboard(playerNum))
+            playerNum += 1
 
     response = jsonify(player_list)
     return response
