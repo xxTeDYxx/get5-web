@@ -154,7 +154,7 @@ def match_map_update_player(matchid, mapnumber, steamid64):
     if map_stats:
         player_stats = PlayerStats.get_or_create(matchid, mapnumber, steamid64)
         if player_stats:
-            player_stats.name = str(request.values.get('name')).encode('ASCII')
+            player_stats.name = request.values.get('name')
             team = request.values.get('team')
             if team == 'team1':
                 player_stats.team_id = match.team1_id
