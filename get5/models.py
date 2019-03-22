@@ -506,14 +506,14 @@ class PlayerStats(db.Model):
         AverageSPR = 0.317
         AverageRMK = 1.277
         KillRating = float(self.kills) / float(self.roundsplayed) / AverageKPR
-        SurvivalRating = float(self.roundsplayed
-                               - self.deaths) / self.roundsplayed / AverageSPR
-        killcount = float(self.k1 + 4 * self.k2 + 9
-                          * self.k3 + 16 * self.k4 + 25 * self.k5)
+        SurvivalRating = float(self.roundsplayed -
+                               self.deaths) / self.roundsplayed / AverageSPR
+        killcount = float(self.k1 + 4 * self.k2 + 9 *
+                          self.k3 + 16 * self.k4 + 25 * self.k5)
         RoundsWithMultipleKillsRating = killcount / \
             self.roundsplayed / AverageRMK
-        rating = (KillRating + 0.7 * SurvivalRating
-                  + RoundsWithMultipleKillsRating) / 2.7
+        rating = (KillRating + 0.7 * SurvivalRating +
+                  RoundsWithMultipleKillsRating) / 2.7
         return rating
 
     def get_kdr(self):
@@ -541,9 +541,18 @@ class PlayerStats(db.Model):
             return float(self.kills) / self.roundsplayed
 
     def get_ind_scoreboard(self):
-        scoreboardData = {'kills': float(self.kills), 'deaths': float(self.deaths), 'assists': float(
-            self.assists), 'rating': float(self.get_rating(self)), 'hsp': float(self.get_hsp(self))}
-        return json.dumps(scoreboardData)
+        d = {}
+        team = Team.query.get(self.team_id)
+        d[team.name] = {}
+        d[team.name][self.steam_id] = {}
+        d[team.name][self.steam_id]['player_name'] = get_steam_name(self.steam_id)
+        d[team.name][self.steam_id]['kills'] = round(float(self.kills), 1)
+        d[team.name][self.steam_id]['deaths'] = round(float(self.deaths), 1)
+        d[team.name][self.steam_id]['assists'] = round(float(self.assists), 1)
+        d[team.name][self.steam_id]['rating'] = round(float(self.get_rating()), 1)
+        d[team.name][self.steam_id]['hsp'] = round(float(self.get_hsp()), 1)
+
+        return d
 
     def get_deaths(self):
         return float(self.deaths)

@@ -6,6 +6,7 @@ from get5 import app, db, BadRequestError, config_setting
 from models import User, Team, Match, GameServer
 import util
 import re
+from copy import deepcopy
 
 from wtforms import (
     Form, widgets, validators,
@@ -246,6 +247,34 @@ def match(matchid):
         'match.html', user=g.user, admin_access=has_admin_access,
         match=match, team1=team1, team2=team2,
         map_stat_list=map_stat_list, completed=completed, connect_string=connect_string)
+
+
+@match_blueprint.route('/match/<int:matchid>/scoreboard')
+def match_scoreboard(matchid):
+
+    def merge(a, b):
+        if isinstance(b, dict) and isinstance(a, dict):
+            a_and_b = a.viewkeys() & b.viewkeys()
+            every_key = a.viewkeys() | b.viewkeys()
+            return {k: merge(a[k], b[k]) if k in a_and_b else
+                    deepcopy(a[k] if k in a else b[k]) for k in every_key}
+        return deepcopy(b)
+
+    match = Match.query.get_or_404(matchid)
+    team1 = Team.query.get_or_404(match.team1_id)
+    team2 = Team.query.get_or_404(match.team2_id)
+    map_stat_list = match.map_stats.all()
+    player_list = {}
+    tmp_list = {}
+    for map_stats in map_stat_list:
+        for player in map_stats.player_stats:
+            #player_list.update(player.get_ind_scoreboard())
+            player_list = merge(player_list, player.get_ind_scoreboard())
+    # for player in match.map_stats.player_stats.filter_by(team_id=team2.id):
+    #     player_list.append(player.get_ind_scoreboard())
+
+    response = jsonify(player_list)
+    return response
 
 
 @match_blueprint.route('/match/<int:matchid>/config')
