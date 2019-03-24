@@ -542,42 +542,26 @@ class PlayerStats(db.Model):
 
     """ Custom made individual scoreboard to work with VMIX and an Excel file.
         The values will be automagically updated and put straight into a broadcast (neat!)"""
-    def get_ind_scoreboard(self, playerNum):
+    def get_ind_scoreboard(self):
         d = {}
-        match_stats = Match.query.filter_by(
-            id=self.match_id).first()
         map_stats = MapStats.query.filter_by(
             match_id=self.match_id).first()
-        if match_stats.team1_id == self.team_id:
-            team_score = map_stats.team1_score
-            map_team_id = 1
-        else:
-            team_score = map_stats.team2_score
-            map_team_id = 2
-        team = Team.query.get(self.team_id)
+        team = Team.query.get(self.team_id)       
         d['map'] = map_stats.map_name
         d[team.name] = {}
-        d[team.name]['Team' + str(map_team_id) + 'Name'] = team.name
-        d[team.name]['Team' + str(map_team_id) + 'Score'] = team_score
         d[team.name][self.steam_id] = {}
-        d[team.name][self.steam_id]['Player'+str(playerNum)] = get_steam_name(self.steam_id)
-        d[team.name][self.steam_id]['kills'+str(playerNum)] = round(float(self.kills), 1)
-        d[team.name][self.steam_id]['deaths'+str(playerNum)] = round(float(self.deaths), 1)
-        d[team.name][self.steam_id]['assists' + str(playerNum)] = round(float(self.assists), 1)
-        d[team.name][self.steam_id]['rating'+str(playerNum)] = round(float(self.get_rating()), 2)
-        d[team.name][self.steam_id]['hsp' + str(playerNum)] = round(float(self.get_hsp()), 2)
-        d[team.name][self.steam_id]['firstkill' +
-                                    str(playerNum)] = round(float(self.firstkill_ct + self.firstkill_t), 1)
-        d[team.name][self.steam_id]['k2' +
-                                    str(playerNum)] = round(float(self.k2), 1)
-        d[team.name][self.steam_id]['k3' +
-                                    str(playerNum)] = round(float(self.k3), 1)
-        d[team.name][self.steam_id]['k4' +
-                                    str(playerNum)] = round(float(self.k4), 1)
-        d[team.name][self.steam_id]['k5' +
-                                    str(playerNum)] = round(float(self.k5), 1)
-        d[team.name][self.steam_id]['ADR' +
-                                    str(playerNum)] = round(float(self.get_adr()), 1)
+        d[team.name][self.steam_id]['Player'] = get_steam_name(self.steam_id)
+        d[team.name][self.steam_id]['kills'] = round(float(self.kills), 1)
+        d[team.name][self.steam_id]['deaths'] = round(float(self.deaths), 1)
+        d[team.name][self.steam_id]['assists'] = round(float(self.assists), 1)
+        d[team.name][self.steam_id]['rating'] = round(float(self.get_rating()), 2)
+        d[team.name][self.steam_id]['hsp'] = round(float(self.get_hsp()), 2)
+        d[team.name][self.steam_id]['firstkill'] = round(float(self.firstkill_ct + self.firstkill_t), 1)
+        d[team.name][self.steam_id]['k2'] = round(float(self.k2), 1)
+        d[team.name][self.steam_id]['k3'] = round(float(self.k3), 1)
+        d[team.name][self.steam_id]['k4'] = round(float(self.k4), 1)
+        d[team.name][self.steam_id]['k5'] = round(float(self.k5), 1)
+        d[team.name][self.steam_id]['ADR'] = round(float(self.get_adr()), 1)
         return d
 
     def get_deaths(self):
