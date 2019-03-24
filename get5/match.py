@@ -278,9 +278,9 @@ def match_scoreboard(matchid):
             player_dict = merge(player_dict, player.get_ind_scoreboard())
     # Sort teams based on kills.
     sorted_player_dict[team1.name] = OrderedDict(
-        sorted(player_dict[team1.name].items(), key=lambda x: x[1].get('kills')))
+        sorted(player_dict[team1.name].items(), key=lambda x: x[1].get('kills'), reverse=True))
     sorted_player_dict[team2.name] = OrderedDict(
-        sorted(player_dict[team2.name].items(), key=lambda x: x[1].get('kills')))
+        sorted(player_dict[team2.name].items(), key=lambda x: x[1].get('kills'), reverse=True))
 
     t1score, t2score = match.get_current_score()
     #d[team.name]['TeamName'] = team.name
