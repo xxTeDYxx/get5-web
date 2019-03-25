@@ -1,11 +1,10 @@
-from flask import Blueprint, request, render_template, flash, g, redirect, jsonify, Markup
+from flask import Blueprint, request, render_template, flash, g, redirect, jsonify, Markup, json
 
 import steamid
 import get5
 from get5 import app, db, BadRequestError, config_setting
 from models import User, Team, Match, GameServer
 from collections import OrderedDict
-from itertools import chain
 import util
 import re
 from copy import deepcopy
@@ -283,9 +282,7 @@ def match_scoreboard(matchid):
         sorted(player_dict[team2.name].items(), key=lambda x: x[1].get('kills'), reverse=True))
 
     t1score, t2score = match.get_current_score()
-    #d[team.name]['TeamName'] = team.name
-    #d[team.name]['TeamScore'] = team_score
-
+    curMap = player_dict['map']
     sorted_player_dict[team1.name]['TeamName'] = team1.name
     sorted_player_dict[team2.name]['TeamName'] = team2.name
     sorted_player_dict[team1.name]['TeamScore'] = t1score
@@ -294,10 +291,13 @@ def match_scoreboard(matchid):
     # app.logger.info('sorted_player_dict: \n{}'
     #                .format(sorted_player_dict))
     # Leave our sorting for now.
-    app.config['JSON_SORT_KEYS'] = False
-    sorted_player_dict['map'] = player_dict['map']
-    response = jsonify(sorted_player_dict)
-    app.config['JSON_SORT_KEYS'] = True
+    #app.config['JSON_SORT_KEYS'] = False
+    sorted_player_dict['map'] = curMap
+    #response = jsonify(sorted_player_dict)
+    response = app.response_class(
+        json.dumps(sorted_player_dict, sort_keys=False),
+        mimetype='application/json')
+    #app.config['JSON_SORT_KEYS'] = True
     return response
 
 
