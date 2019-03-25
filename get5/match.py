@@ -235,7 +235,7 @@ def match(matchid):
                 str(gotv_port[3])
         else:
             connect_string = None
-            gotv_string = None
+            gotv_string = ''
     except util.RconError as e:
         connect_string = None
         gotv_string = None
