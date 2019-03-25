@@ -288,7 +288,7 @@ def match_scoreboard(matchid):
 
     sorted_player_dict[team1.name]['TeamName'] = team1.name
     sorted_player_dict[team2.name]['TeamName'] = team2.name
-    sorted_player_dict = player_dict['map']
+    sorted_player_dict['map'] = player_dict['map']
     sorted_player_dict[team1.name]['TeamScore'] = t1score
     sorted_player_dict[team2.name]['TeamScore'] = t2score
 
