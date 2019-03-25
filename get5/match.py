@@ -290,12 +290,12 @@ def match_scoreboard(matchid):
     sorted_player_dict[team2.name]['TeamName'] = team2.name
     sorted_player_dict[team1.name]['TeamScore'] = t1score
     sorted_player_dict[team2.name]['TeamScore'] = t2score
-    sorted_player_dict['map'] = player_dict['map']
     # Create new dictionary for teams with given values.
     # app.logger.info('sorted_player_dict: \n{}'
     #                .format(sorted_player_dict))
     # Leave our sorting for now.
     app.config['JSON_SORT_KEYS'] = False
+    sorted_player_dict['map'] = player_dict['map']
     response = jsonify(sorted_player_dict)
     app.config['JSON_SORT_KEYS'] = True
     return response
