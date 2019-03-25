@@ -16,7 +16,7 @@
 <td></td>
 <td></td>
 
-{% for player in map_stats.player_stats.filter_by(team_id=team.id)|sort(attribute='1.kills' %}
+{% for player in map_stats.player_stats.filter_by(team_id=team.id)|sort(attribute='1.kills') %}
 {% if player.roundsplayed > 0 %}
 <tr>
   <td> <a href="{{player.get_steam_url()}}"> {{ player.get_player_name() }} </a></td>
