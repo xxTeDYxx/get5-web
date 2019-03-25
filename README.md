@@ -1,13 +1,16 @@
 get5-web BETA
 ===========================
 
-Development [![Build Status](https://travis-ci.org/PhlexPlexico/get5-web.svg?branch=development)](https://travis-ci.org/PhlexPlexico/get5-web)
-Master [![Build Status](https://travis-ci.org/PhlexPlexico/get5-web.svg?branch=master)](https://travis-ci.org/PhlexPlexico/get5-web)
+Development
+[![Build Status](https://travis-ci.org/PhlexPlexico/get5-web.svg?branch=development)](https://travis-ci.org/PhlexPlexico/get5-web)
+
+Master 
+[![Build Status](https://travis-ci.org/PhlexPlexico/get5-web.svg?branch=master)](https://travis-ci.org/PhlexPlexico/get5-web)
 **Status: Experimental, not supported.**
 
 This is an **experimental** (proof-of-concept) web panel meant to be used in conjunction with the [get5](https://github.com/splewis/get5) CS:GO server plugin. It provides a more convenient way of managing matches and match servers.
 
-**WARNING**: YOU SHOULD NOT USE THIS. IT HAS BUGS. IT HAS NO SUPPORT. **The get5 plugin itself is supported - this webpanel itself has NO support.** If you want a working webpanel for get5, look elsewhere or develop your own.
+**WARNING**: THIS FORK OF GET5-WEBPANEL IS UNDER CURRENT DEVELOPMENT. THERE IS BUGS, THERE WILL BE FAIL POINTS IN THE APPLICATION. I AM TRYING TO MAKE IT WORK PROPERLY FOR MY SPECIFIC USE CASE, SUCH AS THE SCOREBOARD API.
 
 
 ## How to use it:
@@ -39,7 +42,7 @@ Note: when using this web panel, the CS:GO game servers **must** be have both th
 
 ## Installation
 
-Please see the [installation instructions](INSTALL.md) for Ubuntu 16.04 with apache2. You can use other distributions or web servers, but you will likely have to figure out how to install a python flask app yourself.
+Please see the [installation instructions](INSTALL.md) **currently outdated** for Ubuntu 16.04 with apache2. You can use other distributions or web servers, but you will likely have to figure out how to install a python flask app yourself.
 
 ## How do the game server and web panel communicate?
 
