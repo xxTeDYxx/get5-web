@@ -118,9 +118,13 @@
       is a known bug that will say bad password if you do not have CS:GO open!
     </div>
     <a type="button" class="btn btn-success" href="{{ connect_string }}">Connect</a>
-    <a type="button" class="btn btn-info" href="{{ gotv_string }}">Connect to GoTV</a>
-
+    
     {% endif %}
+    
+    {% if gotv_string is not none and not match.finalized() %}
+    <a type="button" class="btn btn-info" href="{{ gotv_string }}">Connect to GoTV</a>
+    {% endif %}
+    
     {% if match.start_time is not none %}
     <p>Started at {{ match.start_time.strftime('%Y-%m-%d %H:%M') }}</p>
 
