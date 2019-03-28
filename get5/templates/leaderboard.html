@@ -1,14 +1,15 @@
 {% from "macros.html" import pagination_buttons, pagination_active %} {% extends
-"layout.html" %} {% macro leaderboard_table(aTeam) %}
-{% set rank = 1 %}
-{% for team, value in aTeam.items() %}
+"layout.html" %} {% macro leaderboard_table(aTeam) %} {% set rank = 1 %} {% for
+team, value in aTeam.items() %}
 <tr>
   <td>{{ rank }}</td>
   <td class="text-center">{{ team }}</td>
-  <td class="text-center">{{ value }}</td>
+  <td class="text-center">{{ value.wins }}</td>
+  <td class="text-center">{{ value.losses }}</td>
+  <th class="text-center"></th>
+  <td class="text-center">{{ value.rounddiff }}</td>
 </tr>
-{% set rank = rank + 1 %}
-{% endfor %} {% endmacro %} {% block content %}
+{% set rank = rank + 1 %} {% endfor %} {% endmacro %} {% block content %}
 
 <div id="content">
   <h1>
@@ -27,7 +28,9 @@
       </tr>
     </thead>
     <tbody>
-      {{ leaderboard_table(standings) }}
+      {{
+        leaderboard_table(standings)
+      }}
     </tbody>
   </table>
 </div>
