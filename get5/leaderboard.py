@@ -52,9 +52,9 @@ def leaderboard():
 
         dTeamStandings[winningTeam.name]['wins'] += 1
         # Get which team they were on and subtract the rounds won from lost.
-        dTeamStandings[winningTeam.name]['rounddiff'] = winningRounds - losingRounds
+        dTeamStandings[winningTeam.name]['rounddiff'] += (winningRounds - losingRounds)
         dTeamStandings[losingTeam.name]['losses'] += 1
-        dTeamStandings[losingTeam.name]['rounddiff'] = dTeamStandings[losingTeam.name]['rounddiff'] + (losingRounds - winningRounds)
+        dTeamStandings[losingTeam.name]['rounddiff'] += (losingRounds - winningRounds)
     # Sort team standings by wins. Next will be wins plus round diff.
     dTeamStandings = OrderedDict(
         sorted(dTeamStandings.items(), key=lambda x: (x[1].get('wins'), x[1].get('losses'), x[1].get('rounddiff')), reverse=True))
