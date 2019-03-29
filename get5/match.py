@@ -193,7 +193,9 @@ def match_create():
                 # ADD FORM DATA FOR EXTRA GOODIES HERE LIKE CLAN TAG ETC.
                 # Essentially stuff that doesn't need to be stored in DB.
                 # Force Get5 to auth on official matches.
-                server.send_rcon_command('get5_check_auths 1', raise_errors=True)
+                if server_available:
+                    server.send_rcon_command('get5_check_auths 1', raise_errors=True)
+                    
                 server.in_use = True
 
                 db.session.commit()
@@ -454,7 +456,11 @@ def match_backup(matchid):
         command = 'get5_loadbackup {}'.format(file)
         response = server.send_rcon_command(command)
         # Make sure auths get enabled, silently.
-        server.send_rcon_command('get5_check_auths 1')
+        try:
+            server.send_rcon_command('get5_check_auths 1')
+        except:
+            pass
+        
         if response:
             flash('Restored backup file {}'.format(file))
         else:
