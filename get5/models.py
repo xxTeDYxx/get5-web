@@ -586,6 +586,15 @@ class PlayerStats(db.Model):
         return rv
 
 
+# TODO: Create class and use instead of dictionary.
+class TeamLeaderboard():
+    def init(self):
+        self.teamid = 0
+        self.wins = 0
+        self.losses = 0
+        self.rounddiff = 0
+
+
 @cache.memoize(timeout=60 * 60 * 24)  # 1 day timeout
 def get_steam_name(steam64):
     url = 'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={}&steamids={}'
