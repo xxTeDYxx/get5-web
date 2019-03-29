@@ -21,7 +21,7 @@ def leaderboard():
         cancelled=False)
     allTeams = Team.query.order_by(-Team.id)
     # Shoutouts to n3rds.
-    dTeamStandings = defaultdict(lambda: {'teamid': 0, wins': 0, 'losses': 0, 'rounddiff': 0})
+    dTeamStandings = defaultdict(lambda: {'teamid': 0, 'wins': 0, 'losses': 0, 'rounddiff': 0})
     # Build our own object with team and links, rank, and round diff?
     # Building our own object requires matches, map_stats for each match.
     # Just build a dictionary with each match and stats?
