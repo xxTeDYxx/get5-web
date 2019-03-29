@@ -13,10 +13,8 @@ from copy import deepcopy
 leaderboard_blueprint = Blueprint('leaderboard', __name__)
 
 
-@leaderboard_blueprint.route("/leaderboard")
+@leaderboard_blueprint.route('/leaderboard')
 def leaderboard():
-    app.logger.info('Made it to leaderboard route.')
-    page = util.as_int(request.values.get('page'), on_fail=1)
     totalMatches = Match.query.order_by(-Match.id).filter_by(
         cancelled=False)
     allTeams = Team.query.order_by(-Team.id)
@@ -54,4 +52,4 @@ def leaderboard():
         sorted(dTeamStandings.items(), key=lambda x: (x[1].get('wins'), x[1].get('losses'), x[1].get('rounddiff')), reverse=True))
     # app.logger.info('Currently in dTeamStandings: \n{}'.format(dTeamStandings))
 
-    return render_template('leaderboard.html', standings=dTeamStandings, page=page)
+    return render_template('leaderboard.html', standings=dTeamStandings, user=g.user)
