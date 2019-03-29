@@ -86,7 +86,7 @@ class GameServer(db.Model):
 
     def receive_rcon_value(self, command):
         try:
-            response = self.send_rcon_command(command, raise_errors=True)
+            response = self.send_rcon_command(command, raise_errors=False, timeout=1.0)
             pattern = r'"([A-Za-z0-9_\./\\-]*)"'
             value = re.split(pattern, Markup(response.replace('\n', '<br>')))
         except: 
