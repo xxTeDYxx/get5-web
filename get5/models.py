@@ -84,7 +84,7 @@ class GameServer(db.Model):
         else:
             return self.get_hostport()
 
-    def receieve_rcon_value(self, command):
+    def receive_rcon_value(self, command):
         try:
             response = self.send_rcon_command(command, raise_errors=True)
             pattern = r'"([A-Za-z0-9_\./\\-]*)"'
