@@ -192,9 +192,10 @@ def match_create():
                     match.plugin_version = 'unknown'
                 # ADD FORM DATA FOR EXTRA GOODIES HERE LIKE CLAN TAG ETC.
                 # Essentially stuff that doesn't need to be stored in DB.
-                # Force Get5 to auth on official matches.
+                # Force Get5 to auth on official matches. Don't raise errors
+                # if we cannot do this.
                 if server_available:
-                    server.send_rcon_command('get5_check_auths 1', raise_errors=True)
+                    server.send_rcon_command('get5_check_auths 1')
                     
                 server.in_use = True
 
