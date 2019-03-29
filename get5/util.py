@@ -113,10 +113,14 @@ def strip_rcon_logline(response):
 
     return response
 
-def receieve_rcon_value(command):
-    response = server.send_rcon_command(command, raise_errors=True)
-    pattern = r'"([A-Za-z0-9_\./\\-]*)"'
-    value = re.split(pattern, Markup(response.replace('\n', '<br>')))
+def receieve_rcon_value(command, server):
+    try:
+        response = server.send_rcon_command(command, raise_errors=True)
+        pattern = r'"([A-Za-z0-9_\./\\-]*)"'
+        value = re.split(pattern, Markup(response.replace('\n', '<br>')))
+    except (socket.error, socket.timeout,
+                IncompleteMessageError, AuthenticationError, NoResponseError) as e: 
+        return None
     # Not sure how stable this will be, but send off for the third 
     # value of the string split. Most values returned have format 
     # "sv_password" = "test" (def. "")
