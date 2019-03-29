@@ -84,6 +84,18 @@ class GameServer(db.Model):
         else:
             return self.get_hostport()
 
+    def receieve_rcon_value(self, command):
+        try:
+            response = self.send_rcon_command(command, raise_errors=True)
+            pattern = r'"([A-Za-z0-9_\./\\-]*)"'
+            value = re.split(pattern, Markup(response.replace('\n', '<br>')))
+        except: 
+            return None
+        # Not sure how stable this will be, but send off for the third 
+        # value of the string split. Most values returned have format 
+        # "sv_password" = "test" (def. "")
+        return value[3]
+        
     def __repr__(self):
         return 'GameServer({})'.format(self.get_hostport())
 
