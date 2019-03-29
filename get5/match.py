@@ -196,7 +196,7 @@ def match_create():
                 # if we cannot do this.
                 if server_available:
                     server.send_rcon_command('get5_check_auths 1')
-                    
+
                 server.in_use = True
 
                 db.session.commit()
