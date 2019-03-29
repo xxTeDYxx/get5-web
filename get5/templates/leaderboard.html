@@ -3,7 +3,7 @@
 team, value in aTeam.items() %}
 <tr>
   <td>{{ rank }}</td>
-  <td class="text-center">{{ team }}</td>
+  <td class="text-center"><a href="/team/{{value.teamid}}">{{ team }</a>}</td>
   <td class="text-center">{{ value.wins }}</td>
   <td class="text-center">{{ value.losses }}</td>
   <th class="text-center"></th>

@@ -111,7 +111,7 @@
     </div>
     {% endif %}
 
-    {% if connect_string is not none and not match.finalized() %}
+    {% if connect_string is not none and not match.finalized() and not match.live() %}
     <div class="alert alert-notice" role="alert">
       <span class="fa fa-exclamation-circle" aria-hidden="true"></span>
       Please make sure to have CS:GO open before pressing the "Connect" button. There

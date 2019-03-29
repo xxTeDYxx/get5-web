@@ -191,6 +191,9 @@ def match_create():
                 else:
                     match.plugin_version = 'unknown'
                 # ADD FORM DATA FOR EXTRA GOODIES HERE LIKE CLAN TAG ETC.
+                # Essentially stuff that doesn't need to be stored in DB.
+                # Force Get5 to auth on official matches.
+                server.send_rcon_command('get5_check_auths 1', raise_errors=True)
                 server.in_use = True
 
                 db.session.commit()
@@ -222,17 +225,12 @@ def match(matchid):
     completed = match.winner
     try:
         if server and not match.finalized():
-            command = 'sv_password'
-            response = server.send_rcon_command(command, raise_errors=True)
-            pattern = r'"([A-Za-z0-9_\./\\-]*)"'
-            password = re.split(pattern, Markup(response.replace('\n', '<br>')))
+            password = util.receive_rcon_value('sv_password')
             connect_string = str("steam://connect/") + str(server.ip_string) + str(":") + \
-                str(server.port) + str("/") + str(password[3])
-            command = 'tv_port'
-            response = server.send_rcon_command(command, raise_errors=True)
-            gotv_port = re.split(pattern, Markup(response.replace('\n', '<br>')))
+                str(server.port) + str("/") + str(password)
+            gotv_port = util.receive_rcon_value('tv_port')
             gotv_string = str("steam://connect/") + str(server.ip_string) + str(":") + \
-                str(gotv_port[3])
+                str(gotv_port)
         else:
             connect_string = None
             gotv_string = None
@@ -287,17 +285,10 @@ def match_scoreboard(matchid):
     sorted_player_dict[team2.name]['TeamName'] = team2.name
     sorted_player_dict[team1.name]['TeamScore'] = t1score
     sorted_player_dict[team2.name]['TeamScore'] = t2score
-    # Create new dictionary for teams with given values.
-    # app.logger.info('sorted_player_dict: \n{}'
-    #                .format(sorted_player_dict))
-    # Leave our sorting for now.
-    #app.config['JSON_SORT_KEYS'] = False
     sorted_player_dict['map'] = curMap
-    #response = jsonify(sorted_player_dict)
     response = app.response_class(
         json.dumps(sorted_player_dict, sort_keys=False),
         mimetype='application/json')
-    #app.config['JSON_SORT_KEYS'] = True
     return response
 
 
@@ -462,6 +453,8 @@ def match_backup(matchid):
         # Restore the backup file
         command = 'get5_loadbackup {}'.format(file)
         response = server.send_rcon_command(command)
+        # Make sure auths get enabled, silently.
+        server.send_rcon_command('get5_check_auths 1')
         if response:
             flash('Restored backup file {}'.format(file))
         else:
