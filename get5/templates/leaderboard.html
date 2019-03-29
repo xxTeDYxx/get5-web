@@ -1,5 +1,3 @@
-{% from "macros.html" import pagination_buttons, pagination_active %}
-
 {% extends "layout.html" %}
 
 {% macro leaderboard_table(aTeam) %}
@@ -37,9 +35,7 @@
         </tr>
       </thead>
       <tbody>
-        {{
-        leaderboard_table(standings)
-      }}
+        {{ leaderboard_table(standings) }}
       </tbody>
     </table>
   </div>
