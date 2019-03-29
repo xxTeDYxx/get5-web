@@ -154,25 +154,25 @@ def match_create():
             match_on_server = g.user.matches.filter_by(
                 server_id=server.id, end_time=None, cancelled=False).first()
 
-            server_avaliable = False
+            server_available = False
             json_reply = None
 
             if g.user.id != server.user_id and not server.public_server:
-                server_avaliable = False
+                server_available = False
                 message = 'This is not your server!'
             elif match_on_server is not None:
-                server_avaliable = False
+                server_available = False
                 message = 'Match {} is already using this server'.format(
                     match_on_server.id)
             elif mock:
-                server_avaliable = True
+                server_available = True
                 message = 'Success'
             else:
                 json_reply, message = util.check_server_avaliability(
                     server)
-                server_avaliable = (json_reply is not None)
+                server_available = (json_reply is not None)
 
-            if server_avaliable:
+            if server_available:
                 skip_veto = 'preset' in form.data['series_type']
                 try:
                     max_maps = int(form.data['series_type'][2])
