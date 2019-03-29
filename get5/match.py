@@ -154,25 +154,25 @@ def match_create():
             match_on_server = g.user.matches.filter_by(
                 server_id=server.id, end_time=None, cancelled=False).first()
 
-            server_avaliable = False
+            server_available = False
             json_reply = None
 
             if g.user.id != server.user_id and not server.public_server:
-                server_avaliable = False
+                server_available = False
                 message = 'This is not your server!'
             elif match_on_server is not None:
-                server_avaliable = False
+                server_available = False
                 message = 'Match {} is already using this server'.format(
                     match_on_server.id)
             elif mock:
-                server_avaliable = True
+                server_available = True
                 message = 'Success'
             else:
                 json_reply, message = util.check_server_avaliability(
                     server)
-                server_avaliable = (json_reply is not None)
+                server_available = (json_reply is not None)
 
-            if server_avaliable:
+            if server_available:
                 skip_veto = 'preset' in form.data['series_type']
                 try:
                     max_maps = int(form.data['series_type'][2])
@@ -192,8 +192,11 @@ def match_create():
                     match.plugin_version = 'unknown'
                 # ADD FORM DATA FOR EXTRA GOODIES HERE LIKE CLAN TAG ETC.
                 # Essentially stuff that doesn't need to be stored in DB.
-                # Force Get5 to auth on official matches.
-                server.send_rcon_command('get5_check_auths 1', raise_errors=True)
+                # Force Get5 to auth on official matches. Don't raise errors
+                # if we cannot do this.
+                if server_available:
+                    server.send_rcon_command('get5_check_auths 1')
+
                 server.in_use = True
 
                 db.session.commit()
@@ -225,10 +228,10 @@ def match(matchid):
     completed = match.winner
     try:
         if server and not match.finalized():
-            password = util.receive_rcon_value('sv_password')
+            password = server.receive_rcon_value('sv_password')
             connect_string = str("steam://connect/") + str(server.ip_string) + str(":") + \
                 str(server.port) + str("/") + str(password)
-            gotv_port = util.receive_rcon_value('tv_port')
+            gotv_port = server.receive_rcon_value('tv_port')
             gotv_string = str("steam://connect/") + str(server.ip_string) + str(":") + \
                 str(gotv_port)
         else:
@@ -454,7 +457,11 @@ def match_backup(matchid):
         command = 'get5_loadbackup {}'.format(file)
         response = server.send_rcon_command(command)
         # Make sure auths get enabled, silently.
-        server.send_rcon_command('get5_check_auths 1')
+        try:
+            server.send_rcon_command('get5_check_auths 1')
+        except:
+            pass
+        
         if response:
             flash('Restored backup file {}'.format(file))
         else:
