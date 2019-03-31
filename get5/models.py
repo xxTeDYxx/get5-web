@@ -20,6 +20,7 @@ class User(db.Model):
     servers = db.relationship('GameServer', backref='user', lazy='dynamic')
     teams = db.relationship('Team', backref='user', lazy='dynamic')
     matches = db.relationship('Match', backref='user', lazy='dynamic')
+    seasons = db.relationship('Season', backref='user', lazy='dynamic')
 
     @staticmethod
     def get_or_create(steam_id):
@@ -244,7 +245,8 @@ class Season(db.Model):
     name = db.Column(db.String(60), default='')
     start_date = db.Column(db.DateTime, default=datetime.datetime.utcnow())
     end_date = db.Column(db.DateTime, default=datetime.date.today() + datetime.timedelta(days=1))
-    
+    matches = db.relationship('Match', backref='season', lazy='dynamic')
+
     @staticmethod
     def create(user, name, start_date, end_date):
         rv = Season()
@@ -255,17 +257,23 @@ class Season(db.Model):
         db.session.add(rv)
         return rv
         
+    def get_season_name(self):
+        return self.name
+
+
 class Match(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     server_id = db.Column(db.Integer, db.ForeignKey('game_server.id'), index=True)
     team1_id = db.Column(db.Integer, db.ForeignKey('team.id'))
     team2_id = db.Column(db.Integer, db.ForeignKey('team.id'))
+    season_id = db.Column(db.Integer, db.ForeignKey('season.id'))
+
     team1_string = db.Column(db.String(32), default='')
     team2_string = db.Column(db.String(32), default='')
     winner = db.Column(db.Integer, db.ForeignKey('team.id'))
     plugin_version = db.Column(db.String(32), default='unknown')
-
+    
     forfeit = db.Column(db.Boolean, default=False)
     cancelled = db.Column(db.Boolean, default=False)
     start_time = db.Column(db.DateTime)

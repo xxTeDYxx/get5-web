@@ -1,16 +1,70 @@
+{% from "macros.html" import pagination_buttons, pagination_active %}
 {% extends "layout.html" %}
 
 {% block content %}
 <div id="content">
-  <div class="container">
+
+  <h1>
+    {% if my_seasons %}
+    Your Seasons
+    {% elif all_seasons %}
+    All Seasons
+    {% else %}
+    Seasons for <a href="/user/{{ season_owner.id }}"> {{ season_owner.name }}</a>
+    {% endif%}
+  </h1>
+
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Season ID</th>
+        <th>Season Name</th>
+        <th>Start Date</th>
+        <th>End Date</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      {% for season in seasons.items %}
+      <tr>
+        <td><a href="/season/{{season.id}}"> {{season.id}}</a></td>
+        <td>
+          <a href="/season/{{season.id}}"> {{season.get_season_name()}}</a>
+        </td>
+        <td>
+          {{season.start_date.strftime('%Y-%m-%d')}}
+        </td>
+        <td>
+          {{ season.end_date.strftime('%Y-%m-%d') }}
+        </td>
 
 
-  </div>
+      </tr>
+      {% endfor %}
+
+    </tbody>
+  </table>
+
+  {{ pagination_buttons(seasons) }}
+
 </div>
+
+{{ pagination_active(seasons) }}
+
+{% if my_seasons %}
+<script>
+  $(document).ready(function () {
+    $("#myseasons").parent().addClass("active");
+  })
+</script>
+{% endif %}
+
+{% if all_seasons %}
 <script>
   $(document).ready(function () {
     $("#seasons").parent().addClass("active");
   })
 </script>
+{% endif %}
 
 {% endblock %}

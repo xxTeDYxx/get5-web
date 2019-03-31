@@ -1,0 +1,56 @@
+{% from "macros.html" import show_flashed_messages %}
+
+{% extends "layout.html" %}
+{% block content %}
+
+<div id="content">
+
+  {{ show_flashed_messages() }}
+
+  <form role="form" action="" method="post" class="form-horizontal">
+
+    {{ form.csrf_token }}
+
+    <br>
+
+    <div class="form-group">
+      {{ form.season_title.label(class="col-sm-2 control-label") }}
+      <div class="col-sm-4">
+        {{ form.season_title(class="form-control input-sm") }}
+      </div>
+    </div>
+
+    <div class="form-group">
+      {{ form.start_date.label(class="col-sm-2 control-label") }}
+      <div class="col-sm-4">
+        {{ form.start_date(class="form-control input-sm") }}
+      </div>
+    </div>
+
+    <br>
+
+    <div class="form-group">
+      {{ form.end_date.label(class="col-sm-2 control-label") }}
+      <div class="col-sm-4">
+        {{ form.end_date(class="form-control input-sm") }}
+      </div>
+    </div>
+    <br>
+
+    <div class="input submit col-sm-offset-1">
+      <input type="submit" class="btn btn-primary" value="Create Season">
+    </div>
+
+    <br>
+
+  </form>
+
+</div>
+
+<script>
+  $(document).ready(function () {
+    $("#season_create").parent().addClass("active");
+  })
+</script>
+
+{% endblock %}
