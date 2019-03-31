@@ -244,7 +244,7 @@ class Season(db.Model):
     name = db.Column(db.String(60), default='')
     start_date = db.Column(db.DateTime, default=datetime.datetime.utcnow())
     end_date = db.Column(db.DateTime, default=datetime.date.today() + datetime.timedelta(days=1))
-
+    
     @staticmethod
     def create(user, name, start_date, end_date):
         rv = Season()

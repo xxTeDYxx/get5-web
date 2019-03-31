@@ -15,7 +15,7 @@ down_revision = 'b28b5677726e'
 
 
 def upgrade():
-    op.create_table('seasons',
+    op.create_table('season',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('user_id', sa.Integer(), nullable=True),
                     sa.Column('name', sa.String(length=32), nullable=False),
@@ -24,12 +24,12 @@ def upgrade():
                     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
                     sa.PrimaryKeyConstraint('id')
                     )
-    op.add_column('match', sa.Column('seasons_id', sa.Integer(), nullable=True))
+    op.add_column('match', sa.Column('season_id', sa.Integer(), nullable=True))
     op.create_foreign_key('match_season_id_fkey', 'match',
-                          'seasons', ['seasons_id'], ['id'])
+                          'season', ['season_id'], ['id'])
 
 
 def downgrade():
     op.drop_constraint(op.f('match_season_id_fkey'), table_name='match', type_='foreignkey')
-    op.drop_column('match', 'seasons_id')
-    op.drop_table('seasons')
+    op.drop_column('match', 'season_id')
+    op.drop_table('season')
