@@ -105,6 +105,9 @@ def register_blueprints():
     from leaderboard import leaderboard_blueprint
     app.register_blueprint(leaderboard_blueprint)
 
+    from seasons import seasons_blueprint
+    app.register_blueprint(seasons_blueprint)
+
 
 @app.route('/login')
 @oid.loginhandler

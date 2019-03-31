@@ -238,7 +238,23 @@ class Team(db.Model):
         return 'Team(id={}, user_id={}, name={}, flag={}, logo={}, public={})'.format(
             self.id, self.user_id, self.name, self.flag, self.logo, self.public_team)
 
+class Season(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    name = db.Column(db.String(60), default='')
+    start_date = db.Column(db.DateTime, default=datetime.datetime.utcnow())
+    end_date = db.Column(db.DateTime, default=datetime.date.today() + datetime.timedelta(days=1))
 
+    @staticmethod
+    def create(user, name, start_date, end_date):
+        rv = Season()
+        rv.user_id = user.id
+        rv.name = name
+        rv.start_date = start_date
+        rv.end_date = end_date
+        db.session.add(rv)
+        return rv
+        
 class Match(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
