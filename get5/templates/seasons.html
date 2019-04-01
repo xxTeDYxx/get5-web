@@ -21,13 +21,14 @@
         <th>Season Name</th>
         <th>Start Date</th>
         <th>End Date</th>
+        <th>Leaderboard</th>
       </tr>
     </thead>
     <tbody>
 
       {% for season in seasons.items %}
       <tr>
-        <td><a href="/season/{{ season.user_id }}/{{season.id}}"> {{season.id}}</a></td>
+        <td>{{season.id}}</td>
         <td>
           <a href="/season/{{ season.user_id }}/{{season.id}}"> {{season.get_season_name()}}</a>
         </td>
@@ -37,7 +38,9 @@
         <td>
           {{ season.end_date.strftime('%Y-%m-%d') }}
         </td>
-
+        <td>
+          <a href="/leaderboard/season/{{season.id}}"> Leaderboard</a>
+        </td>
 
       </tr>
       {% endfor %}

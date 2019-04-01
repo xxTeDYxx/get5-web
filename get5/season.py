@@ -97,4 +97,4 @@ def myseasons():
     if not g.user:
         return redirect('/login')
 
-    return redirect('/seasons/' + str(g.user.id))
+    return redirect('/season/' + str(g.user.id))
