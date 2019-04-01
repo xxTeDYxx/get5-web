@@ -82,7 +82,7 @@ def season_matches(userid, seasonid):
 
 
 @season_blueprint.route("/season/<int:userid>")
-def matches_user(userid):
+def seasons_user(userid):
     user = User.query.get_or_404(userid)
     page = util.as_int(request.values.get('page'), on_fail=1)
     seasons = user.seasons.order_by(-Season.id).paginate(page, 20)

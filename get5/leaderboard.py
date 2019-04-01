@@ -10,14 +10,17 @@ import util
 import re
 from copy import deepcopy
 
+# Since we use the same logic for getting a leaderboard based on total
+# and on season, just wrap it in one function to avoid code reuse.
 
-leaderboard_blueprint = Blueprint('leaderboard', __name__)
 
-
-@leaderboard_blueprint.route('/leaderboard')
-def leaderboard():
-    totalMatches = Match.query.order_by(-Match.id).filter(
-        Match.cancelled == False, Match.end_time.isnot(None))
+def getLeaderboard(seasonid=None):
+    if seasonid is None:
+        totalMatches = Match.query.order_by(-Match.id).filter(
+            Match.cancelled == False, Match.end_time.isnot(None))
+    else:
+        totalMatches = Match.query.order_by(-Match.id).filter(
+            Match.cancelled == False, Match.end_time.isnot(None), Match.season_id == seasonid)
     allTeams = Team.query.order_by(-Team.id)
     # Shoutouts to n3rds.
     dTeamStandings = defaultdict(lambda: {'teamid': 0, 'wins': 0, 'losses': 0, 'rounddiff': 0})
@@ -54,3 +57,16 @@ def leaderboard():
     # app.logger.info('Currently in dTeamStandings: \n{}'.format(dTeamStandings))
 
     return render_template('leaderboard.html', standings=dTeamStandings, user=g.user)
+
+
+leaderboard_blueprint = Blueprint('leaderboard', __name__)
+
+
+@leaderboard_blueprint.route('/leaderboard')
+def leaderboard():
+    return getLeaderboard()
+
+
+@leaderboard_blueprint.route('/leaderboard/season/<int:seasonid>/')
+def seasonal_leaderboard(seasonid):
+    return getLeaderboard(seasonid)
