@@ -6,13 +6,15 @@
 <div id="content">
 
   <h1>
-  {% if my_matches %}
-  Your matches
-  {% elif all_matches %}
-  All matches
-  {% else %}
-  Matches for <a href="/user/{{ match_owner.id }}"> {{ match_owner.name }}</a>
-  {% endif%}
+    {% if my_matches %}
+    Your matches
+    {% elif all_matches %}
+    All matches
+    {% elif season_matches %}
+    Season Matches for <a href="/season/{{season_user.id}}/{{ season.id }}">{{season.name}}</a>
+    {% else %}
+    Matches for <a href="/user/{{ match_owner.id }}"> {{ match_owner.name }}</a>
+    {% endif%}
   </h1>
 
   <table class="table table-striped">
@@ -32,7 +34,7 @@
     </thead>
     <tbody>
 
-    {% for match in matches.items %}
+      {% for match in matches.items %}
       <tr>
         <td><a href="/match/{{match.id}}"> {{match.id}}</a></td>
 
@@ -62,7 +64,7 @@
         {% endif %}
 
       </tr>
-    {% endfor %}
+      {% endfor %}
 
     </tbody>
   </table>
@@ -75,15 +77,25 @@
 
 {% if my_matches %}
 <script>
-    $(document).ready(function () {
-    $("#mymatches").parent().addClass("active"); })
+  $(document).ready(function () {
+    $("#mymatches").parent().addClass("active");
+  })
 </script>
 {% endif %}
 
 {% if all_matches %}
 <script>
-    $(document).ready(function () {
-    $("#matches").parent().addClass("active"); })
+  $(document).ready(function () {
+    $("#matches").parent().addClass("active");
+  })
+</script>
+{% endif %}
+
+{% if season_matches %}
+<script>
+  $(document).ready(function () {
+    $("#seasons").parent().addClass("active");
+  })
 </script>
 {% endif %}
 

@@ -3,7 +3,7 @@ from flask import Blueprint, request, render_template, flash, g, redirect, jsoni
 import steamid
 import get5
 from get5 import app, db, BadRequestError, config_setting
-from models import Season, User
+from models import Season, User, Match
 from datetime import datetime
 import util
 import re
@@ -23,7 +23,7 @@ class SeasonForm(Form):
                            validators=[validators.required()])
 
     end_date = DateField('End Date', format='%m/%d/%Y',
-                         default=datetime.date.today() + datetime.timedelta(days=1),
+                         default=datetime.today(),
                          validators=[validators.required()])
 
 
@@ -67,7 +67,21 @@ def season_create():
         'season_create.html', form=form, user=g.user)
 
 
-@season_blueprint.route("/seasons/<int:userid>")
+@season_blueprint.route("/season/<int:userid>/<int:seasonid>")
+def season_matches(userid, seasonid):
+    user = User.query.get_or_404(userid)
+    season_info = Season.query.get_or_404(seasonid)
+    #app.logger.info("{}\n{}".format(season_info, user))
+    page = util.as_int(request.values.get('page'), on_fail=1)
+    matches = user.matches.order_by(-Match.id).filter_by(season_id=seasonid,
+                                                         cancelled=False).paginate(page, 20)
+
+    return render_template('matches.html', user=g.user, matches=matches,
+                           season_matches=True, all_matches=False, season_user=user,
+                           page=page, season=season_info)
+
+
+@season_blueprint.route("/season/<int:userid>")
 def matches_user(userid):
     user = User.query.get_or_404(userid)
     page = util.as_int(request.values.get('page'), on_fail=1)

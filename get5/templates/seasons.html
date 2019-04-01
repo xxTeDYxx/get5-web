@@ -27,9 +27,9 @@
 
       {% for season in seasons.items %}
       <tr>
-        <td><a href="/season/{{season.id}}"> {{season.id}}</a></td>
+        <td><a href="/season/{{ season.user_id }}/{{season.id}}"> {{season.id}}</a></td>
         <td>
-          <a href="/season/{{season.id}}"> {{season.get_season_name()}}</a>
+          <a href="/season/{{ season.user_id }}/{{season.id}}"> {{season.get_season_name()}}</a>
         </td>
         <td>
           {{season.start_date.strftime('%Y-%m-%d')}}

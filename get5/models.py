@@ -260,6 +260,9 @@ class Season(db.Model):
     def get_season_name(self):
         return self.name
 
+    def __repr__(self):
+        return 'Season(id={}, user_id={}, name={}, start_date={}, end_date={})'.format(
+            self.id, self.user_id, self.name, self.start_date, self.end_date)
 
 class Match(db.Model):
     id = db.Column(db.Integer, primary_key=True)
