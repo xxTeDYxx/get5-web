@@ -228,10 +228,10 @@ def match(matchid):
     completed = match.winner
     try:
         if server and not match.finalized():
-            password = server.receive_rcon_value('sv_password', num_retries=2, timeout=0.75)
+            password = server.receive_rcon_value('sv_password')
             connect_string = str("steam://connect/") + str(server.ip_string) + str(":") + \
                 str(server.port) + str("/") + str(password)
-            gotv_port = server.receive_rcon_value('tv_port', num_retries=2, timeout=0.75)
+            gotv_port = server.receive_rcon_value('tv_port')
             gotv_string = str("steam://connect/") + str(server.ip_string) + str(":") + \
                 str(gotv_port)
         else:
