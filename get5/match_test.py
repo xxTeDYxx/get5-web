@@ -38,6 +38,7 @@ class MatchTests(get5_test.Get5Test):
                                   'match_title': 'Map {MAPNUMBER} of {MAXMAPS}',
                                   'series_type': 'bo3',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
+                                  'season_id': None,
                               })
             self.assertEqual(response.status_code, 200)
             self.assertIn('Error in the Server field', response.data)
@@ -61,6 +62,7 @@ class MatchTests(get5_test.Get5Test):
                                   'team2_id': 2,
                                   'series_type': 'bo3',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
+                                  'season_id': None,
                               })
             self.assertEqual(response.status_code, 200)
             self.assertIn('Error in the Server field', response.data)
@@ -86,6 +88,7 @@ class MatchTests(get5_test.Get5Test):
                                   'match_title': 'Map {MAPNUMBER} of {MAXMAPS}',
                                   'series_type': 'bo3',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
+                                  'season_id': None,
                               })
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.location, url_for(
@@ -126,7 +129,7 @@ class MatchTests(get5_test.Get5Test):
         # Create a match on it
         with self.app as c:
             with c.session_transaction() as sess:
-                sess['user_id'] = 1 # different user from server owner
+                sess['user_id'] = 1  # different user from server owner
             response = c.post('/match/create',
                               follow_redirects=False,
                               data={
@@ -135,6 +138,7 @@ class MatchTests(get5_test.Get5Test):
                                   'team2_id': 2,
                                   'series_type': 'bo3',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
+                                  'season_id': None,
                               })
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.location, url_for(
@@ -149,7 +153,6 @@ class MatchTests(get5_test.Get5Test):
         self.assertTrue(match in User.query.get(1).matches)
         self.assertEqual(self.app.get('/match/2/config').status_code, 200)
         self.assertTrue(GameServer.query.get(3).in_use)
-
 
     def test_match_cancel(self):
         # Make sure someone else can't cancel my match when logged in
