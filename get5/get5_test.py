@@ -42,7 +42,7 @@ class Get5Test(unittest.TestCase):
         GameServer.create(
             user, 'myserver2', '127.0.0.1', '27016', 'password', True)
         db.session.commit()
-        season = Season.create(user, 'Season One Test', date.today(), datetime.datetime.utcnow(),
+        season = Season.create(user, 'Season One Test', datetime.datetime.utcnow(),
                                datetime.datetime.utcnow() + datetime.timedelta(days=1))
         db.session.commit()
 
