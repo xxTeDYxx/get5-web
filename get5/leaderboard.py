@@ -3,7 +3,7 @@ from flask import Blueprint, request, render_template, flash, g, redirect, jsoni
 import steamid
 import get5
 from get5 import app, db, BadRequestError, config_setting
-from models import User, Team, Match, GameServer, MapStats, TeamLeaderboard
+from models import User, Team, Match, GameServer, MapStats, TeamLeaderboard, Season
 from collections import OrderedDict, defaultdict
 from datetime import datetime
 import util
@@ -18,9 +18,12 @@ def getLeaderboard(seasonid=None):
     if seasonid is None:
         totalMatches = Match.query.order_by(-Match.id).filter(
             Match.cancelled == False, Match.end_time.isnot(None))
+        seasonsBoard = False
     else:
         totalMatches = Match.query.order_by(-Match.id).filter(
             Match.cancelled == False, Match.end_time.isnot(None), Match.season_id == seasonid)
+        seasonsBoard = True
+        season = Season.query.get_or_404(seasonid)
     allTeams = Team.query.order_by(-Team.id)
     # Shoutouts to n3rds.
     dTeamStandings = defaultdict(lambda: {'teamid': 0, 'wins': 0, 'losses': 0, 'rounddiff': 0})
@@ -56,7 +59,7 @@ def getLeaderboard(seasonid=None):
         sorted(dTeamStandings.items(), key=lambda x: (x[1].get('wins'), x[1].get('losses'), x[1].get('rounddiff')), reverse=True))
     # app.logger.info('Currently in dTeamStandings: \n{}'.format(dTeamStandings))
 
-    return render_template('leaderboard.html', standings=dTeamStandings, user=g.user)
+    return render_template('leaderboard.html', standings=dTeamStandings, user=g.user, seasonsBoard=seasonsBoard, seasonName=season.name)
 
 
 leaderboard_blueprint = Blueprint('leaderboard', __name__)

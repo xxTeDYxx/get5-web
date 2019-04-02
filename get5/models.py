@@ -245,7 +245,7 @@ class Season(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     name = db.Column(db.String(60), default='')
     start_date = db.Column(db.DateTime, default=datetime.datetime.utcnow())
-    end_date = db.Column(db.DateTime, default=datetime.date.today() + datetime.timedelta(days=1))
+    end_date = db.Column(db.DateTime)
     matches = db.relationship('Match', backref='season', lazy='dynamic')
 
     @staticmethod
@@ -260,6 +260,38 @@ class Season(db.Model):
         
     def get_season_name(self):
         return self.name
+
+    def set_data(self, user, name, start_date, end_date):
+        self.user_id = user.id
+        self.name = name
+        self.start_date = start_date
+        self.end_date = end_date
+        
+    def can_edit(self, user):
+            if not user:
+                return False
+            if self.user_id == user.id:
+                return True
+            return False
+
+    def can_delete(self, user):
+            if not self.can_edit(user):
+                return False
+            return self.get_recent_matches().count() == 0
+
+    def get_recent_matches(self, limit=10):
+        season = Season.query.get_or_404(self.id)
+        matches = season.matches
+
+        recent_matches = matches.filter(
+            (Match.season_id == self.id) & (
+                Match.cancelled == False) & (Match.start_time != None)  # noqa: E712
+        ).order_by(-Match.id).limit(5)
+
+        if recent_matches is None:
+            return []
+        else:
+            return recent_matches     
 
     def __repr__(self):
         return 'Season(id={}, user_id={}, name={}, start_date={}, end_date={})'.format(

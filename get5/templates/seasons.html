@@ -36,11 +36,27 @@
           {{season.start_date.strftime('%Y-%m-%d')}}
         </td>
         <td>
+          {% if season.end_date %}
           {{ season.end_date.strftime('%Y-%m-%d') }}
+          {% endif %}
         </td>
         <td>
           <a href="/leaderboard/season/{{season.id}}"> Leaderboard</a>
         </td>
+
+
+        {% if season.can_edit(user) %}
+        <td>
+          <div class="pull-right">
+            <a href="/season/{{season.id}}/edit" class="btn btn-primary btn-xs">Edit</a>
+          </div>
+          {% if season.can_delete(user) %}
+          <div class="pull-right">
+            <a href="/season/{{season.id}}/delete" class="btn btn-danger btn-xs">Delete</a>
+          </div>
+          {% endif %}
+        </td>
+        {% endif %}
 
       </tr>
       {% endfor %}

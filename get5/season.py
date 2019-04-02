@@ -6,7 +6,6 @@ from get5 import app, db, BadRequestError, config_setting
 from models import Season, User, Match
 from datetime import datetime
 import util
-import re
 
 from wtforms import (
     Form, widgets, validators,
@@ -15,7 +14,8 @@ from wtforms import (
 
 
 def start_greater_than_end_validator(form, field):
-    if form.end_date.data <= form.start_date.data:
+    # We are allowed to have null end dates, as a continuing season.
+    if (form.start_date.data and form.end_date.data) and form.end_date.data <= form.start_date.data:
         raise ValidationError('End date must be greater than start date.')
 
 
@@ -27,15 +27,15 @@ def name_validator(form, field):
 class SeasonForm(Form):
     season_title = StringField('Season Name',
                                default='',
-                               validators=[validators.Length(min=0, max=Season.name.type.length)])
+                               validators=[validators.Length(min=5, max=Season.name.type.length)])
 
     start_date = DateField('Start Date', format='%m/%d/%Y',
                            default=datetime.today(),
-                           validators=[[validators.required()]])
+                           validators=[validators.required(), start_greater_than_end_validator])
 
     end_date = DateField('End Date', format='%m/%d/%Y',
                          default=datetime.today(),
-                         validators=[start_greater_than_end_validator])
+                         validators=[validators.optional()])
 
 
 season_blueprint = Blueprint('season', __name__)
@@ -99,6 +99,50 @@ def seasons_user(userid):
     app.logger.info('User is {}'.format(g.user))
     return render_template('seasons.html', user=g.user, seasons=seasons,
                            my_seasons=is_owner, all_matches=False, season_owner=user, page=page)
+
+
+@season_blueprint.route('/season/<int:seasonid>/edit', methods=['GET', 'POST'])
+def season_edit(seasonid):
+    season = Season.query.get_or_404(seasonid)
+    if not season.can_edit(g.user):
+        return 'Not your season', 400
+
+    form = SeasonForm(
+        request.form,
+        user_id=season.user_id,
+        season_title=season.name,
+        start_date=season.start_date,
+        end_date=season.end_date)
+
+    if request.method == 'GET':
+        return render_template('season_create.html', user=g.user, form=form,
+                               edit=True)
+
+    elif request.method == 'POST':
+        if request.method == 'POST':
+            if form.validate():
+                data = form.data
+                season.set_data(g.user, data['season_title'], data['start_date'],
+                                data['end_date'])
+                db.session.commit()
+                return redirect('/season/{}/{}'.format(season.user_id, season.id))
+            else:
+                flash_errors(form)
+
+    return render_template(
+        'season_create.html', user=g.user, form=form, edit=True)
+
+
+@season_blueprint.route('/season/<int:seasonid>/delete')
+def season_delete(seasonid):
+    season = Season.query.get_or_404(seasonid)
+    if not season.can_delete(g.user):
+        return 'Cannot delete this team', 400
+
+    if Season.query.filter_by(id=season.id).delete():
+        db.session.commit()
+
+    return redirect('/myseasons')
 
 
 @season_blueprint.route("/myseasons")

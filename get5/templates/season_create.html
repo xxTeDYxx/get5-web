@@ -37,9 +37,15 @@
     </div>
     <br>
 
+    {% if edit %}
+    <div class="input submit col-sm-offset-1">
+      <input type="submit" class="btn btn-primary" value="Update Season Info">
+    </div>
+    {% else %}
     <div class="input submit col-sm-offset-1">
       <input type="submit" class="btn btn-primary" value="Create Season">
     </div>
+    {% endif %}
 
     <br>
 
