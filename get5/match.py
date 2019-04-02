@@ -137,7 +137,7 @@ class MatchForm(Form):
             self.season_selection.choices = []
         season_tuples = []
         season_tuples.append((0, 'No Season'))
-        for seasons in Season.query.order_by(-Season.id):
+        for seasons in Season.query.filter(Season.end_date >= datetime.now()).order_by(-Season.id):
             season_tuples.append((seasons.id, seasons.name))
         self.season_selection.choices += season_tuples
 
@@ -155,6 +155,7 @@ def match_create():
     if request.method == 'POST':
         num_matches = g.user.matches.count()
         max_matches = config_setting('USER_MAX_MATCHES')
+        season_id = None
 
         if max_matches >= 0 and num_matches >= max_matches and not g.user.admin:
             flash('You already have the maximum number of matches ({}) created'.format(
@@ -192,10 +193,10 @@ def match_create():
                     max_maps = int(form.data['series_type'][2])
                 except ValueError:
                     max_maps = 1
-                if form.data['season_selection'] == 0:
-                    season_id = None
-                else:
+
+                if form.data['season_selection'] != 0:
                     season_id = form.data['season_selection']
+
                 match = Match.create(
                     g.user, form.data['team1_id'], form.data['team2_id'],
                     form.data['team1_string'], form.data['team2_string'],

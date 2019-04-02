@@ -10,21 +10,32 @@ import re
 
 from wtforms import (
     Form, widgets, validators,
-    StringField, DateField)
+    StringField, DateField,
+    ValidationError)
+
+
+def start_greater_than_end_validator(form, field):
+    if form.end_date.data <= form.start_date.data:
+        raise ValidationError('End date must be greater than start date.')
+
+
+def name_validator(form, field):
+    if form.season_title.data == '' or form.season_title.data == None:
+        raise ValidationError('Title must not be null.')
 
 
 class SeasonForm(Form):
     season_title = StringField('Season Name',
-                               default='NAME HERE',
-                               validators=[validators.Length(min=-1, max=Season.name.type.length)])
+                               default='',
+                               validators=[validators.Length(min=0, max=Season.name.type.length)])
 
     start_date = DateField('Start Date', format='%m/%d/%Y',
                            default=datetime.today(),
-                           validators=[validators.required()])
+                           validators=[[validators.required()]])
 
     end_date = DateField('End Date', format='%m/%d/%Y',
                          default=datetime.today(),
-                         validators=[validators.required()])
+                         validators=[start_greater_than_end_validator])
 
 
 season_blueprint = Blueprint('season', __name__)
@@ -46,7 +57,6 @@ def season_create():
     form = SeasonForm(request.form)
 
     if request.method == 'POST':
-
         if form.validate():
             mock = config_setting('TESTING')
 
@@ -71,7 +81,6 @@ def season_create():
 def season_matches(userid, seasonid):
     user = User.query.get_or_404(userid)
     season_info = Season.query.get_or_404(seasonid)
-    #app.logger.info("{}\n{}".format(season_info, user))
     page = util.as_int(request.values.get('page'), on_fail=1)
     matches = user.matches.order_by(-Match.id).filter_by(season_id=seasonid,
                                                          cancelled=False).paginate(page, 20)
