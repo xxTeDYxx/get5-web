@@ -58,8 +58,10 @@ def getLeaderboard(seasonid=None):
     dTeamStandings = OrderedDict(
         sorted(dTeamStandings.items(), key=lambda x: (x[1].get('wins'), x[1].get('losses'), x[1].get('rounddiff')), reverse=True))
     # app.logger.info('Currently in dTeamStandings: \n{}'.format(dTeamStandings))
-
-    return render_template('leaderboard.html', standings=dTeamStandings, user=g.user, seasonsBoard=seasonsBoard, seasonName=season.name)
+    if seasonsBoard:
+        return render_template('leaderboard.html', standings=dTeamStandings, user=g.user, seasonsBoard=seasonsBoard, seasonName=season.name)
+    else:
+        return render_template('leaderboard.html', standings=dTeamStandings, user=g.user, seasonsBoard=seasonsBoard)
 
 
 leaderboard_blueprint = Blueprint('leaderboard', __name__)

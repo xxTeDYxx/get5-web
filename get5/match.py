@@ -480,7 +480,7 @@ def match_backup(matchid):
             server.send_rcon_command('get5_check_auths 1')
         except:
             pass
-
+          
         if response:
             flash('Restored backup file {}'.format(file))
         else:
