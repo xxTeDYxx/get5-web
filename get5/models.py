@@ -10,7 +10,7 @@ import datetime
 import string
 import random
 import json
-
+import re
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -87,10 +87,11 @@ class GameServer(db.Model):
 
     def receive_rcon_value(self, command):
         try:
-            response = self.send_rcon_command(command, raise_errors=False, timeout=1.0)
+            response = self.send_rcon_command(command, raise_errors=False)
             pattern = r'"([A-Za-z0-9_\./\\-]*)"'
             value = re.split(pattern, Markup(response.replace('\n', '<br>')))
-        except: 
+        except Exception as e: 
+            app.logger.info("Tried to receive value from server but failed.\n{}".format(e))
             return None
         # Not sure how stable this will be, but send off for the third 
         # value of the string split. Most values returned have format 
@@ -294,11 +295,12 @@ class Match(db.Model):
 
     @staticmethod
     def create(user, team1_id, team2_id, team1_string, team2_string,
-               max_maps, skip_veto, title, veto_mappool, server_id=None):
+               max_maps, skip_veto, title, veto_mappool, season_id, server_id=None):
         rv = Match()
         rv.user_id = user.id
         rv.team1_id = team1_id
         rv.team2_id = team2_id
+        rv.season_id = season_id
         rv.skip_veto = skip_veto
         rv.title = title
         rv.veto_mappool = ' '.join(veto_mappool)
