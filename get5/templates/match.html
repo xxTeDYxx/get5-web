@@ -114,32 +114,23 @@
     {% if connect_string is not none and not match.finalized() and not match.live() %}
     <div class="alert alert-notice" role="alert">
       <span class="fa fa-exclamation-circle" aria-hidden="true"></span>
-      Please make sure to have CS:GO open before pressing the "Connect" button. There
-      is a known bug that will say bad password if you do not have CS:GO open!
+      <b>Please make sure to have CS:GO open before pressing the "Connect" button. There
+        is a known bug that will say bad password if you do not have CS:GO open! </b>
     </div>
     <a type="button" class="btn btn-success" href="{{ connect_string }}">Connect</a>
 
     {% endif %}
 
-    {% if gotv_string is not none and not match.finalized() %}
+    {% if gotv_string is not none and not match.finalized() and not match.live() %}
     <a type="button" class="btn btn-info" href="{{ gotv_string }}">Connect to GoTV</a>
     {% endif %}
 
-    {% if match.start_time is not none %}
-    <p>Started at {{ match.start_time.strftime('%Y-%m-%d %H:%M') }}</p>
-
-
-    {% else %}
+    {% if match.start_time is none %}
     <div class="panel panel-default" role="alert">
       <div class="panel-body">
         This match is pending start.
       </div>
     </div>
-    {% endif %}
-
-
-    {% if match.end_time is not none %}
-    <p>Ended at {{ match.end_time.strftime('%Y-%m-%d %H:%M') }}</p>
     {% endif %}
 
     {% for map_stats in map_stat_list %}

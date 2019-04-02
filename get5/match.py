@@ -3,8 +3,9 @@ from flask import Blueprint, request, render_template, flash, g, redirect, jsoni
 import steamid
 import get5
 from get5 import app, db, BadRequestError, config_setting
-from models import User, Team, Match, GameServer
+from models import User, Team, Match, GameServer, Season
 from collections import OrderedDict
+from datetime import datetime
 import util
 import re
 from copy import deepcopy
@@ -89,6 +90,9 @@ class MatchForm(Form):
                                       validators=[mappool_validator],
                                       )
 
+    season_selection = SelectField('Season', coerce=int,
+                                   validators=[validators.optional()])
+
     def add_teams(self, user):
         if self.team1_id.choices is None:
             self.team1_id.choices = []
@@ -128,6 +132,15 @@ class MatchForm(Form):
 
         self.server_id.choices += server_tuples
 
+    def add_seasons(self):
+        if self.season_selection.choices is None:
+            self.season_selection.choices = []
+        season_tuples = []
+        season_tuples.append((0, 'No Season'))
+        for seasons in Season.query.filter(Season.end_date >= datetime.now()).order_by(-Season.id):
+            season_tuples.append((seasons.id, seasons.name))
+        self.season_selection.choices += season_tuples
+
 
 @match_blueprint.route('/match/create', methods=['GET', 'POST'])
 def match_create():
@@ -137,10 +150,12 @@ def match_create():
     form = MatchForm(request.form)
     form.add_teams(g.user)
     form.add_servers(g.user)
+    form.add_seasons()
 
     if request.method == 'POST':
         num_matches = g.user.matches.count()
         max_matches = config_setting('USER_MAX_MATCHES')
+        season_id = None
 
         if max_matches >= 0 and num_matches >= max_matches and not g.user.admin:
             flash('You already have the maximum number of matches ({}) created'.format(
@@ -179,11 +194,15 @@ def match_create():
                 except ValueError:
                     max_maps = 1
 
+                if form.data['season_selection'] != 0:
+                    season_id = form.data['season_selection']
+
                 match = Match.create(
                     g.user, form.data['team1_id'], form.data['team2_id'],
                     form.data['team1_string'], form.data['team2_string'],
                     max_maps, skip_veto, form.data['match_title'],
-                    form.data['veto_mappool'], form.data['server_id'])
+                    form.data['veto_mappool'],
+                    season_id, form.data['server_id'])
 
                 # Save plugin version data if we have it
                 if json_reply and 'plugin_version' in json_reply:
@@ -195,7 +214,7 @@ def match_create():
                 # Force Get5 to auth on official matches. Don't raise errors
                 # if we cannot do this.
                 if server_available:
-                    server.send_rcon_command('get5_check_auths 1')
+                    server.send_rcon_command('get5_check_auths 1', num_retries=2, timeout=0.75)
 
                 server.in_use = True
 
@@ -227,7 +246,7 @@ def match(matchid):
     map_stat_list = match.map_stats.all()
     completed = match.winner
     try:
-        if server and not match.finalized():
+        if server is not None:
             password = server.receive_rcon_value('sv_password')
             connect_string = str("steam://connect/") + str(server.ip_string) + str(":") + \
                 str(server.port) + str("/") + str(password)
@@ -461,7 +480,7 @@ def match_backup(matchid):
             server.send_rcon_command('get5_check_auths 1')
         except:
             pass
-        
+          
         if response:
             flash('Restored backup file {}'.format(file))
         else:

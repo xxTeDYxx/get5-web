@@ -1,9 +1,9 @@
 import unittest
 import logging
-
+import datetime
 import get5
 from get5 import db
-from models import User, Team, GameServer, Match
+from models import User, Team, GameServer, Match, Season
 
 
 # All tests will use this base test framework, including the test date defined
@@ -42,7 +42,10 @@ class Get5Test(unittest.TestCase):
         GameServer.create(
             user, 'myserver2', '127.0.0.1', '27016', 'password', True)
         db.session.commit()
+        season = Season.create(user, 'Season One Test', datetime.datetime.utcnow(),
+                               datetime.datetime.utcnow() + datetime.timedelta(days=1))
+        db.session.commit()
 
         Match.create(user, team1.id, team2.id, '', '', 1, False,
-                     'Map {MAPNUMBER}', ['de_dust2', 'de_cache', 'de_mirage'], server.id)
+                     'Map {MAPNUMBER}', ['de_dust2', 'de_cache', 'de_mirage'], season.id, server.id)
         db.session.commit()

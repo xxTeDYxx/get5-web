@@ -10,7 +10,7 @@ import datetime
 import string
 import random
 import json
-
+import re
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -20,6 +20,7 @@ class User(db.Model):
     servers = db.relationship('GameServer', backref='user', lazy='dynamic')
     teams = db.relationship('Team', backref='user', lazy='dynamic')
     matches = db.relationship('Match', backref='user', lazy='dynamic')
+    seasons = db.relationship('Season', backref='user', lazy='dynamic')
 
     @staticmethod
     def get_or_create(steam_id):
@@ -86,10 +87,11 @@ class GameServer(db.Model):
 
     def receive_rcon_value(self, command):
         try:
-            response = self.send_rcon_command(command, raise_errors=False, timeout=1.0)
+            response = self.send_rcon_command(command, raise_errors=False)
             pattern = r'"([A-Za-z0-9_\./\\-]*)"'
             value = re.split(pattern, Markup(response.replace('\n', '<br>')))
-        except: 
+        except Exception as e: 
+            app.logger.info("Tried to receive value from server but failed.\n{}".format(e))
             return None
         # Not sure how stable this will be, but send off for the third 
         # value of the string split. Most values returned have format 
@@ -238,6 +240,62 @@ class Team(db.Model):
         return 'Team(id={}, user_id={}, name={}, flag={}, logo={}, public={})'.format(
             self.id, self.user_id, self.name, self.flag, self.logo, self.public_team)
 
+class Season(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    name = db.Column(db.String(60), default='')
+    start_date = db.Column(db.DateTime, default=datetime.datetime.utcnow())
+    end_date = db.Column(db.DateTime)
+    matches = db.relationship('Match', backref='season', lazy='dynamic')
+
+    @staticmethod
+    def create(user, name, start_date, end_date):
+        rv = Season()
+        rv.user_id = user.id
+        rv.name = name
+        rv.start_date = start_date
+        rv.end_date = end_date
+        db.session.add(rv)
+        return rv
+        
+    def get_season_name(self):
+        return self.name
+
+    def set_data(self, user, name, start_date, end_date):
+        self.user_id = user.id
+        self.name = name
+        self.start_date = start_date
+        self.end_date = end_date
+        
+    def can_edit(self, user):
+            if not user:
+                return False
+            if self.user_id == user.id:
+                return True
+            return False
+
+    def can_delete(self, user):
+            if not self.can_edit(user):
+                return False
+            return self.get_recent_matches().count() == 0
+
+    def get_recent_matches(self, limit=10):
+        season = Season.query.get_or_404(self.id)
+        matches = season.matches
+
+        recent_matches = matches.filter(
+            (Match.season_id == self.id) & (
+                Match.cancelled == False) & (Match.start_time != None)  # noqa: E712
+        ).order_by(-Match.id).limit(5)
+
+        if recent_matches is None:
+            return []
+        else:
+            return recent_matches     
+
+    def __repr__(self):
+        return 'Season(id={}, user_id={}, name={}, start_date={}, end_date={})'.format(
+            self.id, self.user_id, self.name, self.start_date, self.end_date)
 
 class Match(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -245,11 +303,13 @@ class Match(db.Model):
     server_id = db.Column(db.Integer, db.ForeignKey('game_server.id'), index=True)
     team1_id = db.Column(db.Integer, db.ForeignKey('team.id'))
     team2_id = db.Column(db.Integer, db.ForeignKey('team.id'))
+    season_id = db.Column(db.Integer, db.ForeignKey('season.id'))
+
     team1_string = db.Column(db.String(32), default='')
     team2_string = db.Column(db.String(32), default='')
     winner = db.Column(db.Integer, db.ForeignKey('team.id'))
     plugin_version = db.Column(db.String(32), default='unknown')
-
+    
     forfeit = db.Column(db.Boolean, default=False)
     cancelled = db.Column(db.Boolean, default=False)
     start_time = db.Column(db.DateTime)
@@ -267,11 +327,12 @@ class Match(db.Model):
 
     @staticmethod
     def create(user, team1_id, team2_id, team1_string, team2_string,
-               max_maps, skip_veto, title, veto_mappool, server_id=None):
+               max_maps, skip_veto, title, veto_mappool, season_id, server_id=None):
         rv = Match()
         rv.user_id = user.id
         rv.team1_id = team1_id
         rv.team2_id = team2_id
+        rv.season_id = season_id
         rv.skip_veto = skip_veto
         rv.title = title
         rv.veto_mappool = ' '.join(veto_mappool)
