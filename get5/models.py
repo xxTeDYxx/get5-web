@@ -615,10 +615,10 @@ class PlayerStats(db.Model):
 
     """ Custom made individual scoreboard to work with VMIX and an Excel file.
         The values will be automagically updated and put straight into a broadcast (neat!)"""
-    def get_ind_scoreboard(self):
+    def get_ind_scoreboard(self, map_number):
         d = {}
         map_stats = MapStats.query.filter_by(
-            match_id=self.match_id).first()
+            match_id=self.match_id, map_number=map_number).first()
         team = Team.query.get(self.team_id)       
         d['map'] = map_stats.map_name
         d[team.name] = {}

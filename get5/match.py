@@ -289,27 +289,37 @@ def match_scoreboard(matchid):
     match = Match.query.get_or_404(matchid)
     team1 = Team.query.get_or_404(match.team1_id)
     team2 = Team.query.get_or_404(match.team2_id)
+    map_num = 0
     map_stat_list = match.map_stats.all()
     player_dict = {}
+    matches = OrderedDict()
+    match_num = 0
     sorted_player_dict = OrderedDict()
+    app.logger.info('{}'.format(map_stat_list))
     for map_stats in map_stat_list:
         for player in map_stats.player_stats:
-            player_dict = merge(player_dict, player.get_ind_scoreboard())
-    # Sort teams based on kills.
-    sorted_player_dict[team1.name] = OrderedDict(
-        sorted(player_dict[team1.name].items(), key=lambda x: x[1].get('kills'), reverse=True))
-    sorted_player_dict[team2.name] = OrderedDict(
-        sorted(player_dict[team2.name].items(), key=lambda x: x[1].get('kills'), reverse=True))
+            player_dict = merge(player_dict, player.get_ind_scoreboard(map_stats.map_number))
+        # Sort teams based on kills.
+        sorted_player_dict[team1.name] = OrderedDict(
+            sorted(player_dict[team1.name].items(), key=lambda x: x[1].get('kills'), reverse=True))
+        sorted_player_dict[team2.name] = OrderedDict(
+            sorted(player_dict[team2.name].items(), key=lambda x: x[1].get('kills'), reverse=True))
+        
+        t1score = map_stats.team1_score
+        t2score = map_stats.team2_score
+        curMap = map_stats.map_name
+        sorted_player_dict[team1.name]['TeamName'] = team1.name
+        sorted_player_dict[team2.name]['TeamName'] = team2.name
+        sorted_player_dict[team1.name]['TeamScore'] = t1score
+        sorted_player_dict[team2.name]['TeamScore'] = t2score
+        sorted_player_dict['map'] = curMap
+        matches['map_'+str(match_num)]=sorted_player_dict
+        match_num+=1
+        sorted_player_dict = OrderedDict()
+        player_dict = {}
 
-    t1score, t2score = match.get_current_score()
-    curMap = player_dict['map']
-    sorted_player_dict[team1.name]['TeamName'] = team1.name
-    sorted_player_dict[team2.name]['TeamName'] = team2.name
-    sorted_player_dict[team1.name]['TeamScore'] = t1score
-    sorted_player_dict[team2.name]['TeamScore'] = t2score
-    sorted_player_dict['map'] = curMap
     response = app.response_class(
-        json.dumps(sorted_player_dict, sort_keys=False),
+        json.dumps(matches, sort_keys=False),
         mimetype='application/json')
     return response
 
