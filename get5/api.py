@@ -117,8 +117,8 @@ def match_map_update(matchid, mapnumber):
 @limiter.limit('60 per hour', key_func=rate_limit_key)
 def match_veto_update(matchid):
     match = Match.query.get_or_404(matchid)
-    match_api_check(request, match)
-    veto = Veto.create(matchid, request.values.get('teamString'), request.values.get('map'))
+    #match_api_check(request, match)
+    veto = Veto.create(matchid, request.values.get('teamString'), request.values.get('map'), request.values.get('pick_or_veto'))
     db.session.commit()
     app.logger.info("Confirmed Map Veto For {} on map {}".format(
         request.values.get('teamString'), request.values.get('map')))

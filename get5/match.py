@@ -3,7 +3,7 @@ from flask import Blueprint, request, render_template, flash, g, redirect, jsoni
 import steamid
 import get5
 from get5 import app, db, BadRequestError, config_setting
-from models import User, Team, Match, GameServer, Season
+from models import User, Team, Match, GameServer, Season, Veto
 from collections import OrderedDict
 from datetime import datetime
 import util
@@ -240,6 +240,7 @@ def match_create():
 @match_blueprint.route('/match/<int:matchid>')
 def match(matchid):
     match = Match.query.get_or_404(matchid)
+    vetoes = Veto.query.filter_by(match_id=matchid)
     server = GameServer.query.get_or_404(match.server_id)
     team1 = Team.query.get_or_404(match.team1_id)
     team2 = Team.query.get_or_404(match.team2_id)
@@ -268,12 +269,12 @@ def match(matchid):
         is_owner = (g.user.id == match.user_id)
         has_admin_access = is_owner or (config_setting(
             'ADMINS_ACCESS_ALL_MATCHES') and g.user.admin)
-
+    app.logger.info("Veto: \n{}".format(vetoes))
     return render_template(
         'match.html', user=g.user, admin_access=has_admin_access,
         match=match, team1=team1, team2=team2,
         map_stat_list=map_stat_list, completed=completed, connect_string=connect_string,
-        gotv_string=gotv_string)
+        gotv_string=gotv_string, vetoes=vetoes)
 
 
 @match_blueprint.route('/match/<int:matchid>/scoreboard')
