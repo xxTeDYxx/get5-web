@@ -1,6 +1,6 @@
 from get5 import app, limiter, db, BadRequestError
 from util import as_int
-from models import Match, MapStats, PlayerStats, GameServer
+from models import Match, MapStats, PlayerStats, GameServer, Veto
 
 from flask import Blueprint, request
 import flask_limiter
@@ -110,6 +110,18 @@ def match_map_update(matchid, mapnumber):
     else:
         return 'Failed to find map stats object', 400
 
+    return 'Success'
+
+
+@api_blueprint.route('/match/<int:matchid>/vetoUpdate', methods=['POST'])
+@limiter.limit('60 per hour', key_func=rate_limit_key)
+def match_veto_update(matchid):
+    match = Match.query.get_or_404(matchid)
+    match_api_check(request, match)
+    veto = Veto.create(matchid, request.values.get('teamString'), request.values.get('map'))
+    db.session.commit()
+    app.logger.info("Confirmed Map Veto For {} on map {}".format(
+        request.values.get('teamString'), request.values.get('map')))
     return 'Success'
 
 
