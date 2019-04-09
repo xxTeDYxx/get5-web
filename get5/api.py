@@ -1,6 +1,6 @@
 from get5 import app, limiter, db, BadRequestError
 from util import as_int
-from models import Match, MapStats, PlayerStats, GameServer, Veto
+from models import Match, MapStats, PlayerStats, GameServer, Veto, Team
 
 from flask import Blueprint, request
 import flask_limiter
@@ -119,16 +119,17 @@ def match_veto_update(matchid):
     match = Match.query.get_or_404(matchid)
     match_api_check(request, match)
     if request.values.get('teamString') == "team1":
-        teamName = match.team1_string
+        # GameServer.query.get(match.server_id)
+        teamName = Team.query.get(match.team1_id).name
     elif request.values.get('teamString') == "team2":
-        teamName = match.team2_string
+        teamName = Team.query.get(match.team2_id).name
     else:
         teamName = "Decider"
     veto = Veto.create(matchid, teamName,
                        request.values.get('map'), request.values.get('pick_or_veto'))
     db.session.commit()
     app.logger.info("Confirmed Map Veto For {} on map {}".format(
-        request.values.get('teamString'), request.values.get('map')))
+        teamName, request.values.get('map')))
     return 'Success'
 
 
