@@ -677,7 +677,9 @@ class Veto(db.Model):
         rv.pick_or_veto = p_v
         db.session.add(rv)
         return rv
-        
+    
+    def getTeamName(self):
+        pass
 
 # TODO: Create class and use instead of dictionary.
 class TeamLeaderboard():
