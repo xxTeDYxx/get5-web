@@ -88,8 +88,11 @@ class GameServer(db.Model):
     def receive_rcon_value(self, command):
         try:
             response = self.send_rcon_command(command, raise_errors=False)
-            pattern = r'"([A-Za-z0-9_\./\\-]*)"'
-            value = re.split(pattern, Markup(response.replace('\n', '<br>')))
+            if response is not None:
+                pattern = r'"([A-Za-z0-9_\./\\-]*)"'
+                value = re.split(pattern, Markup(response.replace('\n', '<br>')))
+            else:
+                return None
         except Exception as e: 
             app.logger.info("Tried to receive value from server but failed.\n{}".format(e))
             return None
@@ -658,6 +661,25 @@ class PlayerStats(db.Model):
 
         return rv
 
+class Veto(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    match_id = db.Column(db.Integer, db.ForeignKey('match.id'))
+    team_name = db.Column(db.String(64), default='')
+    map = db.Column(db.String(32), default='')
+    pick_or_veto = db.Column(db.String(4), default='veto')
+    
+    @staticmethod
+    def create(match_id, team_name, map_name, p_v):
+        rv = Veto()
+        rv.match_id = match_id
+        rv.team_name = team_name
+        rv.map = map_name
+        rv.pick_or_veto = p_v
+        db.session.add(rv)
+        return rv
+    
+    def getTeamName(self):
+        pass
 
 # TODO: Create class and use instead of dictionary.
 class TeamLeaderboard():

@@ -133,6 +133,33 @@
     </div>
     {% endif %}
 
+    {% if vetoes.count() > 0 %}
+    <div class="panel panel-primary">
+      <div class="panel-heading">Vetoes</div>
+
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Veto/Pick</th>
+            <th class="text-center">Map</th>
+            <th class="text-center">Team Name</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          {% for veto in vetoes %}
+          <tr>
+            <td> {{ veto.pick_or_veto }} </td>
+            <td class="text-center"> {{ veto.map }} </td>
+            <td class="text-center"> {{ veto.team_name }} </td>
+          </tr>
+          {% endfor %}
+
+        </tbody>
+
+      </table>
+    </div>
+    {% endif %}
     {% for map_stats in map_stat_list %}
     <br>
     <div class="panel panel-primary">
