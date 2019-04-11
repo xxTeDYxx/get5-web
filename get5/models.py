@@ -234,7 +234,7 @@ class Team(db.Model):
         return Markup('<a href="{}">{}</a>'.format(self.get_url(), self.name))
 
     def get_logo_or_flag_html(self, scale=1.0, other_team=None):
-        if logos.has_logo(self.logo) and (other_team is None or logos.has_logo(other_team.logo)):
+        if logos.has_logo(self.logo):
             return self.get_logo_html(scale)
         else:
             return self.get_flag_html(scale)
@@ -321,7 +321,7 @@ class Match(db.Model):
     title = db.Column(db.String(60), default='')
     skip_veto = db.Column(db.Boolean)
     api_key = db.Column(db.String(32))
-
+    veto_first = db.Column(db.String(5))
     veto_mappool = db.Column(db.String(500))
     map_stats = db.relationship('MapStats', backref='match', lazy='dynamic')
 
@@ -330,7 +330,7 @@ class Match(db.Model):
 
     @staticmethod
     def create(user, team1_id, team2_id, team1_string, team2_string,
-               max_maps, skip_veto, title, veto_mappool, season_id, server_id=None):
+               max_maps, skip_veto, title, veto_mappool, season_id, veto_first, server_id=None):
         rv = Match()
         rv.user_id = user.id
         rv.team1_id = team1_id
@@ -341,6 +341,12 @@ class Match(db.Model):
         rv.veto_mappool = ' '.join(veto_mappool)
         rv.server_id = server_id
         rv.max_maps = max_maps
+        if veto_first == "CT":
+            rv.veto_first = "team1"
+        elif veto_first == "T":
+            rv.veto_first = "team2"
+        else:
+            rv.veto_first = None
         rv.api_key = ''.join(random.SystemRandom().choice(
             string.ascii_uppercase + string.digits) for _ in range(24))
         db.session.add(rv)
@@ -458,6 +464,11 @@ class Match(db.Model):
         d = {}
         d['matchid'] = str(self.id)
         d['match_title'] = self.title
+        
+        if self.veto_first == "CT":
+            d['veto_first'] = "team1"
+        else:
+            d['veto_first'] = "team2"
 
         d['skip_veto'] = self.skip_veto
         if self.max_maps == 2:
@@ -678,8 +689,8 @@ class Veto(db.Model):
         db.session.add(rv)
         return rv
     
-    def getTeamName(self):
-        pass
+    def __repr__(self):
+        return 'Veto(id={})'.format(self.id)
 
 # TODO: Create class and use instead of dictionary.
 class TeamLeaderboard():
