@@ -6,11 +6,13 @@ Development
 Master
 [![Build Status](https://travis-ci.org/PhlexPlexico/get5-web.svg?branch=master)](https://travis-ci.org/PhlexPlexico/get5-web)
 
-**Status: Experimental, not supported.**
+**Status: Third Party Supported**
 
-This is an **experimental** (proof-of-concept) web panel meant to be used in conjunction with the [get5](https://github.com/splewis/get5) CS:GO server plugin. It provides a more convenient way of managing matches and match servers.
+This is an **experimental** web panel meant to be used in conjunction with the [get5](https://github.com/splewis/get5) CS:GO server plugin. It provides a more convenient way of managing matches and match servers.
 
-**WARNING**: THIS FORK OF GET5-WEBPANEL IS UNDER CURRENT DEVELOPMENT. THERE IS BUGS, THERE WILL BE FAIL POINTS IN THE APPLICATION. I AM TRYING TO MAKE IT WORK PROPERLY FOR MY SPECIFIC USE CASE, SUCH AS THE SCOREBOARD API.
+This fork of get5-web will probably be updated as more features are required for my use case (running a small league). Bugs will be fixed as I come across them, or based on priority (i.e. does it break everything for me). If you have any bugs you'd like to report, please create an issue. I'll try my best to help solve the issue, but I am still new to learning flask as well.
+
+**WARNING**: THIS BUILD OF THE WEB-PANEL IS UNDER DEVELOPMENT AND IS STARTING TO USE MODIFIED GET5 MATERIAL, SUCH AS THE API_STATS PLUGIN. IF YOU HAVE ANY ISSUES WITH THE VETO PROCESS, OR ANY NEW IMPLEMENTATIONS, PLEASE REPORT IT HERE. 
 
 ## How to use it:
 
@@ -40,12 +42,12 @@ Note: when using this web panel, the CS:GO game servers **must** be have both th
 ## Requirements:
 
 - python2.7
-- MySQL (other databases will likely work, but aren't guaranteed to)
+- MySQL (other databases will likely work, but aren't guaranteed to, [example for MariaDB](https://github.com/splewis/get5-web/issues/146#issuecomment-480908372))
 - a linux web server capable of running Flask applications ([see deployment options](http://flask.pocoo.org/docs/0.11/deploying/))
 
 ## Installation
 
-Please see the [installation instructions](INSTALL.md) **currently outdated** for Ubuntu 16.04 with apache2. You can use other distributions or web servers, but you will likely have to figure out how to install a python flask app yourself.
+Please see the [installation instructions](INSTALL.md) for Ubuntu 16.04 with apache2. You can use other distributions or web servers, but you will likely have to figure out how to install a python flask app yourself.
 
 ## How do the game server and web panel communicate?
 
@@ -57,7 +59,7 @@ Please see the [installation instructions](INSTALL.md) **currently outdated** fo
 
 Autoformatting:
 
-```
+```sh
 cd get5
 autopep8 -r get5 --in-place
 autopep8 -r get5 --diff # should have no output
@@ -65,7 +67,7 @@ autopep8 -r get5 --diff # should have no output
 
 Linting errors:
 
-```
+```sh
 cd get5
 pyflakes *.py
 ```
@@ -73,12 +75,12 @@ pyflakes *.py
 Testing:
 You must also setup a `test_config.py` file in the `instance` directory.
 
-```
+```sh
 ./test.sh
 ```
 
 Manually running a test instance: (for development purposes)
 
-```
+```sh
 python2.7 main.py
 ```

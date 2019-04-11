@@ -161,7 +161,50 @@ get5.register_blueprints()
 ```sh
 service apache2 restart
 ```
+## 11: Optional - Move to SSL
 
-## 11: Finished
+> In order to move to SSL, you will need to generate your own cert, which can be done on your machine, or you can use something like certbot in order to get certificates assigned to your server. Lookup certbot for apache, and you will find plenty of resources. Once this is done, update your VirtualHost header to be 
+```apache
+<VirtualHost *:443>
+```
+
+> Instead of 80. Once this is done, restart your server
+```sh
+service apache2 restart
+```
+
+## 12: Finished
 
 > Navigate to your sub domain in the browser and view the finished results.
+
+## 13: Building get5_apistats
+
+> In order to get the veto module fully functional on the site, you will have to compile the API plugin from this repository. In order to do this, you will need to go download sourcemod, and extract it to a directory of your choice.
+
+### 13b: Gathering requirements
+
+> Once downloaded and extracted, merge everything from sourcemod_plugin/get5_apistats into the addons/sourcemod directory (so that the scripting and translation merge). Next, move into the include directoy and get SteamWorks, and other requirements with this command:
+
+```sh
+wget https://raw.githubusercontent.com/KyleSanderson/SteamWorks/master/Pawn/includes/SteamWorks.inc
+wget https://raw.githubusercontent.com/thraaawn/tEasyFTP/master/scripting/include/tEasyFTP.inc
+
+```
+> Lastly, sm-json will be required to build this plugin. Clone the repository, and then copy everything into the includes directory. For example:
+
+```sh
+git clone https://github.com/clugg/sm-json
+cp -r sm-json/addons/sourcemod/scripting/include/json sm-json/addons/sourcemod/scripting/include/json.inc .
+rm -rf sm-json
+```
+
+### 13c: Building and deploying
+
+> Now build the project. Move to the scripting directory and build the plugin:
+
+```sh
+chmod +x spcomp
+./spcomp get5_apistats.sp
+```
+
+> The plugin should be compiled to a *.smx file in that directory. Copy and paste to your server inside the plugins directory.
