@@ -321,7 +321,7 @@ class Match(db.Model):
     title = db.Column(db.String(60), default='')
     skip_veto = db.Column(db.Boolean)
     api_key = db.Column(db.String(32))
-
+    veto_first = db.Column(db.String(5))
     veto_mappool = db.Column(db.String(500))
     map_stats = db.relationship('MapStats', backref='match', lazy='dynamic')
 
@@ -330,7 +330,7 @@ class Match(db.Model):
 
     @staticmethod
     def create(user, team1_id, team2_id, team1_string, team2_string,
-               max_maps, skip_veto, title, veto_mappool, season_id, server_id=None):
+               max_maps, skip_veto, title, veto_mappool, season_id, veto_first, server_id=None):
         rv = Match()
         rv.user_id = user.id
         rv.team1_id = team1_id
@@ -341,6 +341,10 @@ class Match(db.Model):
         rv.veto_mappool = ' '.join(veto_mappool)
         rv.server_id = server_id
         rv.max_maps = max_maps
+        if veto_first == "CT":
+            rv.veto_first = "team1"
+        else:
+            rv.veto_first = "team2"
         rv.api_key = ''.join(random.SystemRandom().choice(
             string.ascii_uppercase + string.digits) for _ in range(24))
         db.session.add(rv)
@@ -458,6 +462,11 @@ class Match(db.Model):
         d = {}
         d['matchid'] = str(self.id)
         d['match_title'] = self.title
+        
+        if self.veto_first == "CT":
+            d['veto_first'] = "team1"
+        else:
+            d['veto_first'] = "team2"
 
         d['skip_veto'] = self.skip_veto
         if self.max_maps == 2:

@@ -83,6 +83,21 @@
 
     <br>
 
+    <div class="form group">
+      {{ form.veto_first.label(class="col-sm-2 control-label") }}
+      <div class="col-sm-offset-2">
+        {% for subfield in form.veto_first %}
+        <tr>
+          <td>{{ subfield }}</td>
+          <td>{{ subfield.label }}</td>
+          <br>
+        </tr>
+        {% endfor %}
+      </div>
+    </div>
+
+    <br>
+
     <div class="form-group">
       {{ form.veto_mappool.label(class="col-sm-2 control-label", style="height:50px") }}
       <div class="col-sm-offset-2">

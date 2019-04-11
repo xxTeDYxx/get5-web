@@ -89,6 +89,13 @@ class MatchForm(Form):
                                       default=default_mapchoices,
                                       validators=[mappool_validator],
                                       )
+    veto_first = RadioField('Veto',
+                             validators=[validators.required()],
+                             default='CT',
+                             choices=[
+                                 ('CT', 'CT gets first veto'),
+                                 ('T', 'T get first veto'),
+                             ])
 
     season_selection = SelectField('Season', coerce=int,
                                    validators=[validators.optional()])
@@ -202,7 +209,8 @@ def match_create():
                     form.data['team1_string'], form.data['team2_string'],
                     max_maps, skip_veto, form.data['match_title'],
                     form.data['veto_mappool'],
-                    season_id, form.data['server_id'])
+                    season_id, form.data['veto_first'],
+                    form.data['server_id'])
 
                 # Save plugin version data if we have it
                 if json_reply and 'plugin_version' in json_reply:
