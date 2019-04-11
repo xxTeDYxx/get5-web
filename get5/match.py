@@ -90,7 +90,6 @@ class MatchForm(Form):
                                       validators=[mappool_validator],
                                       )
     veto_first = RadioField('Veto',
-                             validators=[validators.required()],
                              default='CT',
                              choices=[
                                  ('CT', 'CT gets first veto'),
@@ -207,10 +206,9 @@ def match_create():
                 match = Match.create(
                     g.user, form.data['team1_id'], form.data['team2_id'],
                     form.data['team1_string'], form.data['team2_string'],
-                    max_maps, skip_veto, form.data['match_title'],
-                    form.data['veto_mappool'],
-                    season_id, form.data['veto_first'],
-                    form.data['server_id'])
+                    max_maps, skip_veto,
+                    form.data['match_title'], form.data['veto_mappool'], season_id,
+                    form.data['veto_first'], form.data['server_id'])
 
                 # Save plugin version data if we have it
                 if json_reply and 'plugin_version' in json_reply:
@@ -221,7 +219,7 @@ def match_create():
                 # Essentially stuff that doesn't need to be stored in DB.
                 # Force Get5 to auth on official matches. Don't raise errors
                 # if we cannot do this.
-                if server_available:
+                if server_available and not mock:
                     server.send_rcon_command('get5_check_auths 1', num_retries=2, timeout=0.75)
 
                 server.in_use = True
@@ -277,7 +275,7 @@ def match(matchid):
         is_owner = (g.user.id == match.user_id)
         has_admin_access = is_owner or (config_setting(
             'ADMINS_ACCESS_ALL_MATCHES') and g.user.admin)
-    app.logger.info("Veto: \n{}".format(vetoes))
+    #app.logger.info("Veto: \n{}".format(vetoes))
     return render_template(
         'match.html', user=g.user, admin_access=has_admin_access,
         match=match, team1=team1, team2=team2,
@@ -359,9 +357,10 @@ def admintools_check(user, match):
 
 @match_blueprint.route('/match/<int:matchid>/cancel')
 def match_cancel(matchid):
+    app.logger.info("Match server id is: {}".format(matchid))
     match = Match.query.get_or_404(matchid)
     admintools_check(g.user, match)
-
+    
     match.cancelled = True
     server = GameServer.query.get(match.server_id)
     if server:

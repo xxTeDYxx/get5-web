@@ -689,8 +689,8 @@ class Veto(db.Model):
         db.session.add(rv)
         return rv
     
-    def getTeamName(self):
-        pass
+    def __repr__(self):
+        return 'Veto(id={})'.format(self.id)
 
 # TODO: Create class and use instead of dictionary.
 class TeamLeaderboard():
