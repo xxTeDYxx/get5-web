@@ -39,6 +39,7 @@ class MatchTests(get5_test.Get5Test):
                                   'series_type': 'bo3',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
                                   'season_id': None,
+                                  'veto_first': 'team1',
                               })
             self.assertEqual(response.status_code, 200)
             self.assertIn('Error in the Server field', response.data)
@@ -63,6 +64,7 @@ class MatchTests(get5_test.Get5Test):
                                   'series_type': 'bo3',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
                                   'season_id': None,
+                                  'veto_first': 'team1',
                               })
             self.assertEqual(response.status_code, 200)
             self.assertIn('Error in the Server field', response.data)
@@ -89,6 +91,7 @@ class MatchTests(get5_test.Get5Test):
                                   'series_type': 'bo3',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
                                   'season_id': None,
+                                  'veto_first': 'team1',
                               })
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.location, url_for(
@@ -139,6 +142,7 @@ class MatchTests(get5_test.Get5Test):
                                   'series_type': 'bo3',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
                                   'season_id': None,
+                                  'veto_first': 'team1',
                               })
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.location, url_for(
