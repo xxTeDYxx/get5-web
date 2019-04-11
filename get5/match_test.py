@@ -37,9 +37,9 @@ class MatchTests(get5_test.Get5Test):
                                   'team2_id': 2,
                                   'match_title': 'Map {MAPNUMBER} of {MAXMAPS}',
                                   'series_type': 'bo3',
+                                  'veto_first': 'team1',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
                                   'season_id': None,
-                                  'veto_first': 'team1',
                               })
             self.assertEqual(response.status_code, 200)
             self.assertIn('Error in the Server field', response.data)
@@ -62,9 +62,9 @@ class MatchTests(get5_test.Get5Test):
                                   'team1_id': 1,
                                   'team2_id': 2,
                                   'series_type': 'bo3',
+                                  'veto_first': 'team1',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
                                   'season_id': None,
-                                  'veto_first': 'team1',
                               })
             self.assertEqual(response.status_code, 200)
             self.assertIn('Error in the Server field', response.data)
@@ -89,9 +89,9 @@ class MatchTests(get5_test.Get5Test):
                                   'team2_id': 2,
                                   'match_title': 'Map {MAPNUMBER} of {MAXMAPS}',
                                   'series_type': 'bo3',
+                                  'veto_first': 'team1',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
                                   'season_id': None,
-                                  'veto_first': 'team1',
                               })
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.location, url_for(
@@ -140,9 +140,9 @@ class MatchTests(get5_test.Get5Test):
                                   'team1_id': 1,
                                   'team2_id': 2,
                                   'series_type': 'bo3',
+                                  'veto_first': 'team1',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
                                   'season_id': None,
-                                  'veto_first': 'team1',
                               })
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.location, url_for(
