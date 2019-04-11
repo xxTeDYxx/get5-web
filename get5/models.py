@@ -234,7 +234,7 @@ class Team(db.Model):
         return Markup('<a href="{}">{}</a>'.format(self.get_url(), self.name))
 
     def get_logo_or_flag_html(self, scale=1.0, other_team=None):
-        if logos.has_logo(self.logo) and (other_team is None or logos.has_logo(other_team.logo)):
+        if logos.has_logo(self.logo):
             return self.get_logo_html(scale)
         else:
             return self.get_flag_html(scale)
