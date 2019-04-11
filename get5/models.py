@@ -343,8 +343,10 @@ class Match(db.Model):
         rv.max_maps = max_maps
         if veto_first == "CT":
             rv.veto_first = "team1"
-        else:
+        elif veto_first == "T":
             rv.veto_first = "team2"
+        else:
+            rv.veto_first = None
         rv.api_key = ''.join(random.SystemRandom().choice(
             string.ascii_uppercase + string.digits) for _ in range(24))
         db.session.add(rv)
