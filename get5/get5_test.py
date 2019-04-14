@@ -3,7 +3,7 @@ import logging
 import datetime
 import get5
 from get5 import db
-from models import User, Team, GameServer, Match, Season
+from models import User, Team, GameServer, Match, Season, Veto
 
 
 # All tests will use this base test framework, including the test date defined
@@ -48,4 +48,8 @@ class Get5Test(unittest.TestCase):
 
         Match.create(user, team1.id, team2.id, '', '', 1, False,
                      'Map {MAPNUMBER}', ['de_dust2', 'de_cache', 'de_mirage'], season.id, 'CT', server.id)
+        db.session.commit()
+
+        vetoBan = Veto.create(1, 'EnvyUs', 'de_dust2', 'ban')
+        vetoPick = Veto.create(1, 'EnvyUs', 'de_overpass', 'pick')
         db.session.commit()
