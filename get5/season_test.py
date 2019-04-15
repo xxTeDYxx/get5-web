@@ -2,7 +2,7 @@ import unittest
 
 import get5_test
 from flask import url_for
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from models import User, Match, GameServer, MapStats, Season
 
 
@@ -38,13 +38,13 @@ class SeasonTests(get5_test.Get5Test):
                                   'start_date': datetime.today().strftime('%m/%d/%Y'),
                                   'end_date': (datetime.today() + timedelta(days=1)).strftime('%m/%d/%Y'),
                               })
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.status_code, 302)
         # Verify data was correctly given.
         season = Season.query.get(2)
         self.assertEqual(season.user_id, 1)
-        self.assertEqual(season.season_title, 'TestSeasonTwo')
-        self.assertEqual(season.start_date, datetime.today())
-        self.assertEqual(season.end_date, datetime.today() + timedelta(days=1))
+        self.assertEqual(season.name, 'TestSeasonTwo')
+        self.assertEqual(season.start_date.strftime('%m/%d/%Y'), (datetime.today().strftime('%m/%d/%Y')))
+        self.assertEqual(season.end_date.strftime('%m/%d/%Y'), (datetime.today() + timedelta(days=1)).strftime('%m/%d/%Y'))
     # Try creating a season with no start date given.
     def test_season_create_start_date_null(self):
         with self.app as c:
@@ -61,11 +61,11 @@ class SeasonTests(get5_test.Get5Test):
                               data={
                                   'user_id': 1,
                                   'season_title': 'TestSeasonTwo',
-                                  'start_date': None,
-                                  'end_date': datetime.today() + timedelta(days=1),
+                                  'start_date': (datetime.today() + timedelta(days=1)).strftime('%m/%d/%Y'),
+                                  'end_date': (datetime.today().strftime('%m/%d/%Y')),
                               })
             self.assertEqual(response.status_code, 200)
-            self.assertIn('Error in the Start Date field', response.data)
+            self.assertIn('End date must be greater than start date', response.data)
 
     # Try editing a season that doesn't belong to you.
     def test_season_edit_not_my_season(self):
