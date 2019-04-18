@@ -58,8 +58,6 @@ def season_create():
 
     if request.method == 'POST':
         if form.validate():
-            mock = config_setting('TESTING')
-
             season = Season.create(
                 g.user, form.data['season_title'],
                 form.data['start_date'], form.data['end_date'])
@@ -119,15 +117,14 @@ def season_edit(seasonid):
                                edit=True)
 
     elif request.method == 'POST':
-        if request.method == 'POST':
-            if form.validate():
-                data = form.data
-                season.set_data(g.user, data['season_title'], data['start_date'],
-                                data['end_date'])
-                db.session.commit()
-                return redirect('/season/{}/{}'.format(season.user_id, season.id))
-            else:
-                flash_errors(form)
+        if form.validate():
+            data = form.data
+            season.set_data(g.user, data['season_title'], data['start_date'],
+                            data['end_date'])
+            db.session.commit()
+            return redirect('/season/{}/{}'.format(season.user_id, season.id))
+        else:
+            flash_errors(form)
 
     return render_template(
         'season_create.html', user=g.user, form=form, edit=True)

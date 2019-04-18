@@ -3,7 +3,7 @@ from flask import Blueprint, request, render_template, flash, g, redirect, jsoni
 import steamid
 import get5
 from get5 import app, db, BadRequestError, config_setting
-from models import User, Team, Match, GameServer, MapStats, TeamLeaderboard, Season
+from models import User, Team, Match, GameServer, MapStats, Season
 from collections import OrderedDict, defaultdict
 from datetime import datetime
 import util
