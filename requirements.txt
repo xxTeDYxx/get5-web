@@ -40,6 +40,7 @@ python-valve==0.1.1
 requests==2.20.0
 six==1.10.0
 SQLAlchemy==1.3.0
+statistics==1.0.3.5
 webassets==0.11.1
 Werkzeug==0.11.9
 wrapt==1.10.8

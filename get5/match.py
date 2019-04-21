@@ -253,7 +253,7 @@ def match(matchid):
     map_stat_list = match.map_stats.all()
     completed = match.winner
     try:
-        if server is not None:
+        if server is not None and completed is None:
             password = server.receive_rcon_value('sv_password')
             connect_string = str("steam://connect/") + str(server.ip_string) + str(":") + \
                 str(server.port) + str("/") + str(password)

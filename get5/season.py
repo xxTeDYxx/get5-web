@@ -1,6 +1,5 @@
-from flask import Blueprint, request, render_template, flash, g, redirect, jsonify, Markup, json
+from flask import Blueprint, request, render_template, flash, g, redirect
 
-import steamid
 import get5
 from get5 import app, db, BadRequestError, config_setting
 from models import Season, User, Match
