@@ -29,9 +29,9 @@ import util
 from flask import (Flask, render_template, flash, jsonify,
                    request, g, session, redirect)
 
-import flask.ext.cache
-import flask.ext.sqlalchemy
-import flask.ext.openid
+import flask_cache
+import flask_sqlalchemy
+import flask_openid
 import flask_limiter
 
 # This is a dirty, awful hack to get utf8 encoding 'right'.
@@ -44,7 +44,7 @@ app = Flask(__name__, instance_relative_config=True)
 app.config.from_pyfile('prod_config.py')
 
 # Setup caching
-cache = flask.ext.cache.Cache(app, config={
+cache = flask_cache.Cache(app, config={
     'CACHE_TYPE': 'filesystem',
     'CACHE_DIR': '/tmp',
     'CACHE_THRESHOLD': 25000,
@@ -52,10 +52,11 @@ cache = flask.ext.cache.Cache(app, config={
 })
 
 # Setup openid
-oid = flask.ext.openid.OpenID(app)
+# oid = flask.ext.openid.OpenID(app)
+oid = flask_openid.OpenID(app)
 
 # Setup database connection
-db = flask.ext.sqlalchemy.SQLAlchemy(app)
+db = flask_sqlalchemy.SQLAlchemy(app)
 from models import User, Team, GameServer, Match, MapStats, PlayerStats  # noqa: E402
 
 # Setup rate limiting
@@ -108,6 +109,8 @@ def register_blueprints():
     from season import season_blueprint
     app.register_blueprint(season_blueprint)
 
+    from stats import stats_blueprint
+    app.register_blueprint(stats_blueprint)
 
 @app.route('/login')
 @oid.loginhandler

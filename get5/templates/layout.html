@@ -37,21 +37,51 @@
         </div>
         <div class="collapse navbar-collapse" id="myNavbar">
           <ul class="nav navbar-nav">
-            <li><a id="matches" href="/matches">All Matches</a></li>
-            <li><a id="leaderboard" href="/leaderboard">Leaderboard</a></li>
-            <li><a id="seasons" href="/seasons">Seasons</a></li>
-            {% if user %}
-            <li><a id="mymatches" href="/mymatches">My Matches</a></li>
-            <li><a id="match_create" href="/match/create">Create a Match</a></li>
-            <li><a id="myteams" href="/myteams">My Teams</a></li>
-            <li><a id="team_create" href="/team/create">Create a Team</a></li>
-            <li><a id="myservers" href="/myservers">My Servers</a></li>
-            <li><a id="server_create" href="/server/create">Add a Server</a></li>
-            <li><a id="myseasons" href="/myseasons">My Seasons</a></li>
-            <li><a id="season_create" href="/season/create">Create a Season</a></li>
-            <li><a href="/logout">Logout</a></li>
+            {% if not user %}
+              <li><a id="matches" href="/matches">All Matches</a></li>
+              <li><a id="leaderboard" href="/leaderboard">Leaderboard</a></li>
+              <li><a id="seasons" href="/seasons">Seasons</a></li>
+              <li><a href="/login"> <img src="/static/img/login_small.png" height="18" /></a></li>
             {% else %}
-            <li><a href="/login"> <img src="/static/img/login_small.png" height="18" /></a></li>
+            <li class="nav-item dropdown" id="matchmenu">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown" id="Preview" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                Matches
+                </a>
+                <div class="dropdown-menu" aria-labelledby="Preview">
+                  <a class="dropdown-item" id="matches" href="/matches">All Matches</a><br/>
+                  <a class="dropdown-item" id="mymatches" href="/mymatches">My Matches</a><br/>
+                  <a class="dropdown-item" id="match_create" href="/match/create">Create a Match</a>
+                </div>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown" id="Preview" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                Teams
+                </a>
+                <div class="dropdown-menu" aria-labelledby="Preview">
+                  <a class="dropdown-item" id="myteams" href="/myteams">My Teams</a><br/>
+                  <a class="dropdown-item" id="team_create" href="/team/create">Create a Team</a>
+                </div>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown" id="Preview" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                Servers
+                </a>
+                <div class="dropdown-menu" aria-labelledby="Preview">
+                  <a class="dropdown-item" id="myservers" href="/myservers">My Servers</a><br/>
+                  <a class="dropdown-item" id="server_create" href="/server/create">Create a Server</a>
+                </div>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown" id="Preview" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                Seasons
+                </a>
+                <div class="dropdown-menu" aria-labelledby="Preview">
+                  <a class="dropdown-item" id="myseasons" href="/myseasons">My Seasons</a><br/>
+                  <a class="dropdown-item" id="season_create" href="/season/create">Create a Season</a>
+                </div>
+            </li>
+            <li><a href="/logout">Logout</a></li>
+            
             {% endif %}
           </ul>
         </div>
@@ -69,7 +99,7 @@
     <p>
       Powered by <a href="http://steampowered.com">Steam</a> -
       <a href="/metrics">Stats</a>
-      {% if COMMIT_STRING %} - <a href="https://github.com/splewis/get5-web">Get5 {{COMMIT_STRING}}+</a> {% endif %}
+      {% if COMMIT_STRING %} - <a href="https://github.com/phlexplexico/get5-web">Get5 {{COMMIT_STRING}}+</a> {% endif %}
     </p>
   </div>
 
