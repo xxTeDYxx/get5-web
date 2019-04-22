@@ -300,6 +300,23 @@ class Season(db.Model):
         return 'Season(id={}, user_id={}, name={}, start_date={}, end_date={})'.format(
             self.id, self.user_id, self.name, self.start_date, self.end_date)
 
+class match_audit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer)
+    match_id = db.Column(db.Integer)
+    timeaffected = db.Column(db.DateTime)
+    cmd_used = db.Column(db.String(4000))
+
+    @staticmethod
+    def create(user_id, match_id, timeaffected, cmd_used):
+        rv = match_audit()
+        rv.user_id = user_id
+        rv.match_id = match_id
+        rv.timeaffected = timeaffected
+        rv.cmd_used = cmd_used
+        db.session.add(rv)
+
+
 class Match(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))

@@ -3,7 +3,7 @@ from flask import Blueprint, request, render_template, flash, g, redirect, jsoni
 import steamid
 import get5
 from get5 import app, db, BadRequestError, config_setting
-from models import User, Team, Match, GameServer, Season, Veto
+from models import User, Team, Match, GameServer, Season, Veto, match_audit
 from collections import OrderedDict
 from datetime import datetime
 import util
@@ -393,6 +393,9 @@ def match_rcon(matchid):
             else:
                 rcon_response = 'No output'
             flash(rcon_response)
+            # Store the command.
+            match_audit.create(g.user.id, matchid, datetime.now(), command)
+            db.session.commit()
         except util.RconError as e:
             print(e)
             flash('Failed to send command: ' + str(e))

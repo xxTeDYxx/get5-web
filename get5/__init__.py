@@ -57,7 +57,7 @@ oid = flask_openid.OpenID(app)
 
 # Setup database connection
 db = flask_sqlalchemy.SQLAlchemy(app)
-from models import User, Team, GameServer, Match, MapStats, PlayerStats  # noqa: E402
+from models import User, Team, GameServer, Match, MapStats, PlayerStats, Season  # noqa: E402
 
 # Setup rate limiting
 limiter = flask_limiter.Limiter(
