@@ -14,6 +14,7 @@ def get_user_stats(steamid):
     all_stats = PlayerStats.query.filter_by(steam_id=steamid)
     if all_stats.count() == 0:
         abort(404)
+    steam_url = all_stats.first().get_steam_url()
     kills=sum(c.kills for c in all_stats)
     deaths=sum(c.deaths for c in all_stats)
     kdr=mean(c.get_kdr() for c in all_stats)
@@ -39,4 +40,4 @@ def get_user_stats(steamid):
     user_1v1=v1, user_1v2=v2, user_1v3=v3,
     user_1v4=v4, user_1v5=v5, user_rating=hltvrating,
     user_headshot=hsp, user_totalrounds=total_rounds, user_fbAssists=flashbang_assists,
-    user_name=name)
+    user_name=name, steam_url=steam_url)
