@@ -4,7 +4,7 @@
 
 
 <div id="content">
-    <h1>Player Stats for {{ user_name }}</h1>
+    <h1>Player Stats for <a href="{{ steam_url }}">{{ user_name }}</a></h1>
     <div class="container">
         <table class="table table-hover">
             <thead>
@@ -13,7 +13,7 @@
                 <th class="text-center">Deaths</th>
                 <th class="text-center">Assists</th>
                 <th class="text-center"><acronym title="Flashbang Assists">FBA</acronym></th>
-                <th class="text-center"><acronym title="Kill Death Ratio">KDR</acronym></th>
+                <th class="text-center"><acronym title="Kill/Death Average">KDA</acronym></th>
                 <th class="text-center"><acronym title="Average damage per round">ADR</acronym></th>
                 <th class="text-center">3K</th>
                 <th class="text-center">4K</th>
@@ -23,7 +23,7 @@
                 <th class="text-center">1v3</th>
                 <th class="text-center">1v4</th>
                 <th class="text-center">1v5</th>
-                <th class="text-center"><acronym title="Headshot percentage">HSP</acronym></th>
+                <th class="text-center"><acronym title="Average Headshot Percentage">AHSP</acronym></th>
                 <th class="text-center"><acronym title="Total Rounds Played">TRP</acronym></th>
                 <th class="text-center">Rating</th>
               </tr>
