@@ -1,18 +1,17 @@
-# get5-web BETA
+# get5-web
 
-Development
-[![Build Status](https://travis-ci.org/PhlexPlexico/get5-web.svg?branch=development)](https://travis-ci.org/PhlexPlexico/get5-web)
+Development: [![Build Status](https://travis-ci.org/PhlexPlexico/get5-web.svg?branch=development)](https://travis-ci.org/PhlexPlexico/get5-web)
 
-Master
-[![Build Status](https://travis-ci.org/PhlexPlexico/get5-web.svg?branch=master)](https://travis-ci.org/PhlexPlexico/get5-web)
+Master: [![Build Status](https://travis-ci.org/PhlexPlexico/get5-web.svg?branch=master)](https://travis-ci.org/PhlexPlexico/get5-web)
 
+Total Downloads: [![GitHub Downloads](https://img.shields.io/github/downloads/phlexplexico/get5-web/total.svg?label=Total%20Downloads)]
 **Status: Third Party Supported**
 
 This is an **experimental** web panel meant to be used in conjunction with the [get5](https://github.com/splewis/get5) CS:GO server plugin. It provides a more convenient way of managing matches and match servers.
 
 This fork of get5-web will probably be updated as more features are required for my use case (running a small league). Bugs will be fixed as I come across them, or based on priority (i.e. does it break everything for me). If you have any bugs you'd like to report, please create an issue. I'll try my best to help solve the issue, but I am still new to learning flask as well.
 
-**WARNING**: THIS BUILD OF THE WEB-PANEL IS UNDER DEVELOPMENT AND IS STARTING TO USE MODIFIED GET5 MATERIAL, SUCH AS THE API_STATS PLUGIN. IF YOU HAVE ANY ISSUES WITH THE VETO PROCESS, OR ANY NEW IMPLEMENTATIONS, PLEASE REPORT IT HERE. 
+**WARNING**: THIS BUILD OF THE WEB-PANEL IS UNDER DEVELOPMENT AND IS STARTING TO USE MODIFIED GET5 MATERIAL, SUCH AS THE API_STATS PLUGIN. IF YOU HAVE ANY ISSUES WITH THE VETO PROCESS, OR ANY NEW IMPLEMENTATIONS, PLEASE REPORT IT HERE. IF THERE ARE ANY PROBLEMS YOU HAVE USING THIS WEBPANEL WITH GET5, REPORT THEM HERE AS IT IS MOST LIKELY A PROBLEM WITH THIS, AND NOT GET5 ITSELF.
 
 ## How to use it:
 
