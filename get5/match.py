@@ -448,6 +448,8 @@ def match_adduser(matchid):
         try:
             command = 'get5_addplayer {} {}'.format(new_auth, team)
             response = server.send_rcon_command(command, raise_errors=True)
+            match_audit.create(g.user.id, matchid, datetime.now(), command)
+            db.session.commit()
             flash(response)
         except util.RconError as e:
             flash('Failed to send command: ' + str(e))
