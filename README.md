@@ -4,7 +4,7 @@ Development: [![Build Status](https://travis-ci.org/PhlexPlexico/get5-web.svg?br
 
 Master: [![Build Status](https://travis-ci.org/PhlexPlexico/get5-web.svg?branch=master)](https://travis-ci.org/PhlexPlexico/get5-web)
 
-Total Downloads: [![GitHub Downloads](https://img.shields.io/github/downloads/phlexplexico/get5-web/total.svg?label=Total%20Downloads)](https://github.com/phlexplexico/get5-web/releases/latest)
+[![GitHub Downloads](https://img.shields.io/github/downloads/phlexplexico/get5-web/total.svg?label=Total%20Downloads)](https://github.com/phlexplexico/get5-web/releases/latest)
 
 **Status: Third Party Supported**
 
