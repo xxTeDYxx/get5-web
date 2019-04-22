@@ -4,7 +4,8 @@ Development: [![Build Status](https://travis-ci.org/PhlexPlexico/get5-web.svg?br
 
 Master: [![Build Status](https://travis-ci.org/PhlexPlexico/get5-web.svg?branch=master)](https://travis-ci.org/PhlexPlexico/get5-web)
 
-Total Downloads: [![GitHub Downloads](https://img.shields.io/github/downloads/phlexplexico/get5-web/total.svg?label=Total%20Downloads)]
+Total Downloads: [![GitHub Downloads](https://img.shields.io/github/downloads/phlexplexico/get5-web/total.svg?label=Total%20Downloads)](https://github.com/phlexplexico/get5-web/releases/latest)
+
 **Status: Third Party Supported**
 
 This is an **experimental** web panel meant to be used in conjunction with the [get5](https://github.com/splewis/get5) CS:GO server plugin. It provides a more convenient way of managing matches and match servers.
