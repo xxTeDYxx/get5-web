@@ -8,8 +8,10 @@
   <h1>
   {% if my_teams %}
   Your teams
-  {% else %}
+  {% elif owner is not none %}
   Teams for <a href="/user/{{ owner.id }}"> {{ owner.name }}</a>
+  {% else %}
+  All Public Teams
   {% endif%}
   </h1>
 
@@ -56,6 +58,11 @@
 <script>
     $(document).ready(function () {
     $("#myteams").parent().parent().addClass("active"); })
+</script>
+{% else %}
+<script>
+  $(document).ready(function () {
+  $("#myteams").parent().addClass("active"); })
 </script>
 {% endif %}
 

@@ -128,6 +128,14 @@ class TeamTests(get5_test.Get5Test):
             self.assertEqual(response.location, url_for(
                 'team.teams_user', userid=1, _external=True))
 
+    def test_teams_listing(self):
+        with self.app as c:
+            with c.session_transaction() as sess:
+                sess['user_id'] = 1
+
+            response = c.get('/teams')
+            self.assertEqual(response.status_code, 200)
+
     # TODO: test a new user trying to use a public team
     def test_create_public_team(self):
         with self.app as c:

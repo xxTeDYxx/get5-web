@@ -190,6 +190,31 @@ def teams_user(userid):
             'teams.html', user=g.user, teams=teams, my_teams=my_teams,
                                page=page, owner=user)
 
+@team_blueprint.route('/teams', methods=['GET'])
+def all_teams():
+    all_public_teams = Team.query.filter_by(public_team=True)
+    page = util.as_int(request.values.get('page'), on_fail=1)
+    json_data = util.as_int(request.values.get('json'), on_fail=0)
+
+    if json_data:
+        teams_dict = {}
+        for team in all_public_teams:
+            team_dict = {}
+            team_dict['name'] = team.name
+            team_dict['tag'] = team.tag
+            team_dict['flag'] = team.flag
+            team_dict['logo'] = team.logo
+            team_dict['players'] = filter(lambda x: bool(x), team.auths)
+            teams_dict[team.id] = team_dict
+        return jsonify(teams_dict)
+
+    else:
+        # Render teams page
+        teams = all_public_teams.paginate(page, 20)
+        return render_template(
+            'teams.html', user=g.user, teams=teams, my_teams=False,
+                               page=page, owner=None)
+
 
 @team_blueprint.route('/myteams', methods=['GET'])
 def myteams():
