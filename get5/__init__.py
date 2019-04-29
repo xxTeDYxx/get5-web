@@ -42,6 +42,8 @@ sys.setdefaultencoding('utf-8')
 # Import the Flask Framework
 app = Flask(__name__, instance_relative_config=True)
 app.config.from_pyfile('prod_config.py')
+LOGO_FOLDER = '/var/www/get5-web/get5/static/img/logos/'
+app.config['LOGO_FOLDER'] = LOGO_FOLDER
 
 # Setup caching
 cache = flask_cache.Cache(app, config={
@@ -268,6 +270,7 @@ _config_defaults = {
         'de_overpass',
         'de_train',
     ],
+    LOGO_FOLDER: '/var/www/get5-web/get5/static/img/logos',
 }
 
 

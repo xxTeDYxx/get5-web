@@ -22,7 +22,7 @@ def initialize_logos():
 
 def add_new_logo(tag):
     global _logos
-    _logos.insert(tag)
+    _logos.add(tag)
 
 
 def has_logo(tag):

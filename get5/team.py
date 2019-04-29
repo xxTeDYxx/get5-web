@@ -5,14 +5,21 @@ import countries
 import logos
 import steamid
 import util
+import os
+import io
+
+from werkzeug.utils import secure_filename
+from PIL import Image 
 
 from flask import Blueprint, request, render_template, flash, g, redirect, jsonify
 
 from wtforms import (
-    Form, validators,
+    validators,
     StringField, BooleanField,
     SelectField, ValidationError)
 
+from flask_wtf.file import FileField
+from flask_wtf import FlaskForm
 team_blueprint = Blueprint('team', __name__)
 
 
@@ -28,8 +35,43 @@ def valid_auth(form, field):
     else:
         raise ValidationError('Invalid Steam ID')
 
+def valid_file(form, field):
+    # Safe method.
+    filename = secure_filename(field.data.filename)
+    if filename == '':
+        return
+    index_of_dot = filename.index('.')
+    file_name_without_extension = filename[:index_of_dot]
+    exists = os.path.isfile(app.config['LOGO_FOLDER'] + "/" + secure_filename(filename))
+    if '.' not in filename:
+        raise ValidationError('Image MUST be PNG.')
+    elif filename.rsplit('.', 1)[1].lower() != 'png':
+        raise ValidationError('Image MUST be PNG.')
+    elif len(filename.rsplit('.', 1)[0]) > 3:
+        raise ValidationError('Image name can only be 3 characters long.')
+    elif exists:
+        raise ValidationError('Image name already exists.')
 
-class TeamForm(Form):
+    file = field.data
+    img = Image.open(file)
+    width, height = img.size
+    out = io.BytesIO()
+    img.save(out, format='png')
+    if width != 64 or height != 64:
+        # app.logger.info("Resizing image as it is not 64x64.")
+        img = img.resize((64,64),Image.ANTIALIAS)
+        img.save(out, format='png',optimize=True)
+        # check once more for size.
+        if out.tell() > 10000:
+            app.logger.info("Size: {}".format(out.tell()))
+            raise ValidationError('Image is too large, must be 10kB or less.')
+        img.save(os.path.join(app.config['LOGO_FOLDER'], filename),optimize=True)
+    elif out.tell() > 10000:
+        raise ValidationError('Image is too large, must be 10kB or less.')
+    else:
+        file.save(os.path.join(app.config['LOGO_FOLDER'], filename))
+
+class TeamForm(FlaskForm):
     name = StringField('Team Name', validators=[
         validators.required(),
         validators.Length(min=-1, max=Team.name.type.length)])
@@ -40,10 +82,10 @@ class TeamForm(Form):
     flag_choices = [('', 'None')] + countries.country_choices
     country_flag = SelectField(
         'Country Flag', choices=flag_choices, default='')
+    logo = SelectField('Logo Name', default='')
 
-    logo_choices = logos.get_logo_choices()
-    logo = SelectField('Logo Name', choices=logo_choices, default='')
-
+    upload_logo = FileField(validators=[valid_file])
+    # Possible to create loop and follow MAXPLAYERS from team model?
     auth1 = StringField('Player 1', validators=[valid_auth])
     auth2 = StringField('Player 2', validators=[valid_auth])
     auth3 = StringField('Player 3', validators=[valid_auth])
@@ -67,7 +109,7 @@ def team_create():
     if not g.user:
         return redirect('/login')
 
-    form = TeamForm(request.form)
+    form = TeamForm()
 
     if request.method == 'POST':
         num_teams = g.user.teams.count()
@@ -112,40 +154,51 @@ def team_edit(teamid):
     if not team.can_edit(g.user):
         return 'Not your team', 400
 
-    form = TeamForm(
-        request.form,
-        name=team.name,
-        tag=team.tag,
-        country_flag=team.flag,
-        logo=team.logo,
-        auth1=team.auths[0],
-        auth2=team.auths[1],
-        auth3=team.auths[2],
-        auth4=team.auths[3],
-        auth5=team.auths[4],
-        auth6=team.auths[5],
-        auth7=team.auths[6],
-        public_team=team.public_team)
-
+    form = TeamForm()
+    # We wish to query this every time, since we can now upload photos.
+    form.logo.choices=logos.get_logo_choices()
     if request.method == 'GET':
+        # Set values here, as per new FlaskForms.
+        form.name.data = team.name
+        form.tag.data = team.tag
+        form.country_flag.data = team.flag
+        form.logo.data = team.logo
+        form.auth1.data = team.auths[0]
+        form.auth2.data = team.auths[1]
+        form.auth3.data = team.auths[2]
+        form.auth4.data = team.auths[3]
+        form.auth5.data = team.auths[4]
+        form.auth6.data = team.auths[5]
+        form.auth7.data = team.auths[6]
+        form.public_team.data = team.public_team
         return render_template('team_create.html', user=g.user, form=form,
                                edit=True, is_admin=g.user.admin)
 
     elif request.method == 'POST':
-        if request.method == 'POST':
-            if form.validate():
-                data = form.data
-                public_team = team.public_team
-                if g.user.admin:
-                    public_team = data['public_team']
+        if form.validate_on_submit():
+            data = form.data
+            public_team = team.public_team
+            if g.user.admin:
+                public_team = data['public_team']
 
-                team.set_data(data['name'], data['tag'], data['country_flag'],
-                              data['logo'], form.get_auth_list(),
-                              public_team)
-                db.session.commit()
-                return redirect('/teams/{}'.format(team.user_id))
-            else:
-                flash_errors(form)
+            # Update the logo. Passing validation we have the filename in the list now.
+            if form.upload_logo.data.filename != '':
+                filename = secure_filename(form.upload_logo.data.filename)
+                index_of_dot = filename.index('.')
+                newLogoDetail = filename[:index_of_dot]
+                # Reinit our logos.
+                logos.add_new_logo(newLogoDetail)
+                data['logo'] = newLogoDetail
+
+
+            team.set_data(data['name'], data['tag'], data['country_flag'],
+                            data['logo'], form.get_auth_list(),
+                            public_team)
+            
+            db.session.commit()
+            return redirect('/teams/{}'.format(team.user_id))
+        else:
+            flash_errors(form)
 
     return render_template(
         'team_create.html', user=g.user, form=form, edit=True,

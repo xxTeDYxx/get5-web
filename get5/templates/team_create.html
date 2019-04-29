@@ -7,7 +7,7 @@
 
   {{ show_flashed_messages() }}
 
-  <form role="form" action="" method="post" class="form-horizontal">
+  <form role="form" action="" method="post" class="form-horizontal" enctype="multipart/form-data">
 
     {{ form.csrf_token }}
 
@@ -31,7 +31,14 @@
         {{ form.logo(class="form-control input-sm") }}
       </div>
     </div>
-
+    {% if is_admin %}
+      <div class="form-group">
+        {{ form.upload_logo.label(class="col-sm-2 control-label") }}
+          <div class="col-sm-7">
+            {{ form.upload_logo(class="form-control input-sm") }}
+          </div>
+        </div>
+    {% endif %}
     <div class="form-group">
       {{ form.country_flag.label(class="col-sm-2 control-label") }}
         <div class="col-sm-7">
