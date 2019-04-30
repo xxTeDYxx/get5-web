@@ -21,6 +21,7 @@ import logging
 import logging.handlers
 import re
 import sys
+import os 
 
 import logos
 import steamid
