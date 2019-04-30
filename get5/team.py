@@ -56,25 +56,24 @@ def valid_file(form, field):
     elif exists:
         raise ValidationError('Image name already exists.')
 
-    file = field.data
+    file = request.files['upload_logo']
     img = Image.open(file)
     width, height = img.size
     out = io.BytesIO()
-    img.save(out, format='png')
+    #img.save(out, format='png')
     if width != 64 or height != 64:
-        # app.logger.info("Resizing image as it is not 64x64.")
+        app.logger.info("Resizing image as it is not 64x64.")
         img = img.resize((64,64),Image.ANTIALIAS)
-        out = io.BytesIO()
         img.save(out, format='png')
         # check once more for size.
         if out.tell() > 10000:
             app.logger.info("Size: {}".format(out.tell()))
             raise ValidationError('Image is too large, must be 10kB or less.')
         img.save(os.path.join(app.config['LOGO_FOLDER'], filename),optimize=True)
-    elif out.tell() > 10000:
-        raise ValidationError('Image is too large, must be 10kB or less.')
+    #elif out.tell() > 10000:
+    #    raise ValidationError('Image is too large, must be 10kB or less.')
     else:
-        file.save(os.path.join(app.config['LOGO_FOLDER'], filename))
+        img.save(os.path.join(app.config['LOGO_FOLDER'], filename),optimize=True)
 
 class TeamForm(FlaskForm):
     mock = config_setting("TESTING")
@@ -137,6 +136,15 @@ def team_create():
             tag = data['tag'].strip()
             flag = data['country_flag']
             logo = data['logo']
+
+            # Update the logo. Passing validation we have the filename in the list now.
+            if not mock and form.upload_logo.data.filename != '':
+                filename = secure_filename(form.upload_logo.data.filename)
+                index_of_dot = filename.index('.')
+                newLogoDetail = filename[:index_of_dot]
+                # Reinit our logos.
+                logos.add_new_logo(newLogoDetail)
+                data['logo'] = newLogoDetail
 
             team = Team.create(g.user, name, tag, flag, logo,
                                auths, data['public_team'] and g.user.admin)
