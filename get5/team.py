@@ -36,10 +36,14 @@ def valid_auth(form, field):
         raise ValidationError('Invalid Steam ID')
 
 def valid_file(form, field):
-    # Safe method.
+    mock = config_setting("TESTING")
+    if mock:
+        return
     filename = secure_filename(field.data.filename)
+    # Safe method.
     if filename == '':
         return
+    
     index_of_dot = filename.index('.')
     file_name_without_extension = filename[:index_of_dot]
     exists = os.path.isfile(app.config['LOGO_FOLDER'] + "/" + secure_filename(filename))
@@ -60,7 +64,8 @@ def valid_file(form, field):
     if width != 64 or height != 64:
         # app.logger.info("Resizing image as it is not 64x64.")
         img = img.resize((64,64),Image.ANTIALIAS)
-        img.save(out, format='png',optimize=True)
+        out = io.BytesIO()
+        img.save(out, format='png')
         # check once more for size.
         if out.tell() > 10000:
             app.logger.info("Size: {}".format(out.tell()))
@@ -72,6 +77,7 @@ def valid_file(form, field):
         file.save(os.path.join(app.config['LOGO_FOLDER'], filename))
 
 class TeamForm(FlaskForm):
+    mock = config_setting("TESTING")
     name = StringField('Team Name', validators=[
         validators.required(),
         validators.Length(min=-1, max=Team.name.type.length)])
@@ -82,7 +88,11 @@ class TeamForm(FlaskForm):
     flag_choices = [('', 'None')] + countries.country_choices
     country_flag = SelectField(
         'Country Flag', choices=flag_choices, default='')
-    logo = SelectField('Logo Name', default='')
+    if mock:
+        logo_choices=logos.get_logo_choices()
+        logo = SelectField('Logo Name', choices=logo_choices, default='')
+    else:
+        logo = SelectField('Logo Name', default='')
 
     upload_logo = FileField(validators=[valid_file])
     # Possible to create loop and follow MAXPLAYERS from team model?
@@ -106,17 +116,19 @@ class TeamForm(FlaskForm):
 
 @team_blueprint.route('/team/create', methods=['GET', 'POST'])
 def team_create():
+    mock = config_setting("TESTING")
     if not g.user:
         return redirect('/login')
 
     form = TeamForm()
-
+    # We wish to query this every time, since we can now upload photos.
+    if not mock:
+        form.logo.choices=logos.get_logo_choices()
     if request.method == 'POST':
         num_teams = g.user.teams.count()
         max_teams = config_setting('USER_MAX_TEAMS')
         if max_teams >= 0 and num_teams >= max_teams and not g.user.admin:
-            flash(
-                'You already have the maximum number of teams ({}) stored'.format(num_teams))
+            flash('You already have the maximum number of teams ({}) stored'.format(num_teams))
 
         elif form.validate():
             data = form.data
@@ -150,13 +162,15 @@ def team(teamid):
 
 @team_blueprint.route('/team/<int:teamid>/edit', methods=['GET', 'POST'])
 def team_edit(teamid):
+    mock = config_setting("TESTING")
     team = Team.query.get_or_404(teamid)
     if not team.can_edit(g.user):
         return 'Not your team', 400
 
     form = TeamForm()
     # We wish to query this every time, since we can now upload photos.
-    form.logo.choices=logos.get_logo_choices()
+    if not mock:
+        form.logo.choices=logos.get_logo_choices()
     if request.method == 'GET':
         # Set values here, as per new FlaskForms.
         form.name.data = team.name
@@ -175,14 +189,14 @@ def team_edit(teamid):
                                edit=True, is_admin=g.user.admin)
 
     elif request.method == 'POST':
-        if form.validate_on_submit():
+        if form.validate():
             data = form.data
             public_team = team.public_team
             if g.user.admin:
                 public_team = data['public_team']
 
             # Update the logo. Passing validation we have the filename in the list now.
-            if form.upload_logo.data.filename != '':
+            if not mock and form.upload_logo.data.filename != '':
                 filename = secure_filename(form.upload_logo.data.filename)
                 index_of_dot = filename.index('.')
                 newLogoDetail = filename[:index_of_dot]
