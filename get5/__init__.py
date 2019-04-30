@@ -43,7 +43,7 @@ sys.setdefaultencoding('utf-8')
 # Import the Flask Framework
 app = Flask(__name__, instance_relative_config=True)
 app.config.from_pyfile('prod_config.py')
-LOGO_FOLDER = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__), 'static', 'img', 'logos'))
+LOGO_FOLDER = os.path.realpath(os.path.join(os.getcwd(), 'static', 'img', 'logos'))
 app.config['LOGO_FOLDER'] = LOGO_FOLDER
 
 # Setup caching
