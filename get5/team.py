@@ -70,8 +70,8 @@ def valid_file(form, field):
             app.logger.info("Size: {}".format(out.tell()))
             raise ValidationError('Image is too large, must be 10kB or less.')
         img.save(os.path.join(app.config['LOGO_FOLDER'], filename),optimize=True)
-    #elif out.tell() > 10000:
-    #    raise ValidationError('Image is too large, must be 10kB or less.')
+    elif out.tell() > 10000:
+        raise ValidationError('Image is too large, must be 10kB or less.')
     else:
         img.save(os.path.join(app.config['LOGO_FOLDER'], filename),optimize=True)
 
