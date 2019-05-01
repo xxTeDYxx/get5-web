@@ -7,7 +7,8 @@ _logos = set()
 
 def get_logo_dir():
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    return os.path.join(dir_path, 'static', 'img', 'logos')
+    return os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__), 'static', 'resource', 'csgo', 'resource', 'flash', 'econ', 'tournaments', 'teams'))
+    #return os.path.join(dir_path, 'static', 'img', 'logos')
 
 
 def initialize_logos():
