@@ -45,4 +45,4 @@ statistics==1.0.3.5
 webassets==0.11.1
 Werkzeug==0.11.9
 wrapt==1.10.8
-WTForms==2.2.1
+WTForms==2.1
