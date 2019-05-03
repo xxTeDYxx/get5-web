@@ -1,5 +1,4 @@
-"""empty message
-
+"""Include forfeit column.
 Revision ID: 5b607892c512
 Revises: 8bc3fc909d1a
 Create Date: 2016-07-04 14:10:11.990891
