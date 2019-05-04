@@ -1,4 +1,4 @@
-"""empty message
+"""Include Team Audit Table.
 
 Revision ID: 4e186245e39b
 Revises: 9c8269330b3d
