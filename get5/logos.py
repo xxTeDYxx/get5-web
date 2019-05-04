@@ -6,7 +6,6 @@ _logos = set()
 
 
 def get_logo_dir():
-    dir_path = os.path.dirname(os.path.realpath(__file__))
     return os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__), 'static', 'resource', 'csgo', 'resource', 'flash', 'econ', 'tournaments', 'teams'))
 
 
@@ -36,6 +35,6 @@ def get_logo_choices():
 
 def get_logo_img(tag):
     if has_logo(tag):
-        return '/static/img/logos/{}.png'.format(tag)
+            return '/static/resource/csgo/resource/flash/econ/tournaments/teams/{}.png'.format(tag)
     else:
         return None

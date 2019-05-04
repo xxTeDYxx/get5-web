@@ -18,7 +18,10 @@ def upgrade():
     op.add_column('game_server', sa.Column('ssh_user', sa.String(128), default='', nullable=True))
     op.add_column('game_server', sa.Column('ssh_password', sa.String(128), default='', nullable=True))
     op.add_column('game_server', sa.Column('ssh_passwordless', sa.Boolean(), default=False))
-    
+    op.alter_column('match', 'veto_mappool',
+               existing_type=mysql.VARCHAR(length=32),
+               type_=sa.String(length=128),
+               existing_nullable=True)
 
 
 def downgrade():
@@ -26,4 +29,8 @@ def downgrade():
     op.drop_column('game_server', 'ssh_user')
     op.drop_column('game_server', 'ssh_password')
     op.drop_column('game_server', 'ssh_passwordless')
+    op.alter_column('match', 'veto_mappool',
+               existing_type=sa.String(length=128),
+               type_=mysql.VARCHAR(length=32),
+               existing_nullable=True)
     ### end Alembic commands ###
