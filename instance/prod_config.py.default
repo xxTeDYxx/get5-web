@@ -2,6 +2,7 @@
 SQLALCHEMY_DATABASE_URI = 'mysql://user:password@host/db'  # Sqlalchemy database connection info
 STEAM_API_KEY = '???'  # See https://steamcommunity.com/dev/apikey
 SECRET_KEY = '???'  # Secret key used for flask cookies
+DATABASE_KEY = '???'  # Used for encryption on database. MUST BE 16 BYTES.
 
 ##### Everything below this line is optional to change
 

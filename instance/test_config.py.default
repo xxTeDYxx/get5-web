@@ -1,6 +1,7 @@
 # These must be changed if you want test cases to pass.
 SQLALCHEMY_DATABASE_URI = 'mysql://user:password@host/test_db'
 STEAM_API_KEY = '???'
+DATABASE_KEY = '???'  # Used for encryption on database. MUST BE 16 BYTES.
 
 # These should not be changed.
 DEBUG = False
