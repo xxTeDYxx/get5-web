@@ -51,11 +51,32 @@
       {% if is_admin %}
       <div class="form-group">
         {{ form.public_server.label(class="col-sm-2 control-label") }}
-        <div class="col-sm-offset-1">
-          {{ form.public_server() }}
+        <div class="col-sm-7">
+          {{ form.public_server(class="col-sm-offset-1") }}
         </div>
       </div>
       {% endif %}
+
+      <div class="form-group">
+        {{ form.ssh_user.label(class="col-sm-2 control-label") }}
+          <div class="col-sm-7">
+            {{ form.ssh_user(class="form-control", placeholder="SSH Username") }}
+          </div>
+      </div>
+
+      <div class="form-group">
+        {{ form.ssh_password.label(class="col-sm-2 control-label") }}
+          <div class="col-sm-7">
+            {{ form.ssh_password(class="form-control", placeholder="SSH Password") }}
+          </div>
+      </div>
+
+      <div class="form-group">
+        {{ form.ssh_passwordless.label(class="col-sm-2 control-label") }}
+        <div class="col-sm-7">
+          {{ form.ssh_passwordless(class="col-sm-offset-1") }}
+        </div>
+      </div>
 
       {% if edit %}
       <div class="input submit col-sm-offset-1">

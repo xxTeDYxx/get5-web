@@ -32,6 +32,11 @@ class ServerForm(Form):
 
     public_server = BooleanField('Publicly usable server')
 
+    ssh_user = StringField('SSH Username')
+
+    ssh_password = StringField('SSH Password')
+
+    ssh_passwordless = BooleanField('Passwordless authentication?')
 
 @server_blueprint.route('/server/create', methods=['GET', 'POST'])
 def server_create():
@@ -84,7 +89,10 @@ def server_edit(serverid):
                       ip_string=server.ip_string,
                       port=server.port,
                       rcon_password=server.rcon_password,
-                      public_server=server.public_server)
+                      public_server=server.public_server,
+                      ssh_user=server.ssh_user,
+                      ssh_password=server.ssh_password,
+                      ssh_passwordless=server.ssh_passwordless)
 
     if request.method == 'POST':
         if form.validate():
@@ -96,7 +104,10 @@ def server_edit(serverid):
             server.port = data['port']
             server.rcon_password = data['rcon_password']
             server.public_server = (data['public_server'] and g.user.admin)
-
+            server.ssh_user = data['ssh_user']
+            server.ssh_password = data['ssh_password']
+            server.ssh_passwordless = data['ssh_passwordless']
+            
             if mock or util.check_server_connection(server):
                 db.session.commit()
                 return redirect('/myservers')
