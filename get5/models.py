@@ -12,6 +12,8 @@ import random
 import json
 import re
 
+dbKey = app.config['DATABASE_KEY']
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     steam_id = db.Column(db.String(40), unique=True)
@@ -78,8 +80,11 @@ class GameServer(db.Model):
         return rv
 
     def send_rcon_command(self, command, raise_errors=False, num_retries=3, timeout=3.0):
+        encRcon = util.decrypt(dbKey, self.rcon_password)
+        if encRcon is None:
+            encRcon = self.rcon_password
         return util.send_rcon_command(
-            self.ip_string, self.port, self.rcon_password,
+            self.ip_string, self.port, encRcon,
             command, raise_errors, num_retries, timeout)
 
     def get_hostport(self):
