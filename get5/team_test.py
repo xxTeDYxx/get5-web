@@ -2,6 +2,7 @@ import unittest
 
 from flask import url_for
 
+import util
 import get5_test
 from models import User, Team
 
