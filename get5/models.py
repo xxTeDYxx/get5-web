@@ -55,7 +55,7 @@ class GameServer(db.Model):
     display_name = db.Column(db.String(32), default='')
     ip_string = db.Column(db.String(32))
     port = db.Column(db.Integer)
-    rcon_password = db.Column(db.String(32))
+    rcon_password = db.Column(db.String(128))
     in_use = db.Column(db.Boolean, default=False)
     public_server = db.Column(db.Boolean, default=False, index=True)
     ssh_user = db.Column(db.String(128), default='')
