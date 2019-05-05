@@ -53,14 +53,20 @@ def server_create():
 
         elif form.validate():
             mock = config_setting('TESTING')
-
             data = form.data
+            if not mock:
+                encRcon = util.encrypt(dbKey, str(data['rcon_password']))
+                encSsh = util.encrypt(dbKey, str(data['ssh_password']))
+            else:
+                encRcon = data['rcon_password']
+                encSsh = data['ssh_password']
+            
             server = GameServer.create(g.user,
                                        data['display_name'],
                                        data['ip_string'], data['port'],
-                                       data['rcon_password'],
+                                       encRcon,
                                        data['public_server'] and g.user.admin,
-                                       data['ssh_user'], data['ssh_password'],
+                                       data['ssh_user'], encSsh,
                                        data['ssh_passwordless'])
 
             if mock or util.check_server_connection(server, dbKey):
@@ -102,15 +108,20 @@ def server_edit(serverid):
     if request.method == 'POST':
         if form.validate():
             mock = app.config['TESTING']
-
             data = form.data
+            if not mock:
+                encRcon = util.encrypt(dbKey, str(data['rcon_password']))
+                encSsh = util.encrypt(dbKey, str(data['ssh_password']))
+            else:
+                encRcon = data['rcon_password']
+                encSsh = data['ssh_password']
             server.display_name = data['display_name']
             server.ip_string = data['ip_string']
             server.port = data['port']
-            server.rcon_password = util.encrypt(dbKey, str(data['rcon_password']))
+            server.rcon_password = encRcon
             server.public_server = (data['public_server'] and g.user.admin)
             server.ssh_user = data['ssh_user']
-            server.ssh_password = util.encrypt(dbKey, str(data['ssh_password']))
+            server.ssh_password = encSsh
             server.ssh_passwordless = data['ssh_passwordless']
 
 
