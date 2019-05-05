@@ -85,7 +85,7 @@ class TeamTests(get5_test.Get5Test):
         self.assertEqual(server.user_id, 1)
         self.assertEqual(server.ip_string, '111.123.123.123')
         self.assertEqual(server.port, 27014)
-        self.assertEqual(server.rcon_password, 'strongpassword2')
+        self.assertEqual(util.decrypt(app.config['DATABASE_KEY'], str(server.rcon_password)), 'strongpassword2')
 
     def test_server_deletion(self):
         # Can't delete server in use
