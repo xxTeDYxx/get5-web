@@ -16,7 +16,7 @@ from wtforms import (
     SelectField, ValidationError, SelectMultipleField)
 
 match_blueprint = Blueprint('match', __name__)
-
+dbKey = app.config['DATABASE_KEY']
 
 class MultiCheckboxField(SelectMultipleField):
     widget = widgets.ListWidget(prefix_label=False)
@@ -190,7 +190,7 @@ def match_create():
                 message = 'Success'
             else:
                 json_reply, message = util.check_server_avaliability(
-                    server,key)
+                    server,dbKey)
                 server_available = (json_reply is not None)
 
             if server_available:
