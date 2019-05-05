@@ -161,5 +161,5 @@ def decrypt(key, source, decode=True):
     data = decryptor.decrypt(source[AES.block_size:])  # decrypt
     padding = ord(data[-1])  # pick the padding value from the end; Python 2.x: ord(data[-1]) # Python 3.x: data[-1]
     if data[-padding:] != chr(padding) * padding:  # Python 2.x: chr(padding) * padding # Python 3.x: bytes([padding]) * padding:
-        raise None
+        return None
     return data[:-padding]  # remove the padding
