@@ -4,7 +4,7 @@ from flask import url_for
 
 import get5_test
 from models import User, GameServer
-
+import util
 
 # TODO: add a test for trying to create a public server as non-admin
 class TeamTests(get5_test.Get5Test):
