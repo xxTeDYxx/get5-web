@@ -40,14 +40,17 @@ def check_server_connection(server, key=None):
     return response is not None
 
 
-def check_server_avaliability(server):
+def check_server_avaliability(server,key=None):
     import json
 
     if not server:
         return None, 'Server not found'
-
+    if key:
+        encRcon = decrypt(key, server.rcon_password)
+    else:
+        encRcon = server.rcon_password
     response = send_rcon_command(
-        server.ip_string, server.port, server.rcon_password, 'get5_web_avaliable')
+        server.ip_string, server.port, encRcon, 'get5_web_avaliable')
 
     if response:
         json_error = False

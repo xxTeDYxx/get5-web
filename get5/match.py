@@ -190,7 +190,7 @@ def match_create():
                 message = 'Success'
             else:
                 json_reply, message = util.check_server_avaliability(
-                    server)
+                    server,key)
                 server_available = (json_reply is not None)
 
             if server_available:
