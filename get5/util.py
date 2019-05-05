@@ -30,9 +30,13 @@ def format_mapname(mapname):
             return mapname
 
 
-def check_server_connection(server):
+def check_server_connection(server, key=None):
+    if key:
+        decPass = decrypt(key, server.rcon_password)
+    else:
+        decPass = server.rcon_password
     response = send_rcon_command(
-        server.ip_string, server.port, server.rcon_password, 'status')
+        server.ip_string, server.port, decPass, 'status')
     return response is not None
 
 
@@ -126,6 +130,8 @@ def get_version():
         return None
 
 def encrypt(key, source, encode=True):
+    if not source:
+        return
     key = SHA256.new(key).digest()  # use SHA-256 over our key to get a proper-sized AES key
     IV = Random.new().read(AES.block_size)  # generate IV
     encryptor = AES.new(key, AES.MODE_CBC, IV)
@@ -134,12 +140,21 @@ def encrypt(key, source, encode=True):
     data = IV + encryptor.encrypt(source)  # store the IV at the beginning and encrypt
     return base64.b64encode(data).decode("latin-1") if encode else data
 
+# Try excepts are to avoid any backwards compatibility issues.
 def decrypt(key, source, decode=True):
+    if not source:
+        return None
     if decode:
-        source = base64.b64decode(source.encode("latin-1"))
+        try:
+            source = base64.b64decode(source.encode("latin-1"))
+        except:
+            return None
     key = SHA256.new(key).digest()  # use SHA-256 over our key to get a proper-sized AES key
     IV = source[:AES.block_size]  # extract the IV from the beginning
-    decryptor = AES.new(key, AES.MODE_CBC, IV)
+    try:
+        decryptor = AES.new(key, AES.MODE_CBC, IV)
+    except:
+        return None
     data = decryptor.decrypt(source[AES.block_size:])  # decrypt
     padding = ord(data[-1])  # pick the padding value from the end; Python 2.x: ord(data[-1]) # Python 3.x: data[-1]
     if data[-padding:] != chr(padding) * padding:  # Python 2.x: chr(padding) * padding # Python 3.x: bytes([padding]) * padding:

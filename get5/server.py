@@ -8,7 +8,7 @@ from wtforms import Form, validators, StringField, IntegerField, BooleanField
 
 
 server_blueprint = Blueprint('server', __name__)
-
+dbKey = app.config['DATABASE_KEY']
 
 class ServerForm(Form):
     display_name = StringField('Display Name',
@@ -59,9 +59,11 @@ def server_create():
                                        data['display_name'],
                                        data['ip_string'], data['port'],
                                        data['rcon_password'],
-                                       data['public_server'] and g.user.admin)
+                                       data['public_server'] and g.user.admin,
+                                       data['ssh_user'], data['ssh_password'],
+                                       data['ssh_passwordless'])
 
-            if mock or util.check_server_connection(server):
+            if mock or util.check_server_connection(server, dbKey):
                 db.session.commit()
                 app.logger.info(
                     'User {} created server {}'.format(g.user.id, server.id))
@@ -84,14 +86,17 @@ def server_edit(serverid):
     if not is_owner:
         return 'Not your server', 400
 
+    # Attempt encryption/decryption
+    rconDecrypt = util.decrypt(dbKey, server.rcon_password)
+    sshDecrypt = util.decrypt(dbKey, server.ssh_password)
     form = ServerForm(request.form,
                       display_name=server.display_name,
                       ip_string=server.ip_string,
                       port=server.port,
-                      rcon_password=server.rcon_password,
+                      rcon_password=server.rcon_password if rconDecrypt is None else rconDecrypt,
                       public_server=server.public_server,
                       ssh_user=server.ssh_user,
-                      ssh_password=server.ssh_password,
+                      ssh_password=server.ssh_password if sshDecrypt is None else sshDecrypt,
                       ssh_passwordless=server.ssh_passwordless)
 
     if request.method == 'POST':
@@ -102,13 +107,14 @@ def server_edit(serverid):
             server.display_name = data['display_name']
             server.ip_string = data['ip_string']
             server.port = data['port']
-            server.rcon_password = data['rcon_password']
+            server.rcon_password = util.encrypt(dbKey, str(data['rcon_password']))
             server.public_server = (data['public_server'] and g.user.admin)
             server.ssh_user = data['ssh_user']
-            server.ssh_password = data['ssh_password']
+            server.ssh_password = util.encrypt(dbKey, str(data['ssh_password']))
             server.ssh_passwordless = data['ssh_passwordless']
-            
-            if mock or util.check_server_connection(server):
+
+
+            if mock or util.check_server_connection(server, dbKey):
                 db.session.commit()
                 return redirect('/myservers')
             else:
