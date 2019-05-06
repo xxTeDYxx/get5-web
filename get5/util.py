@@ -163,3 +163,12 @@ def decrypt(key, source, decode=True):
     if data[-padding:] != chr(padding) * padding:  # Python 2.x: chr(padding) * padding # Python 3.x: bytes([padding]) * padding:
         return None
     return data[:-padding]  # remove the padding
+
+''' This command will be the bulk of the remote work since it's a
+    pretty basic function to begin with. We will need the hostname,
+    directory, and possible password if we don't go based off of an
+    authentication key. '''
+def begin_scp(host, remote_src, local_dest, match, password=None):
+    # We need to clean the URL of remote_src as it contains variables in relation to the match.
+    # Values include: TIME, MAPNAME, MAPNUMBER, MATCHID, TEAM1, TEAM2.
+    pass

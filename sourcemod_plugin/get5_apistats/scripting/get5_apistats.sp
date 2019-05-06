@@ -48,7 +48,7 @@ char g_APIURL[128];
 // clang-format off
 public Plugin myinfo = {
   name = "Get5 Web API Integration",
-  author = "splewis",
+  author = "splewis/phlexplexico",
   description = "Records match stats to a get5-web api",
   version = PLUGIN_VERSION,
   url = "https://github.com/splewis/get5"
@@ -181,7 +181,7 @@ public void CheckForLogo(const char[] logo) {
   // Try to fetch the file if we don't have it.
   if (!FileExists(logoPath)) {
     LogDebug("Fetching logo for %s", logo);
-    Handle req = CreateRequest(k_EHTTPMethodGET, "/static/img/logos/%s.png", logo);
+    Handle req = CreateRequest(k_EHTTPMethodGET, "/static/resource/csgo/resource/flash/econ/tournaments/teams/%s.png", logo);
     if (req == INVALID_HANDLE) {
       return;
     }
@@ -353,6 +353,16 @@ public void Get5_OnMapVetoed(MatchTeam team, const char[] map){
       SteamWorks_SendHTTPRequest(req);
   }
   LogDebug("Accepted Map Veto.");
+}
+
+public void Get5_OnDemoFinished(const char[] filename){
+  LogDebug("Demo finished, now sending upload request to API.");
+  Handle req = CreateRequest(k_EHTTPMethodPOST, "match/%d/demo", g_MatchID);
+  if (req != INVALID_HANDLE) {
+      AddStringParam(req, "demoFile", filename);
+      SteamWorks_SendHTTPRequest(req);
+  }
+  LogDebug("Sent our request!");
 }
 
 public void Get5_OnMapPicked(MatchTeam team, const char[] map){

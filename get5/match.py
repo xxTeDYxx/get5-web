@@ -275,7 +275,6 @@ def match(matchid):
         is_owner = (g.user.id == match.user_id)
         has_admin_access = is_owner or (config_setting(
             'ADMINS_ACCESS_ALL_MATCHES') and g.user.admin)
-    #app.logger.info("Veto: \n{}".format(vetoes))
     return render_template(
         'match.html', user=g.user, admin_access=has_admin_access,
         match=match, team1=team1, team2=team2,
@@ -458,22 +457,6 @@ def match_adduser(matchid):
         flash('Invalid steamid: {}'.format(auth))
 
     return redirect('/match/{}'.format(matchid))
-
-
-# @match_blueprint.route('/match/<int:matchid>/sendconfig')
-# def match_sendconfig(matchid):
-#     match = Match.query.get_or_404(matchid)
-#     admintools_check(g.user, match)
-#     server = GameServer.query.get_or_404(match.server_id)
-
-#     try:
-#         server.send_rcon_command('mp_unpause_match', raise_errors=True)
-#         flash('Unpaused match')
-#     except util.RconError as e:
-#         flash('Failed to send unpause command: ' + str(e))
-
-#     return redirect('/match/{}'.format(matchid))
-
 
 @match_blueprint.route('/match/<int:matchid>/backup', methods=['GET'])
 def match_backup(matchid):

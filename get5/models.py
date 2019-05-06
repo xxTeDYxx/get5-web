@@ -236,6 +236,7 @@ class Team(db.Model):
             html = ('<img src="{}"  width="{}" height="{}">')
             return Markup(html.format(logos.get_logo_img(self.logo), width, height))
         else:
+            #app.logger.info("Looked for {} but found nothing.".format(self.logo))
             return ''
 
     def get_url(self):
