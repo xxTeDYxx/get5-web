@@ -84,7 +84,6 @@ def server_edit(serverid):
 
     # Attempt encryption/decryption
     rconDecrypt = util.decrypt(dbKey, server.rcon_password)
-    sshDecrypt = util.decrypt(dbKey, server.ssh_password)
     form = ServerForm(request.form,
                       display_name=server.display_name,
                       ip_string=server.ip_string,
