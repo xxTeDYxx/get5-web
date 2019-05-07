@@ -97,10 +97,8 @@ def server_edit(serverid):
             data = form.data
             if not mock:
                 encRcon = util.encrypt(dbKey, str(data['rcon_password']))
-                encSsh = util.encrypt(dbKey, str(data['ssh_password']))
             else:
                 encRcon = data['rcon_password']
-                encSsh = data['ssh_password']
             server.display_name = data['display_name']
             server.ip_string = data['ip_string']
             server.port = data['port']
