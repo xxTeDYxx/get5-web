@@ -60,12 +60,9 @@ class GameServer(db.Model):
     rcon_password = db.Column(db.String(128))
     in_use = db.Column(db.Boolean, default=False)
     public_server = db.Column(db.Boolean, default=False, index=True)
-    ssh_user = db.Column(db.String(128), default='')
-    ssh_password = db.Column(db.String(128), default='')
-    ssh_passwordless = db.Column(db.Boolean, default=False)
 
     @staticmethod
-    def create(user, display_name, ip_string, port, rcon_password, public_server, ssh_user='', ssh_password='', ssh_passwordless=False):
+    def create(user, display_name, ip_string, port, rcon_password, public_server):
         rv = GameServer()
         rv.user_id = user.id
         rv.display_name = display_name
@@ -73,9 +70,6 @@ class GameServer(db.Model):
         rv.port = port
         rv.rcon_password = rcon_password
         rv.public_server = public_server
-        rv.ssh_user = ssh_user
-        rv.ssh_password = ssh_password
-        rv.ssh_passwordless = ssh_passwordless
         db.session.add(rv)
         return rv
 

@@ -3,8 +3,7 @@ SQLALCHEMY_DATABASE_URI = 'mysql://user:password@host/db'  # Sqlalchemy database
 STEAM_API_KEY = '???'  # See https://steamcommunity.com/dev/apikey
 SECRET_KEY = '???'  # Secret key used for flask cookies
 DATABASE_KEY = '???'  # Used for encryption on database. MUST BE 16 BYTES.
-GET5_REMOTE_DIRECTORY = '' # THIS SHOULD BE IDENTICAL TO THE GET5 PLUGIN 'get5_demo_name_format'. For example, if you've included a directory before the demo file name like demos/{MATCHID}_map{MAPNUMBER}_{MAPNAME} this value would just be 'demos'
-DEMO_DIRECTORY = 'static/demos' # Your demos will be placed in this direectory after every match.
+
 ##### Everything below this line is optional to change
 
 import os

@@ -32,12 +32,6 @@ class ServerForm(Form):
 
     public_server = BooleanField('Publicly usable server')
 
-    ssh_user = StringField('SSH Username')
-
-    ssh_password = StringField('SSH Password')
-
-    ssh_passwordless = BooleanField('Passwordless authentication?')
-
 @server_blueprint.route('/server/create', methods=['GET', 'POST'])
 def server_create():
     if not g.user:
@@ -56,18 +50,14 @@ def server_create():
             data = form.data
             if not mock:
                 encRcon = util.encrypt(dbKey, str(data['rcon_password']))
-                encSsh = util.encrypt(dbKey, str(data['ssh_password']))
             else:
                 encRcon = data['rcon_password']
-                encSsh = data['ssh_password']
             
             server = GameServer.create(g.user,
                                        data['display_name'],
                                        data['ip_string'], data['port'],
                                        encRcon,
-                                       data['public_server'] and g.user.admin,
-                                       data['ssh_user'], encSsh,
-                                       data['ssh_passwordless'])
+                                       data['public_server'] and g.user.admin)
 
             if mock or util.check_server_connection(server, dbKey):
                 db.session.commit()
@@ -100,10 +90,7 @@ def server_edit(serverid):
                       ip_string=server.ip_string,
                       port=server.port,
                       rcon_password=server.rcon_password if rconDecrypt is None else rconDecrypt,
-                      public_server=server.public_server,
-                      ssh_user=server.ssh_user,
-                      ssh_password=server.ssh_password if sshDecrypt is None else sshDecrypt,
-                      ssh_passwordless=server.ssh_passwordless)
+                      public_server=server.public_server)
 
     if request.method == 'POST':
         if form.validate():
@@ -120,10 +107,6 @@ def server_edit(serverid):
             server.port = data['port']
             server.rcon_password = encRcon
             server.public_server = (data['public_server'] and g.user.admin)
-            server.ssh_user = data['ssh_user']
-            server.ssh_password = encSsh
-            server.ssh_passwordless = data['ssh_passwordless']
-
 
             if mock or util.check_server_connection(server, dbKey):
                 db.session.commit()

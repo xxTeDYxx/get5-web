@@ -1,5 +1,5 @@
 from get5 import app, limiter, db, BadRequestError
-from util import as_int, begin_scp, decrypt
+from util import as_int
 from models import Match, MapStats, PlayerStats, GameServer, Veto, Team
 
 from flask import Blueprint, request
@@ -73,19 +73,6 @@ def match_finish(matchid):
     db.session.commit()
     app.logger.info('Finished match {}, winner={}'.format(match, winner))
     return 'Success'
-
-@api_blueprint.route('/match/<int:matchid>/demo', methods=['POST'])
-@limiter.limit('60 per hour', key_func=rate_limit_key)
-def match_download_demo(matchid):
-    match = Match.query.get_or_404(matchid)
-    match_api_check(request, match)
-    # Spin up subprocess here to copy over demos?
-    # SSH for sure will be encrypted as new feature, no need to worry about legacy.
-    # encSSH = decrypt(app.config['DATABASE_KEY'], server.ssh_password)
-    # fileName = request.values.get('teamString') == "team1":
-    # demoThread = threading.Thread(name='demo_upload_match{}'.format(match.id), target=begin_scp(server.ip_string, app.config['GET5_REMOTE_DEMO_NAME_FORMAT'], app.config['DEMO_DIRECTORY'], match, encSSH))
-    # demoThread.start()
-    pass
 
 @api_blueprint.route('/match/<int:matchid>/map/<int:mapnumber>/start', methods=['POST'])
 @limiter.limit('60 per hour', key_func=rate_limit_key)
