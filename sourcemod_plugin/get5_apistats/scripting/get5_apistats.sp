@@ -63,13 +63,24 @@ public void OnPluginStart() {
       CreateConVar("get5_web_api_key", "", "Match API key, this is automatically set through rcon");
   HookConVarChange(g_APIKeyCvar, ApiInfoChanged);
 
-  g_APIURLCvar = CreateConVar("get5_web_api_url", "", "URL the get5 api is hosted at");
+  g_APIURLCvar = CreateConVar("get5_web_api_url", "", "URL the get5 api is hosted at, IGNORE AS IT IS SYSTEM SET.");
 
   HookConVarChange(g_APIURLCvar, ApiInfoChanged);
 
   RegConsoleCmd("get5_web_avaliable",
                 Command_Avaliable);  // legacy version since I'm bad at spelling
   RegConsoleCmd("get5_web_available", Command_Avaliable);
+
+  g_FTPUserName =
+      CreateConVar("get5_api_ftp_username", "csgoserver", "Authorized username for FTP.");
+  g_FTPPassword =
+      CreateConVar("get5_api_ftp_password", "supersecret", "Password for FTP User.");
+  g_FTPHost =
+      CreateConVar("get5_api_ftp_host", "yourget5host.com", "Your website/server with FTP enabled.");
+  g_FTPPort =
+      CreateConVar("get5_api_ftp_port", "21", "Server port.");
+  /** Create and exec plugin's configuration file **/
+  AutoExecConfig(true, "get5_api");
 }
 
 public Action Command_Avaliable(int client, int args) {
