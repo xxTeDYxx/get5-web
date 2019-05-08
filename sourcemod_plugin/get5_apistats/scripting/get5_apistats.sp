@@ -22,13 +22,11 @@
 #include "include/logdebug.inc"
 #include <cstrike>
 #include <sourcemod>
-/*FTP Uploading.*/
-#include <tEasyFTP>
 #include "get5/util.sp"
 #include "get5/version.sp"
 
 #include <SteamWorks>
-
+#include <system2> // github.com/dordnung/System2/
 #include <json> // github.com/clugg/sm-json
 #include "get5/jsonhelpers.sp"
 
@@ -45,6 +43,15 @@ char g_APIURL[128];
 
 ConVar g_DemoDirectoryCvar;
 char g_DemoDir[PLATFORM_MAX_PATH];
+
+ConVar g_FTPHostCvar;
+char g_FTPHost[128];
+
+ConVar g_FTPPortCvar;
+int g_FTPPort;
+
+ConVar g_RemoteDemoDirCvar;
+char g_RemoteDemoDir[PLATFORM_MAX_PATH];
 
 #define LOGO_DIR "resource/flash/econ/tournaments/teams"
 
@@ -75,8 +82,19 @@ public void OnPluginStart() {
   RegConsoleCmd("get5_web_available", Command_Avaliable);
 
   g_DemoDirectoryCvar =
-      CreateConVar("get5_remote_demo_directory", "demos", "Location of where demos are stored on the webserver.");
+      CreateConVar("get5_local_demo_directory", "demos", "Location of where demos are stored on the game server.");
 
+  g_FTPHostCvar = 
+      CreateConVar("get5_api_ftp_host", "ftp://example.com", "Remote FTP Host. Make sure you do NOT have the trailing slash.");
+
+  g_FTPPortCvar = 
+      CreateConVar("get5_api_ftp_port", "21", "Remote FTP Port");
+
+  g_RemoteDemoDirCvar =
+      CreateConVar("get5_remote_demo_directory", "demos", "Location of where demos are stored on the game server.");
+
+  /** Create and exec plugin's configuration file **/
+  AutoExecConfig(true, "get5api");
 }
 
 public Action Command_Avaliable(int client, int args) {
@@ -363,11 +381,18 @@ public void Get5_OnMapVetoed(MatchTeam team, const char[] map){
 }
 
 public void Get5_OnDemoFinished(const char[] filename){
-  char demoPath[PLATFORM_MAX_PATH];
-  Format(demoPath, sizeof(demoPath), "%s.dem", filename);
+  char localDemoPath[PLATFORM_MAX_PATH];
+  char remoteDemoPath[PLATFORM_MAX_PATH];
 
-  LogDebug("Demo finished, now sending upload request to API.");
   g_DemoDirectoryCvar.GetString(g_DemoDir, sizeof(g_DemoDir));
+  g_RemoteDemoDirCvar.GetString(g_RemoteDemoDir, sizeof(g_RemoteDemoDir));
+  g_FTPHostCvar.GetString(g_FTPHost, sizeof(g_FTPHost));
+  g_FTPPort = g_FTPPortCvar.IntValue;
+  Format(localDemoPath, sizeof(localDemoPath), "%s/%s.dem", g_DemoDir, filename);
+  Format(remoteDemoPath, sizeof(remoteDemoPath), "%s/%s/%s.dem", g_FTPHost, g_RemoteDemoDir, filename);
+  
+  LogDebug("Demo finished, now sending upload request to API.");
+  
   Handle req = CreateRequest(k_EHTTPMethodPOST, "match/%d/demo", g_MatchID);
   // Send filename to append to match in database maybe?
   if (req != INVALID_HANDLE) {
@@ -375,16 +400,28 @@ public void Get5_OnDemoFinished(const char[] filename){
       SteamWorks_SendHTTPRequest(req);
   }
   LogDebug("Sent our request!");
-  // Begin upload.
-  EasyFTP_UploadFile(g_DemoDir, demoPath, "/", UploadComplete);
+  System2FTPRequest ftpRequest = new System2FTPRequest(FtpResponseCallback, remoteDemoPath);
+  ftpRequest.AppendToFile = true;
+  ftpRequest.CreateMissingDirs = false;
+  ftpRequest.SetPort(g_FTPPort);
+  //ftpRequest.SetProgressCallback(FtpProgressCallback);
+  ftpRequest.SetInputFile(localDemoPath);
+  ftpRequest.StartRequest();   
   LogDebug("Demo uploaded!");
 }
 
-public void UploadComplete(const char[] sTarget, const char[] sLocalFile, const char[] sRemoteFile, int iErrorCode, int data) {
-	if(iErrorCode == 0) {
-		DeleteFile(sLocalFile);
-	}
-}
+public void FtpResponseCallback(bool success, const char[] error, System2FTPRequest request, System2FTPResponse response) {
+    if (success) {
+        char file[PLATFORM_MAX_PATH];
+        request.GetInputFile(file, sizeof(file));
+
+        if (strlen(file) > 0) {
+            LogDebug("Uploaded %d bytes with %d bytes / second", response.UploadSize, response.UploadSpeed);
+        } else {
+            LogDebug("Downloaded %d bytes with %d bytes / second", response.DownloadSize, response.DownloadSpeed);
+        }
+    }
+}  
 
 public void Get5_OnMapPicked(MatchTeam team, const char[] map){
   char teamString[64];
