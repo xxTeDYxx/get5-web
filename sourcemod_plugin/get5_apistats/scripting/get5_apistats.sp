@@ -41,17 +41,17 @@ char g_APIKey[128];
 ConVar g_APIURLCvar;
 char g_APIURL[128];
 
-ConVar g_DemoDirectoryCvar;
-char g_DemoDir[PLATFORM_MAX_PATH];
-
 ConVar g_FTPHostCvar;
 char g_FTPHost[128];
 
+ConVar g_FTPUsernameCvar;
+char g_FTPUsername[128];
+
+ConVar g_FTPPasswordCvar;
+char g_FTPPassword[128];
+
 ConVar g_FTPPortCvar;
 int g_FTPPort;
-
-ConVar g_RemoteDemoDirCvar;
-char g_RemoteDemoDir[PLATFORM_MAX_PATH];
 
 #define LOGO_DIR "resource/flash/econ/tournaments/teams"
 
@@ -81,17 +81,18 @@ public void OnPluginStart() {
                 Command_Avaliable);  // legacy version since I'm bad at spelling
   RegConsoleCmd("get5_web_available", Command_Avaliable);
 
-  g_DemoDirectoryCvar =
-      CreateConVar("get5_local_demo_directory", "demos", "Location of where demos are stored on the game server.");
-
   g_FTPHostCvar = 
-      CreateConVar("get5_api_ftp_host", "ftp://example.com", "Remote FTP Host. Make sure you do NOT have the trailing slash.");
+      CreateConVar("get5_api_ftp_host", "ftp://example.com", "Remote FTP Host. Make sure you do NOT have the trailing slash. Include the path to the directory you wish to have.");
 
   g_FTPPortCvar = 
       CreateConVar("get5_api_ftp_port", "21", "Remote FTP Port");
 
-  g_RemoteDemoDirCvar =
-      CreateConVar("get5_remote_demo_directory", "demos", "Location of where demos are stored on the game server.");
+  g_FTPUsernameCvar =
+      CreateConVar("get5_api_ftp_username", "username", "Username for the FTP connection.");
+
+  g_FTPPasswordCvar = 
+      CreateConVar("get5_api_ftp_password", "supersecret", "Password for the FTP user.");
+
 
   /** Create and exec plugin's configuration file **/
   AutoExecConfig(true, "get5api");
@@ -381,18 +382,17 @@ public void Get5_OnMapVetoed(MatchTeam team, const char[] map){
 }
 
 public void Get5_OnDemoFinished(const char[] filename){
-  char localDemoPath[PLATFORM_MAX_PATH];
   char remoteDemoPath[PLATFORM_MAX_PATH];
 
-  g_DemoDirectoryCvar.GetString(g_DemoDir, sizeof(g_DemoDir));
-  g_RemoteDemoDirCvar.GetString(g_RemoteDemoDir, sizeof(g_RemoteDemoDir));
   g_FTPHostCvar.GetString(g_FTPHost, sizeof(g_FTPHost));
   g_FTPPort = g_FTPPortCvar.IntValue;
-  Format(localDemoPath, sizeof(localDemoPath), "%s/%s.dem", g_DemoDir, filename);
-  Format(remoteDemoPath, sizeof(remoteDemoPath), "%s/%s/%s.dem", g_FTPHost, g_RemoteDemoDir, filename);
+  g_FTPUsernameCvar.GetString(g_FTPUsername, sizeof(g_FTPUsername));
+  g_FTPPasswordCvar.GetString(g_FTPPassword, sizeof(g_FTPPassword));
+  Format(remoteDemoPath, sizeof(remoteDemoPath), "%s/%s", g_FTPHost, filename);
   
-  LogDebug("Demo finished, now sending upload request to API.");
-  
+  LogMessage("Demo finished, now sending upload request to API.");
+  LogMessage("Demo filename is: %s", filename);
+  LogMessage("Our remote ftp is: %s", remoteDemoPath);
   Handle req = CreateRequest(k_EHTTPMethodPOST, "match/%d/demo", g_MatchID);
   // Send filename to append to match in database maybe?
   if (req != INVALID_HANDLE) {
@@ -403,11 +403,12 @@ public void Get5_OnDemoFinished(const char[] filename){
   System2FTPRequest ftpRequest = new System2FTPRequest(FtpResponseCallback, remoteDemoPath);
   ftpRequest.AppendToFile = true;
   ftpRequest.CreateMissingDirs = false;
+  ftpRequest.SetAuthentication(g_FTPUsername, g_FTPPassword);
   ftpRequest.SetPort(g_FTPPort);
   //ftpRequest.SetProgressCallback(FtpProgressCallback);
-  ftpRequest.SetInputFile(localDemoPath);
+  ftpRequest.SetInputFile(filename);
   ftpRequest.StartRequest();   
-  LogDebug("Demo uploaded!");
+  LogMessage("Demo uploaded!");
 }
 
 public void FtpResponseCallback(bool success, const char[] error, System2FTPRequest request, System2FTPResponse response) {
@@ -416,9 +417,9 @@ public void FtpResponseCallback(bool success, const char[] error, System2FTPRequ
         request.GetInputFile(file, sizeof(file));
 
         if (strlen(file) > 0) {
-            LogDebug("Uploaded %d bytes with %d bytes / second", response.UploadSize, response.UploadSpeed);
+            LogMessage("Uploaded %d bytes with %d bytes / second", response.UploadSize, response.UploadSpeed);
         } else {
-            LogDebug("Downloaded %d bytes with %d bytes / second", response.DownloadSize, response.DownloadSpeed);
+            LogMessage("Downloaded %d bytes with %d bytes / second", response.DownloadSize, response.DownloadSpeed);
         }
     }
 }  
