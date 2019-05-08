@@ -22,8 +22,8 @@
 #include "include/logdebug.inc"
 #include <cstrike>
 #include <sourcemod>
-
-
+/*FTP Uploading.*/
+#include <tEasyFTP>
 #include "get5/util.sp"
 #include "get5/version.sp"
 
@@ -43,6 +43,9 @@ char g_APIKey[128];
 ConVar g_APIURLCvar;
 char g_APIURL[128];
 
+ConVar g_DemoDirectoryCvar;
+char g_DemoDir[PLATFORM_MAX_PATH];
+
 #define LOGO_DIR "resource/flash/econ/tournaments/teams"
 
 // clang-format off
@@ -51,7 +54,7 @@ public Plugin myinfo = {
   author = "splewis/phlexplexico",
   description = "Records match stats to a get5-web api",
   version = PLUGIN_VERSION,
-  url = "https://github.com/splewis/get5"
+  url = "https://github.com/phlexplexico/get5-web"
 };
 // clang-format on
 
@@ -71,16 +74,9 @@ public void OnPluginStart() {
                 Command_Avaliable);  // legacy version since I'm bad at spelling
   RegConsoleCmd("get5_web_available", Command_Avaliable);
 
-  g_FTPUserName =
-      CreateConVar("get5_api_ftp_username", "csgoserver", "Authorized username for FTP.");
-  g_FTPPassword =
-      CreateConVar("get5_api_ftp_password", "supersecret", "Password for FTP User.");
-  g_FTPHost =
-      CreateConVar("get5_api_ftp_host", "yourget5host.com", "Your website/server with FTP enabled.");
-  g_FTPPort =
-      CreateConVar("get5_api_ftp_port", "21", "Server port.");
-  /** Create and exec plugin's configuration file **/
-  AutoExecConfig(true, "get5_api");
+  g_DemoDirectoryCvar =
+      CreateConVar("get5_remote_demo_directory", "demos", "Location of where demos are stored on the webserver.");
+
 }
 
 public Action Command_Avaliable(int client, int args) {
@@ -367,13 +363,27 @@ public void Get5_OnMapVetoed(MatchTeam team, const char[] map){
 }
 
 public void Get5_OnDemoFinished(const char[] filename){
+  char demoPath[PLATFORM_MAX_PATH];
+  Format(demoPath, sizeof(demoPath), "%s.dem", filename);
+
   LogDebug("Demo finished, now sending upload request to API.");
+  g_DemoDirectoryCvar.GetString(g_DemoDir, sizeof(g_DemoDir));
   Handle req = CreateRequest(k_EHTTPMethodPOST, "match/%d/demo", g_MatchID);
+  // Send filename to append to match in database maybe?
   if (req != INVALID_HANDLE) {
       AddStringParam(req, "demoFile", filename);
       SteamWorks_SendHTTPRequest(req);
   }
   LogDebug("Sent our request!");
+  // Begin upload.
+  EasyFTP_UploadFile(g_DemoDir, demoPath, "/", UploadComplete);
+  LogDebug("Demo uploaded!");
+}
+
+public void UploadComplete(const char[] sTarget, const char[] sLocalFile, const char[] sRemoteFile, int iErrorCode, int data) {
+	if(iErrorCode == 0) {
+		DeleteFile(sLocalFile);
+	}
 }
 
 public void Get5_OnMapPicked(MatchTeam team, const char[] map){
