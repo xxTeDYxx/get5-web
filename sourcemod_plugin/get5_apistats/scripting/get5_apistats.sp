@@ -388,7 +388,7 @@ public void Get5_OnMapVetoed(MatchTeam team, const char[] map){
 public void Get5_OnDemoFinished(const char[] filename){
   char remoteDemoPath[PLATFORM_MAX_PATH];
   g_FTPEnable = g_FTPEnableCvar.BoolValue;
-  if(g_FTPEnable && !filename[0]){
+  if(g_FTPEnable && filename[0]){
     g_FTPHostCvar.GetString(g_FTPHost, sizeof(g_FTPHost));
     g_FTPPort = g_FTPPortCvar.IntValue;
     g_FTPUsernameCvar.GetString(g_FTPUsername, sizeof(g_FTPUsername));
@@ -410,7 +410,7 @@ public void Get5_OnDemoFinished(const char[] filename){
     ftpRequest.CreateMissingDirs = true;
     ftpRequest.SetAuthentication(g_FTPUsername, g_FTPPassword);
     ftpRequest.SetPort(g_FTPPort);
-    ftpRequest.SetProgressCallback(FtpProgressCallback);
+    //ftpRequest.SetProgressCallback(FtpProgressCallback);
     ftpRequest.SetInputFile(filename);
     ftpRequest.StartRequest(); 
   } else{
@@ -433,10 +433,12 @@ public void FtpResponseCallback(bool success, const char[] error, System2FTPRequ
     if (success) {
         char file[PLATFORM_MAX_PATH];
         request.GetInputFile(file, sizeof(file));
-
+        LogMessage("Delete file after complete.");
         if (strlen(file) > 0) {
             LogMessage("Delete file after complete.");
         }
+    } else{
+      LogMessage("There was a problem: %s", error);
     }
 }  
 
