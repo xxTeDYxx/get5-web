@@ -53,6 +53,9 @@ char g_FTPPassword[128];
 ConVar g_FTPPortCvar;
 int g_FTPPort;
 
+ConVar g_FTPEnableCvar;
+bool g_FTPEnable;
+
 #define LOGO_DIR "resource/flash/econ/tournaments/teams"
 
 // clang-format off
@@ -93,7 +96,8 @@ public void OnPluginStart() {
   g_FTPPasswordCvar = 
       CreateConVar("get5_api_ftp_password", "supersecret", "Password for the FTP user.");
 
-
+  g_FTPEnableCvar = 
+      CreateConVar("get5_api_fpt_enabled", "0", "0 Disables FTP Upload, 1 Enables.")
   /** Create and exec plugin's configuration file **/
   AutoExecConfig(true, "get5api");
 }
@@ -383,32 +387,38 @@ public void Get5_OnMapVetoed(MatchTeam team, const char[] map){
 
 public void Get5_OnDemoFinished(const char[] filename){
   char remoteDemoPath[PLATFORM_MAX_PATH];
-
-  g_FTPHostCvar.GetString(g_FTPHost, sizeof(g_FTPHost));
-  g_FTPPort = g_FTPPortCvar.IntValue;
-  g_FTPUsernameCvar.GetString(g_FTPUsername, sizeof(g_FTPUsername));
-  g_FTPPasswordCvar.GetString(g_FTPPassword, sizeof(g_FTPPassword));
-  Format(remoteDemoPath, sizeof(remoteDemoPath), "%s/%s", g_FTPHost, filename);
-  
-  LogMessage("Demo finished, now sending upload request to API.");
-  LogMessage("Demo filename is: %s", filename);
-  LogMessage("Our remote ftp is: %s", remoteDemoPath);
-  Handle req = CreateRequest(k_EHTTPMethodPOST, "match/%d/demo", g_MatchID);
-  // Send filename to append to match in database maybe?
-  if (req != INVALID_HANDLE) {
-      AddStringParam(req, "demoFile", filename);
-      SteamWorks_SendHTTPRequest(req);
+  g_FTPEnable = g_FTPEnableCvar.BoolValue;
+  if(g_FTPEnable){
+    g_FTPHostCvar.GetString(g_FTPHost, sizeof(g_FTPHost));
+    g_FTPPort = g_FTPPortCvar.IntValue;
+    g_FTPUsernameCvar.GetString(g_FTPUsername, sizeof(g_FTPUsername));
+    g_FTPPasswordCvar.GetString(g_FTPPassword, sizeof(g_FTPPassword));
+    Format(remoteDemoPath, sizeof(remoteDemoPath), "%s/%s", g_FTPHost, filename);
+    
+    LogMessage("Demo finished, now sending upload request to API.");
+    LogMessage("Demo filename is: %s", filename);
+    LogMessage("Our remote ftp is: %s", remoteDemoPath);
+    Handle req = CreateRequest(k_EHTTPMethodPOST, "match/%d/demo", g_MatchID);
+    // Send filename to append to match in database maybe?
+    if (req != INVALID_HANDLE) {
+        AddStringParam(req, "demoFile", filename);
+        SteamWorks_SendHTTPRequest(req);
+    }
+    LogDebug("Sent our request!");
+    System2FTPRequest ftpRequest = new System2FTPRequest(FtpResponseCallback, remoteDemoPath);
+    ftpRequest.AppendToFile = true;
+    ftpRequest.CreateMissingDirs = false;
+    ftpRequest.SetAuthentication(g_FTPUsername, g_FTPPassword);
+    ftpRequest.SetPort(g_FTPPort);
+    //ftpRequest.SetProgressCallback(FtpProgressCallback);
+    ftpRequest.SetInputFile(filename);
+    ftpRequest.StartRequest(); 
+    LogMessage("Demo uploaded!");
+  } else{
+    LogMessage("FTP Uploads Disabled. Change config to enable.")
   }
-  LogDebug("Sent our request!");
-  System2FTPRequest ftpRequest = new System2FTPRequest(FtpResponseCallback, remoteDemoPath);
-  ftpRequest.AppendToFile = true;
-  ftpRequest.CreateMissingDirs = false;
-  ftpRequest.SetAuthentication(g_FTPUsername, g_FTPPassword);
-  ftpRequest.SetPort(g_FTPPort);
-  //ftpRequest.SetProgressCallback(FtpProgressCallback);
-  ftpRequest.SetInputFile(filename);
-  ftpRequest.StartRequest();   
-  LogMessage("Demo uploaded!");
+    
+  
 }
 
 public void FtpResponseCallback(bool success, const char[] error, System2FTPRequest request, System2FTPResponse response) {
