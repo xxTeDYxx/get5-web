@@ -97,7 +97,7 @@ public void OnPluginStart() {
       CreateConVar("get5_api_ftp_password", "supersecret", "Password for the FTP user.");
 
   g_FTPEnableCvar = 
-      CreateConVar("get5_api_fpt_enabled", "0", "0 Disables FTP Upload, 1 Enables.")
+      CreateConVar("get5_api_fpt_enabled", "0", "0 Disables FTP Upload, 1 Enables.");
   /** Create and exec plugin's configuration file **/
   AutoExecConfig(true, "get5api");
 }
@@ -388,7 +388,7 @@ public void Get5_OnMapVetoed(MatchTeam team, const char[] map){
 public void Get5_OnDemoFinished(const char[] filename){
   char remoteDemoPath[PLATFORM_MAX_PATH];
   g_FTPEnable = g_FTPEnableCvar.BoolValue;
-  if(g_FTPEnable){
+  if(g_FTPEnable && !filename[0]){
     g_FTPHostCvar.GetString(g_FTPHost, sizeof(g_FTPHost));
     g_FTPPort = g_FTPPortCvar.IntValue;
     g_FTPUsernameCvar.GetString(g_FTPUsername, sizeof(g_FTPUsername));
@@ -407,19 +407,27 @@ public void Get5_OnDemoFinished(const char[] filename){
     LogDebug("Sent our request!");
     System2FTPRequest ftpRequest = new System2FTPRequest(FtpResponseCallback, remoteDemoPath);
     ftpRequest.AppendToFile = true;
-    ftpRequest.CreateMissingDirs = false;
+    ftpRequest.CreateMissingDirs = true;
     ftpRequest.SetAuthentication(g_FTPUsername, g_FTPPassword);
     ftpRequest.SetPort(g_FTPPort);
-    //ftpRequest.SetProgressCallback(FtpProgressCallback);
+    ftpRequest.SetProgressCallback(FtpProgressCallback);
     ftpRequest.SetInputFile(filename);
     ftpRequest.StartRequest(); 
-    LogMessage("Demo uploaded!");
   } else{
-    LogMessage("FTP Uploads Disabled. Change config to enable.")
+    LogMessage("FTP Uploads Disabled OR Filename was empty (no demo to upload). Change config to enable.");
   }
     
   
 }
+
+public void FtpProgressCallback(System2FTPRequest request, int dlTotal, int dlNow, int ulTotal, int ulNow) {
+  char file[PLATFORM_MAX_PATH];
+  request.GetInputFile(file, sizeof(file));
+
+  if (strlen(file) > 0) {
+      PrintToServer("Uploading %s file with %d bytes total, %d now", file, ulTotal, ulNow);
+  }
+}  
 
 public void FtpResponseCallback(bool success, const char[] error, System2FTPRequest request, System2FTPResponse response) {
     if (success) {
@@ -427,9 +435,7 @@ public void FtpResponseCallback(bool success, const char[] error, System2FTPRequ
         request.GetInputFile(file, sizeof(file));
 
         if (strlen(file) > 0) {
-            LogMessage("Uploaded %d bytes with %d bytes / second", response.UploadSize, response.UploadSpeed);
-        } else {
-            LogMessage("Downloaded %d bytes with %d bytes / second", response.DownloadSize, response.DownloadSpeed);
+            LogMessage("Delete file after complete.");
         }
     }
 }  
