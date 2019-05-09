@@ -97,7 +97,7 @@ public void OnPluginStart() {
       CreateConVar("get5_api_ftp_password", "supersecret", "Password for the FTP user.");
 
   g_FTPEnableCvar = 
-      CreateConVar("get5_api_fpt_enabled", "0", "0 Disables FTP Upload, 1 Enables.");
+      CreateConVar("get5_api_ftp_enabled", "0", "0 Disables FTP Upload, 1 Enables.");
   /** Create and exec plugin's configuration file **/
   AutoExecConfig(true, "get5api");
 }
