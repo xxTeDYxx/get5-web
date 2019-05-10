@@ -63,7 +63,7 @@ public Plugin myinfo = {
   name = "Get5 Web API Integration",
   author = "splewis/phlexplexico",
   description = "Records match stats to a get5-web api",
-  version = PLUGIN_VERSION,
+  version = "0.1",
   url = "https://github.com/phlexplexico/get5-web"
 };
 // clang-format on
@@ -386,59 +386,103 @@ public void Get5_OnMapVetoed(MatchTeam team, const char[] map){
 }
 
 public void Get5_OnDemoFinished(const char[] filename){
+  LogDebug("Demo finished, now sending upload request to API.");
+  Handle req = CreateRequest(k_EHTTPMethodPOST, "match/%d/demo", g_MatchID);
+  // Send filename to append to match in database maybe?
+  if (req != INVALID_HANDLE) {
+      AddStringParam(req, "demoFile", filename);
+      SteamWorks_SendHTTPRequest(req);
+  }
+  LogDebug("About to enter UploadDemo.");
+  UploadDemo(filename);
+  
+}
+
+public void UploadDemo(const char[] filename){
   char remoteDemoPath[PLATFORM_MAX_PATH];
   g_FTPEnable = g_FTPEnableCvar.BoolValue;
+  char zippedFile[PLATFORM_MAX_PATH];
   if(g_FTPEnable && filename[0]){
     g_FTPHostCvar.GetString(g_FTPHost, sizeof(g_FTPHost));
     g_FTPPort = g_FTPPortCvar.IntValue;
     g_FTPUsernameCvar.GetString(g_FTPUsername, sizeof(g_FTPUsername));
     g_FTPPasswordCvar.GetString(g_FTPPassword, sizeof(g_FTPPassword));
-    Format(remoteDemoPath, sizeof(remoteDemoPath), "%s/%s", g_FTPHost, filename);
-    
-    LogMessage("Demo finished, now sending upload request to API.");
-    LogMessage("Demo filename is: %s", filename);
-    LogMessage("Our remote ftp is: %s", remoteDemoPath);
-    Handle req = CreateRequest(k_EHTTPMethodPOST, "match/%d/demo", g_MatchID);
-    // Send filename to append to match in database maybe?
-    if (req != INVALID_HANDLE) {
-        AddStringParam(req, "demoFile", filename);
-        SteamWorks_SendHTTPRequest(req);
-    }
-    LogDebug("Sent our request!");
+
+    // Will either be a zipped file or default filename.
+    CompressFile(filename, zippedFile);
     System2FTPRequest ftpRequest = new System2FTPRequest(FtpResponseCallback, remoteDemoPath);
-    ftpRequest.AppendToFile = true;
+    ftpRequest.AppendToFile = false;
     ftpRequest.CreateMissingDirs = true;
     ftpRequest.SetAuthentication(g_FTPUsername, g_FTPPassword);
     ftpRequest.SetPort(g_FTPPort);
-    //ftpRequest.SetProgressCallback(FtpProgressCallback);
-    ftpRequest.SetInputFile(filename);
+    ftpRequest.SetProgressCallback(FtpProgressCallback);
+    LogMessage("Our File is: %s", zippedFile);
+
+    ftpRequest.SetInputFile(zippedFile);
     ftpRequest.StartRequest(); 
   } else{
-    LogMessage("FTP Uploads Disabled OR Filename was empty (no demo to upload). Change config to enable.");
+    LogDebug("FTP Uploads Disabled OR Filename was empty (no demo to upload). Change config to enable.");
   }
-    
-  
 }
+
+public void CompressFile(const char[] filename, char zippedFile[PLATFORM_MAX_PATH]) {
+  // Boolean which holds the knowledge whether we have to force using the 32-bit executable
+  bool force32Bit = false;
+
+  char binDir[PLATFORM_MAX_PATH];
+  char binDir32Bit[PLATFORM_MAX_PATH];
+  Format(zippedFile, sizeof(zippedFile), "%s.zip", filename);
+  // First check if we can use the 7-ZIP executable which is suitable for the running machine
+  if (!System2_Check7ZIP(binDir, sizeof(binDir))) {
+      // If not: Check if 32-bit 7-ZIP can be used
+      if (!System2_Check7ZIP(binDir32Bit, sizeof(binDir32Bit), true)) {
+          // Print an error if both can't be executed
+          if (StrEqual(binDir, binDir32Bit)) {
+              LogMessage("NOTE: 7-ZIP was not found or is not executable at '%s', uploading as regular file.", binDir);
+              Format(zippedFile, sizeof(zippedFile), "%s.zip", filename);
+	      return;
+          } else {
+              LogMessage("NOTE: 7-ZIP was not found or is not executable at '%s' or '%s', uploading as regular file.", binDir, binDir32Bit);
+              Format(zippedFile, sizeof(zippedFile), "%s.zip", filename);
+	      return;
+          }
+      } else {
+          // 64-bit does not seem to work, but 32-bit do. We have to memorize this.
+          force32Bit = true;
+      }
+  }
+  // Now use the knowledge whether we have to force 32-bit or not.
+  System2_Compress(ExecuteCallback, filename, zippedFile, ARCHIVE_ZIP, LEVEL_9, 0, force32Bit);
+}
+
 
 public void FtpProgressCallback(System2FTPRequest request, int dlTotal, int dlNow, int ulTotal, int ulNow) {
   char file[PLATFORM_MAX_PATH];
   request.GetInputFile(file, sizeof(file));
-
   if (strlen(file) > 0) {
-      PrintToServer("Uploading %s file with %d bytes total, %d now", file, ulTotal, ulNow);
+      LogMessage("Uploading %s file with %d bytes total, %d now", file, ulTotal, ulNow);
   }
 }  
 
 public void FtpResponseCallback(bool success, const char[] error, System2FTPRequest request, System2FTPResponse response) {
-    if (success) {
+    if (success || StrContains(error, "Uploaded unaligned file size") > -1) {
         char file[PLATFORM_MAX_PATH];
         request.GetInputFile(file, sizeof(file));
-        LogMessage("Delete file after complete.");
         if (strlen(file) > 0) {
             LogMessage("Delete file after complete.");
         }
     } else{
       LogMessage("There was a problem: %s", error);
+    }
+}  
+
+public void ExecuteCallback(bool success, const char[] command, System2ExecuteOutput output, any data) {
+    if (!success || output.ExitStatus != 0) {
+        LogMessage("Couldn't execute commands %s successfully", command);
+    } else {
+        char outputString[128];
+        output.GetOutput(outputString, sizeof(outputString));
+        LogMessage("Output of the command %s: %s", command, outputString);
     }
 }  
 
