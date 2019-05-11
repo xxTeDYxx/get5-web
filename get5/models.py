@@ -121,22 +121,24 @@ class Team(db.Model):
     logo = db.Column(db.String(10), default='')
     auths = db.Column(db.PickleType)
     public_team = db.Column(db.Boolean, index=True)
+    preferred_names = db.Column(db.PickleType)
 
     @staticmethod
-    def create(user, name, tag, flag, logo, auths, public_team=False):
+    def create(user, name, tag, flag, logo, auths, public_team=False, preferred_names=None):
         rv = Team()
         rv.user_id = user.id
-        rv.set_data(name, tag, flag, logo, auths, public_team and user.admin)
+        rv.set_data(name, tag, flag, logo, auths, (public_team and user.admin), preferred_names)
         db.session.add(rv)
         return rv
 
-    def set_data(self, name, tag, flag, logo, auths, public_team):
+    def set_data(self, name, tag, flag, logo, auths, public_team, preferred_names=None):
         self.name = name
         self.tag = tag
         self.flag = flag.lower() if flag else ''
         self.logo = logo
         self.auths = auths
         self.public_team = public_team
+        self.preferred_names = preferred_names
 
     def can_edit(self, user):
         if not user:
