@@ -95,13 +95,15 @@ class TeamForm(FlaskForm):
 
     upload_logo = FileField(validators=[valid_file])
     # Possible to create loop and follow MAXPLAYERS from team model?
-    auth1 = StringField('Player 1', validators=[valid_auth])
-    auth2 = StringField('Player 2', validators=[valid_auth])
-    auth3 = StringField('Player 3', validators=[valid_auth])
-    auth4 = StringField('Player 4', validators=[valid_auth])
-    auth5 = StringField('Player 5', validators=[valid_auth])
-    auth6 = StringField('Player 6', validators=[valid_auth])
-    auth7 = StringField('Player 7', validators=[valid_auth])
+    # auth1 = StringField('Player 1', validators=[valid_auth])
+    # auth2 = StringField('Player 2', validators=[valid_auth])
+    # auth3 = StringField('Player 3', validators=[valid_auth])
+    # auth4 = StringField('Player 4', validators=[valid_auth])
+    # auth5 = StringField('Player 5', validators=[valid_auth])
+    # auth6 = StringField('Player 6', validators=[valid_auth])
+    # auth7 = StringField('Player 7', validators=[valid_auth])
+    # Add amount of forms via MAXPLAYERS
+
     public_team = BooleanField('Public Team')
 
     def get_auth_list(self):
@@ -112,13 +114,15 @@ class TeamForm(FlaskForm):
 
         return auths
 
+# Now can create a max player count based on your needs.
+for num in range(Team.MAXPLAYERS):
+    setattr(TeamForm, "auth"+str(num+1), StringField('Player '+str(num+1), validators=[valid_auth]))
 
 @team_blueprint.route('/team/create', methods=['GET', 'POST'])
 def team_create():
     mock = config_setting("TESTING")
     if not g.user:
         return redirect('/login')
-
     form = TeamForm()
     # We wish to query this every time, since we can now upload photos.
     if not mock:
@@ -174,7 +178,6 @@ def team_edit(teamid):
     team = Team.query.get_or_404(teamid)
     if not team.can_edit(g.user):
         return 'Not your team', 400
-
     form = TeamForm()
     # We wish to query this every time, since we can now upload photos.
     if not mock:
