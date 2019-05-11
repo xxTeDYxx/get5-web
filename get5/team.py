@@ -7,6 +7,7 @@ import steamid
 import util
 import os
 import io
+import re
 
 from werkzeug.utils import secure_filename
 from PIL import Image 
@@ -94,15 +95,6 @@ class TeamForm(FlaskForm):
         logo = SelectField('Logo Name', default='')
 
     upload_logo = FileField(validators=[valid_file])
-    # Possible to create loop and follow MAXPLAYERS from team model?
-    # auth1 = StringField('Player 1', validators=[valid_auth])
-    # auth2 = StringField('Player 2', validators=[valid_auth])
-    # auth3 = StringField('Player 3', validators=[valid_auth])
-    # auth4 = StringField('Player 4', validators=[valid_auth])
-    # auth5 = StringField('Player 5', validators=[valid_auth])
-    # auth6 = StringField('Player 6', validators=[valid_auth])
-    # auth7 = StringField('Player 7', validators=[valid_auth])
-    # Add amount of forms via MAXPLAYERS
 
     public_team = BooleanField('Public Team')
 
@@ -117,7 +109,8 @@ class TeamForm(FlaskForm):
 # Now can create a max player count based on your needs.
 for num in range(Team.MAXPLAYERS):
     setattr(TeamForm, "auth"+str(num+1), StringField('Player '+str(num+1), validators=[valid_auth]))
-
+    # Will have to clean input as well, remove any utf characters?
+    setattr(TeamForm, "pref_name"+str(num+1), StringField("Player "+str(num+1)+"'s Name"))
 @team_blueprint.route('/team/create', methods=['GET', 'POST'])
 def team_create():
     mock = config_setting("TESTING")
@@ -163,7 +156,7 @@ def team_create():
             flash_errors(form)
 
     return render_template('team_create.html', user=g.user, form=form,
-                           edit=False, is_admin=g.user.admin)
+                           edit=False, is_admin=g.user.admin, MAXPLAYER=Team.MAXPLAYERS)
 
 
 @team_blueprint.route('/team/<int:teamid>', methods=['GET'])
@@ -188,16 +181,15 @@ def team_edit(teamid):
         form.tag.data = team.tag
         form.country_flag.data = team.flag
         form.logo.data = team.logo
-        form.auth1.data = team.auths[0]
-        form.auth2.data = team.auths[1]
-        form.auth3.data = team.auths[2]
-        form.auth4.data = team.auths[3]
-        form.auth5.data = team.auths[4]
-        form.auth6.data = team.auths[5]
-        form.auth7.data = team.auths[6]
+        #TODO: FIND A LESS HACK FIX.
+        for field in form:
+            if "auth" in field.name:
+                field.data = team.auths[int(re.search(r'\d+', field.name).group())-1]
+            if "pref_name" in field.name:
+                field.data = "PLACEHOLDER"
         form.public_team.data = team.public_team
         return render_template('team_create.html', user=g.user, form=form,
-                               edit=True, is_admin=g.user.admin)
+                               edit=True, is_admin=g.user.admin, MAXPLAYER=Team.MAXPLAYERS)
 
     elif request.method == 'POST':
         if form.validate():
