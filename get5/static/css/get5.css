@@ -24,4 +24,9 @@ ul.nav.navbar-nav {
 		float:none;
 		text-align:center;
 	}
+	.panel-body
+	{
+		float:none;
+		overflow-x:scroll;
+	}
 }
