@@ -100,7 +100,7 @@ class TeamForm(FlaskForm):
 
     def get_auth_list(self):
         auths = []
-        for i in range(1, 8):
+        for i in range(1, Team.MAXPLAYERS+1):
             key = 'auth{}'.format(i)
             auths.append(self.data[key])
 
@@ -184,7 +184,10 @@ def team_edit(teamid):
         #TODO: FIND A LESS HACK FIX.
         for field in form:
             if "auth" in field.name:
-                field.data = team.auths[int(re.search(r'\d+', field.name).group())-1]
+                try:
+                    field.data = team.auths[int(re.search(r'\d+', field.name).group())-1]
+                except IndexError:
+                    field.data = None
             if "pref_name" in field.name:
                 field.data = "PLACEHOLDER"
         form.public_team.data = team.public_team
