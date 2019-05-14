@@ -106,11 +106,18 @@ class TeamForm(FlaskForm):
 
         return auths
 
+    def get_pref_list(self):
+        prefs = []
+        for i in range(1, Team.MAXPLAYERS+1):
+            key = 'pref_name{}'.format(i)
+            prefs.append(self.data[key])
+
+        return prefs
 # Now can create a max player count based on your needs.
 for num in range(Team.MAXPLAYERS):
     setattr(TeamForm, "auth"+str(num+1), StringField('Player '+str(num+1), validators=[valid_auth]))
-    # Will have to clean input as well, remove any utf characters?
     setattr(TeamForm, "pref_name"+str(num+1), StringField("Player "+str(num+1)+"'s Name"))
+
 @team_blueprint.route('/team/create', methods=['GET', 'POST'])
 def team_create():
     mock = config_setting("TESTING")
@@ -129,6 +136,7 @@ def team_create():
         elif form.validate():
             data = form.data
             auths = form.get_auth_list()
+            pref_names = form.get_pref_list()
             name = data['name'].strip()
             tag = data['tag'].strip()
             flag = data['country_flag']
@@ -144,7 +152,7 @@ def team_create():
                 data['logo'] = newLogoDetail
 
             team = Team.create(g.user, name, tag, flag, logo,
-                               auths, data['public_team'] and g.user.admin)
+                               auths, data['public_team'] and g.user.admin, pref_names)
 
             db.session.commit()
             app.logger.info(
@@ -186,10 +194,13 @@ def team_edit(teamid):
             if "auth" in field.name:
                 try:
                     field.data = team.auths[int(re.search(r'\d+', field.name).group())-1]
-                except IndexError:
+                except:
                     field.data = None
             if "pref_name" in field.name:
-                field.data = "PLACEHOLDER"
+                try:
+                    field.data = team.preferred_names[int(re.search(r'\d+', field.name).group())-1]
+                except:
+                    field.data = None
         form.public_team.data = team.public_team
         return render_template('team_create.html', user=g.user, form=form,
                                edit=True, is_admin=g.user.admin, MAXPLAYER=Team.MAXPLAYERS)
@@ -213,7 +224,7 @@ def team_edit(teamid):
 
             team.set_data(data['name'], data['tag'], data['country_flag'],
                             data['logo'], form.get_auth_list(),
-                            public_team)
+                            public_team, form.get_pref_list())
             
             db.session.commit()
             return redirect('/teams/{}'.format(team.user_id))
@@ -252,6 +263,7 @@ def teams_user(userid):
             team_dict['flag'] = team.flag
             team_dict['logo'] = team.logo
             team_dict['players'] = filter(lambda x: bool(x), team.auths)
+            team_dict['players_pref_names'] = filter(lambda x: bool(x), team.preferred_names)
             teams_dict[team.id] = team_dict
         return jsonify(teams_dict)
 
@@ -278,6 +290,7 @@ def all_teams():
             team_dict['flag'] = team.flag
             team_dict['logo'] = team.logo
             team_dict['players'] = filter(lambda x: bool(x), team.auths)
+            team_dict['players_pref_names'] = filter(lambda x: bool(x), team.preferred_names)
             teams_dict[team.id] = team_dict
         return jsonify(teams_dict)
 

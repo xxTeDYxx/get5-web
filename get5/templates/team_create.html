@@ -49,12 +49,19 @@
     {# Surprisingly works! Dynamically present MAXPLAYERs.#}
     {% for i in range(MAXPLAYER)%}
       {% set authNum = "auth"+(i+1)|string %}
+      {% set prefNum = "pref_name"+(i+1)|string %}
       <div class="form-group">
         {{ form[authNum].label(class="col-sm-2 control-label") }}
           <div class="col-sm-7">
             {{ form[authNum](class="form-control", placeholder="Any steamid format") }}
           </div>
         </div>
+        <div class="form-group">
+            {{ form[prefNum].label(class="col-sm-2 control-label") }}
+              <div class="col-sm-7">
+                {{ form[prefNum](class="form-control", placeholder="Optional Match Name") }}
+              </div>
+            </div>
     {% endfor %}
 
 
