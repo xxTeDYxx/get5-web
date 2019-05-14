@@ -517,7 +517,15 @@ class Match(db.Model):
             add_if('flag', team.flag.upper())
             add_if('logo', team.logo)
             add_if('matchtext', matchtext)
-            d[teamkey]['players'] = filter(lambda x: x != '', team.auths)
+            # Attempt to send in KV Pairs of preferred names. 
+            # If none, send in the regular list.
+            try:
+                d[teamkey]['players'] = {}
+                for uid, name in zip(team.auths, team.preferred_names):
+                    d[teamkey]['players'][uid] = name
+            except:
+                d[teamkey]['players'] = filter(lambda x: x != '', team.auths)
+
 
         add_team_data('team1', self.team1_id, self.team1_string)
         add_team_data('team2', self.team2_id, self.team2_string)

@@ -63,7 +63,7 @@ public Plugin myinfo = {
   name = "Get5 Web API Integration",
   author = "splewis/phlexplexico",
   description = "Records match stats to a get5-web api",
-  version = "0.1",
+  version = "0.2",
   url = "https://github.com/phlexplexico/get5-web"
 };
 // clang-format on
@@ -94,7 +94,7 @@ public void OnPluginStart() {
       CreateConVar("get5_api_ftp_username", "username", "Username for the FTP connection.");
 
   g_FTPPasswordCvar = 
-      CreateConVar("get5_api_ftp_password", "supersecret", "Password for the FTP user.");
+      CreateConVar("get5_api_ftp_password", "supersecret", "Password for the FTP user. Leave blank if no password.");
 
   g_FTPEnableCvar = 
       CreateConVar("get5_api_ftp_enabled", "0", "0 Disables FTP Upload, 1 Enables.");
@@ -386,16 +386,15 @@ public void Get5_OnMapVetoed(MatchTeam team, const char[] map){
 }
 
 public void Get5_OnDemoFinished(const char[] filename){
-  LogDebug("Demo finished, now sending upload request to API.");
-  Handle req = CreateRequest(k_EHTTPMethodPOST, "match/%d/demo", g_MatchID);
+  LogDebug("About to enter UploadDemo.");
+  UploadDemo(filename);
+  LogDebug("Demo upload finished, now sending upload request to API.");
+  Handle req = CreateRequest(k_EHTTPMethodPOST, "match/%d/map/%d/demo", g_MatchID, MapNumber());
   // Send filename to append to match in database maybe?
   if (req != INVALID_HANDLE) {
       AddStringParam(req, "demoFile", filename);
       SteamWorks_SendHTTPRequest(req);
   }
-  LogDebug("About to enter UploadDemo.");
-  UploadDemo(filename);
-  
 }
 
 public void UploadDemo(const char[] filename){
