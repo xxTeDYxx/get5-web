@@ -521,7 +521,7 @@ class Match(db.Model):
             # If none, send in the regular list.
             try:
                 d[teamkey]['players'] = {}
-                for uid, name in zip(team.auths, team.preferred_names):
+                for uid, name in zip(filter(lambda x: x != '', team.auths), team.preferred_names):
                     d[teamkey]['players'][uid] = name
             except:
                 d[teamkey]['players'] = filter(lambda x: x != '', team.auths)
