@@ -387,20 +387,21 @@ public void Get5_OnMapVetoed(MatchTeam team, const char[] map){
 
 public void Get5_OnDemoFinished(const char[] filename){
   LogDebug("About to enter UploadDemo.");
-  UploadDemo(filename);
+  char zippedFile[PLATFORM_MAX_PATH];
+  UploadDemo(filename, zippedFile);
   LogDebug("Demo upload finished, now sending upload request to API.");
   Handle req = CreateRequest(k_EHTTPMethodPOST, "match/%d/map/%d/demo", g_MatchID, MapNumber());
   // Send filename to append to match in database maybe?
   if (req != INVALID_HANDLE) {
-      AddStringParam(req, "demoFile", filename);
+      AddStringParam(req, "demoFile", zippedFile);
       SteamWorks_SendHTTPRequest(req);
   }
 }
 
-public void UploadDemo(const char[] filename){
+public void UploadDemo(const char[] filename, char zippedFile[PLATFORM_MAX_PATH]){
   char remoteDemoPath[PLATFORM_MAX_PATH];
   g_FTPEnable = g_FTPEnableCvar.BoolValue;
-  char zippedFile[PLATFORM_MAX_PATH];
+  
   if(g_FTPEnable && filename[0]){
     g_FTPHostCvar.GetString(g_FTPHost, sizeof(g_FTPHost));
     g_FTPPort = g_FTPPortCvar.IntValue;

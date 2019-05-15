@@ -350,12 +350,14 @@ class Match(db.Model):
     veto_mappool = db.Column(db.String(500))
     map_stats = db.relationship('MapStats', backref='match', lazy='dynamic')
 
+    demoFile = db.Column(db.String(256))
+
     team1_score = db.Column(db.Integer, default=0)
     team2_score = db.Column(db.Integer, default=0)
 
     @staticmethod
     def create(user, team1_id, team2_id, team1_string, team2_string,
-               max_maps, skip_veto, title, veto_mappool, season_id, veto_first, server_id=None):
+               max_maps, skip_veto, title, veto_mappool, season_id, veto_first, server_id=None, demoFile=None):
         rv = Match()
         rv.user_id = user.id
         rv.team1_id = team1_id
@@ -374,6 +376,7 @@ class Match(db.Model):
             rv.veto_first = None
         rv.api_key = ''.join(random.SystemRandom().choice(
             string.ascii_uppercase + string.digits) for _ in range(24))
+        rv.demoFile = demoFile
         db.session.add(rv)
         return rv
 
@@ -541,6 +544,7 @@ class Match(db.Model):
                 d['maplist'].append(map)
 
         return d
+
 
     def __repr__(self):
         return 'Match(id={})'.format(self.id)
