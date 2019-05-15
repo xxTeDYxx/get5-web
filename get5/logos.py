@@ -43,9 +43,9 @@ def get_logo_choices():
 
 
 def get_logo_img(tag):
-	if has_logo(tag) and os.path.isfile('/static/resource/csgo/resource/flash/econ/tournaments/teams/{}.png'.format(tag)):
+	if has_logo(tag) and os.path.isfile(os.path.join(get_logo_dir(),'{}.png'.format(tag))):
 		return '/static/resource/csgo/resource/flash/econ/tournaments/teams/{}.png'.format(tag)
-	elif has_logo(tag) and os.path.isfile('/static/resource/csgo/materials/panorama/images/tournaments/teams/{}.svg'.format(tag)):
+	elif has_logo(tag) and os.path.isfile(os.path.join(get_pano_dir(),'{}.svg'.format(tag))):
 		return '/static/resource/csgo/materials/panorama/images/tournaments/teams/{}.svg'.format(tag)
 	else:
 		return None
