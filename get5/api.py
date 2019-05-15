@@ -64,6 +64,12 @@ def match_finish(matchid):
         elif winner == 'team2':
             match.team1_score = 0
             match.team2_score = 1
+        else:
+            match.team1_score = 0
+            match.team2_score = 0
+
+        if match.start_time is None:
+            match.start_time = datetime.datetime.utcnow()
 
     match.end_time = datetime.datetime.utcnow()
     server = GameServer.query.get(match.server_id)
