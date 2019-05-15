@@ -47,16 +47,21 @@ def valid_file(form, field):
     
     index_of_dot = filename.index('.')
     file_name_without_extension = filename[:index_of_dot]
+    extension = filename.rsplit('.', 1)[1].lower()
     exists = os.path.isfile(app.config['LOGO_FOLDER'] + "/" + secure_filename(filename))
+    existsSVG = os.path.isfile(app.config['PANO_LOGO_FOLDER'] + "/" + secure_filename(filename))
     if '.' not in filename:
-        raise ValidationError('Image MUST be PNG.')
-    elif filename.rsplit('.', 1)[1].lower() != 'png':
-        raise ValidationError('Image MUST be PNG.')
+        raise ValidationError('Image MUST be PNG or SVG.')
+    elif extension != 'png' or extension != 'svg':
+        raise ValidationError('Image MUST be PNG or SVG.')
     elif len(filename.rsplit('.', 1)[0]) > 3:
         raise ValidationError('Image name can only be 3 characters long.')
     elif exists:
-        raise ValidationError('Image name already exists.')
+        raise ValidationError('Image name already exists for PNG.')
+    elif existsSVG:
+        raise ValidationError('Image name already exists for SVG.')
 
+    
     file = request.files['upload_logo']
     img = Image.open(file)
     width, height = img.size
@@ -65,16 +70,22 @@ def valid_file(form, field):
     if width != 64 or height != 64:
         app.logger.info("Resizing image as it is not 64x64.")
         img = img.resize((64,64),Image.ANTIALIAS)
-        img.save(out, format='png')
+        img.save(out, format=extension)
         # check once more for size.
         if out.tell() > 16384:
             app.logger.info("Size: {}".format(out.tell()))
             raise ValidationError('Image is too large, must be 10kB or less.')
-        img.save(os.path.join(app.config['LOGO_FOLDER'], filename),optimize=True)
+        if extension == 'png':
+            img.save(os.path.join(app.config['LOGO_FOLDER'], filename),optimize=True)
+        else:
+            img.save(os.path.join(app.config['PANO_LOGO_FOLDER'], filename),optimize=True)
     elif out.tell() > 16384:
         raise ValidationError('Image is too large, must be 10kB or less.')
     else:
-        img.save(os.path.join(app.config['LOGO_FOLDER'], filename),optimize=True)
+        if extension == 'png':
+            img.save(os.path.join(app.config['LOGO_FOLDER'], filename),optimize=True)
+        else:
+            img.save(os.path.join(app.config['PANO_LOGO_FOLDER'], filename),optimize=True)
 
 class TeamForm(FlaskForm):
     mock = config_setting("TESTING")
