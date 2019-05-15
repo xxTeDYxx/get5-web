@@ -244,7 +244,7 @@ def team_edit(teamid):
 
     return render_template(
         'team_create.html', user=g.user, form=form, edit=True,
-                           is_admin=g.user.admin)
+                           is_admin=g.user.admin, MAXPLAYER=Team.MAXPLAYERS)
 
 
 @team_blueprint.route('/team/<int:teamid>/delete')
