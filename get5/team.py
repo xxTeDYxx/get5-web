@@ -52,7 +52,7 @@ def valid_file(form, field):
     existsSVG = os.path.isfile(app.config['PANO_LOGO_FOLDER'] + "/" + secure_filename(filename))
     if '.' not in filename:
         raise ValidationError('Image MUST be PNG or SVG.')
-    elif extension != 'png' or extension != 'svg':
+    elif extension not in {'svg', 'png'}:
         raise ValidationError('Image MUST be PNG or SVG.')
     elif len(filename.rsplit('.', 1)[0]) > 3:
         raise ValidationError('Image name can only be 3 characters long.')
@@ -66,7 +66,6 @@ def valid_file(form, field):
     img = Image.open(file)
     width, height = img.size
     out = io.BytesIO()
-    #img.save(out, format='png')
     if width != 64 or height != 64:
         app.logger.info("Resizing image as it is not 64x64.")
         img = img.resize((64,64),Image.ANTIALIAS)
