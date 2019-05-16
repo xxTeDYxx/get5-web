@@ -88,6 +88,8 @@ app.logger.setLevel(logging.INFO)
 
 # Find version info
 app.jinja_env.globals.update(COMMIT_STRING=util.get_version())
+#Set our webpanel name.
+app.jinja_env.globals.update(WEBPANEL_NAME=app.config['WEBPANEL_NAME'])
 
 # Setup any data structures needed
 logos.initialize_logos()
