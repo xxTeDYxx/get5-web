@@ -60,7 +60,7 @@ ConVar g_CompressEnableCvar;
 bool g_CompressEnable;
 
 #define LOGO_DIR "resource/flash/econ/tournaments/teams"
-
+#define PANO_DIR "materials/panorama/images/tournaments/teams"
 // clang-format off
 public Plugin myinfo = {
   name = "Get5 Web API Integration",
@@ -198,6 +198,11 @@ public void Get5_OnSeriesInit() {
       LogError("Failed to create logo directory: %s", LOGO_DIR);
     }
   }
+  if (!DirExists(PANO_DIR)) {
+    if (!CreateDirectory(PANO_DIR, 755)) {
+      LogError("Failed to create logo directory: %s", PANO_DIR);
+    }
+  }
 
   char logo1[32];
   char logo2[32];
@@ -213,7 +218,9 @@ public void CheckForLogo(const char[] logo) {
   }
 
   char logoPath[PLATFORM_MAX_PATH + 1];
+  char svgLogoPath[PLATFORM_MAX_PATH +1];
   Format(logoPath, sizeof(logoPath), "%s/%s.png", LOGO_DIR, logo);
+  Format(svgLogoPath, sizeof(svgLogoPath), "%s/%s.svg", PANO_DIR, logo);
 
   // Try to fetch the file if we don't have it.
   if (!FileExists(logoPath)) {
@@ -228,6 +235,22 @@ public void CheckForLogo(const char[] logo) {
 
     SteamWorks_SetHTTPRequestContextValue(req, view_as<int>(pack));
     SteamWorks_SetHTTPCallbacks(req, LogoCallback);
+    SteamWorks_SendHTTPRequest(req);
+  }
+
+  //Attempt to get SVG.
+  if (!FileExists(svgLogoPath)) {
+    LogDebug("Fetching logo for %s", logo);
+    Handle req = CreateRequest(k_EHTTPMethodGET, "/static/resource/csgo/materials/panorama/images/tournaments/teams/%s.svg", logo);
+    if (req == INVALID_HANDLE) {
+      return;
+    }
+
+    Handle svgPack = CreateDataPack();
+    WritePackString(svgPack, logo);
+
+    SteamWorks_SetHTTPRequestContextValue(req, view_as<int>(svgPack));
+    SteamWorks_SetHTTPCallbacks(req, LogoCallbackSvg);
     SteamWorks_SendHTTPRequest(req);
   }
 }
@@ -248,6 +271,24 @@ public int LogoCallback(Handle request, bool failure, bool successful, EHTTPStat
 
   LogMessage("Saved logo for %s to %s", logo, logoPath);
   SteamWorks_WriteHTTPResponseBodyToFile(request, logoPath);
+}
+
+public int LogoCallbackSvg(Handle request, bool failure, bool successful, EHTTPStatusCode status, int data) {
+  if (failure || !successful) {
+    LogError("Logo request failed, status code = %d", status);
+    return;
+  }
+
+  DataPack pack = view_as<DataPack>(data);
+  pack.Reset();
+  char logo[32];
+  pack.ReadString(logo, sizeof(logo));
+
+  char svgLogoPath[PLATFORM_MAX_PATH + 1];
+  Format(svgLogoPath, sizeof(svgLogoPath), "%s/%s.svg", PANO_DIR, logo);
+
+  LogMessage("Saved logo for %s to %s", logo, svgLogoPath);
+  SteamWorks_WriteHTTPResponseBodyToFile(request, svgLogoPath);
 }
 
 public void Get5_OnGoingLive(int mapNumber) {
