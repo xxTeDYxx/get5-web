@@ -63,45 +63,41 @@ def valid_file(form, field):
     elif existsSVG:
         raise ValidationError('Image name already exists for SVG.')
 
+    
     if extension == 'png':
-        savePng(request, filename, extension)
-    else:
-        saveSVG(request, filename)
-
-def saveSVG(request, filename):
-    file = request.files['upload_logo']
-    #Limited - attempt to find width and height. If nothing then deny upload.
-    tree = ET.parse(file)
-    root = tree.getroot()
-    try:
-        width = root.attrib['width']
-        height = root.attrib['height']
-    except:
-        raise ValidationError('SVG is not properly formatted.')
-    if (width in {'64', '64px'}) and (height in {'64','64px'}):
-        tree.write(app.config['PANO_LOGO_FOLDER'] + "/" + secure_filename(filename))
-        app.logger.info("Saved our SVG!")
-    else:
-        raise ValidationError("Error in saving SVG to folder.")
-
-def savePng(request, filename, extension):
-    file = request.files['upload_logo']
-    img = Image.open(file)
-    width, height = img.size
-    out = io.BytesIO()
-    if width != 64 or height != 64:
-        app.logger.info("Resizing image as it is not 64x64.")
-        img = img.resize((64,64),Image.ANTIALIAS)
-        img.save(out, format=extension)
-        # check once more for size.
-        if out.tell() > 16384:
-            app.logger.info("Size: {}".format(out.tell()))
+        file = request.files['upload_logo']
+        img = Image.open(file)
+        width, height = img.size
+        out = io.BytesIO()
+        if width != 64 or height != 64:
+            app.logger.info("Resizing image as it is not 64x64.")
+            img = img.resize((64,64),Image.ANTIALIAS)
+            img.save(out, format=extension)
+            # check once more for size.
+            if out.tell() > 16384:
+                app.logger.info("Size: {}".format(out.tell()))
+                raise ValidationError('Image is too large, must be 10kB or less.')
+            img.save(os.path.join(app.config['LOGO_FOLDER'], filename),optimize=True)
+        elif out.tell() > 16384:
             raise ValidationError('Image is too large, must be 10kB or less.')
-        img.save(os.path.join(app.config['LOGO_FOLDER'], filename),optimize=True)
-    elif out.tell() > 16384:
-        raise ValidationError('Image is too large, must be 10kB or less.')
+        else:
+            img.save(os.path.join(app.config['LOGO_FOLDER'], filename),optimize=True)
     else:
-        img.save(os.path.join(app.config['LOGO_FOLDER'], filename),optimize=True)
+        file = request.files['upload_logo']
+        #Limited - attempt to find width and height. If nothing then deny upload.
+        tree = ET.parse(file)
+        root = tree.getroot()
+        try:
+            width = root.attrib['width']
+            height = root.attrib['height']
+        except:
+            raise ValidationError('SVG is not properly formatted.')
+        if (width in {'64', '64px'}) and (height in {'64','64px'}):
+            tree.write(app.config['PANO_LOGO_FOLDER'] + "/" + secure_filename(filename))
+            app.logger.info("Saved our SVG!")
+        else:
+            raise ValidationError("Error in saving SVG to folder.")    
+    
 
 class TeamForm(FlaskForm):
     mock = config_setting("TESTING")

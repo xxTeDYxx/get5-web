@@ -56,6 +56,9 @@ int g_FTPPort;
 ConVar g_FTPEnableCvar;
 bool g_FTPEnable;
 
+ConVar g_CompressEnableCvar;
+bool g_CompressEnable;
+
 #define LOGO_DIR "resource/flash/econ/tournaments/teams"
 
 // clang-format off
@@ -98,6 +101,10 @@ public void OnPluginStart() {
 
   g_FTPEnableCvar = 
       CreateConVar("get5_api_ftp_enabled", "0", "0 Disables FTP Upload, 1 Enables.");
+
+  g_CompressEnableCvar =
+      CreateConVar("get5_enabled_7z_compression", "0", "0 Disables zipping files, 1 enables.");
+
   /** Create and exec plugin's configuration file **/
   AutoExecConfig(true, "get5api");
 }
@@ -401,7 +408,7 @@ public void Get5_OnDemoFinished(const char[] filename){
 public void UploadDemo(const char[] filename, char zippedFile[PLATFORM_MAX_PATH]){
   char remoteDemoPath[PLATFORM_MAX_PATH];
   g_FTPEnable = g_FTPEnableCvar.BoolValue;
-  
+  g_CompressEnable = g_CompressEnableCvar.BoolValue;
   if(g_FTPEnable && filename[0]){
     g_FTPHostCvar.GetString(g_FTPHost, sizeof(g_FTPHost));
     g_FTPPort = g_FTPPortCvar.IntValue;
@@ -409,7 +416,12 @@ public void UploadDemo(const char[] filename, char zippedFile[PLATFORM_MAX_PATH]
     g_FTPPasswordCvar.GetString(g_FTPPassword, sizeof(g_FTPPassword));
 
     // Will either be a zipped file or default filename.
-    CompressFile(filename, zippedFile);
+    if(g_CompressEnable){
+      CompressFile(filename, zippedFile);
+    } else {
+      Format(zippedFile, sizeof(zippedFile), "%s", filename);
+    }
+    
     System2FTPRequest ftpRequest = new System2FTPRequest(FtpResponseCallback, remoteDemoPath);
     ftpRequest.AppendToFile = false;
     ftpRequest.CreateMissingDirs = true;
@@ -439,11 +451,11 @@ public void CompressFile(const char[] filename, char zippedFile[PLATFORM_MAX_PAT
           // Print an error if both can't be executed
           if (StrEqual(binDir, binDir32Bit)) {
               LogMessage("NOTE: 7-ZIP was not found or is not executable at '%s', uploading as regular file.", binDir);
-              Format(zippedFile, sizeof(zippedFile), "%s.zip", filename);
+              Format(zippedFile, sizeof(zippedFile), "%s", filename);
 	      return;
           } else {
               LogMessage("NOTE: 7-ZIP was not found or is not executable at '%s' or '%s', uploading as regular file.", binDir, binDir32Bit);
-              Format(zippedFile, sizeof(zippedFile), "%s.zip", filename);
+              Format(zippedFile, sizeof(zippedFile), "%s", filename);
 	      return;
           }
       } else {
