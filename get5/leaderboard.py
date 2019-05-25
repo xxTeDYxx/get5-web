@@ -17,11 +17,12 @@ from copy import deepcopy
 def getLeaderboard(seasonid=None):
     if seasonid is None:
         totalMatches = Match.query.order_by(-Match.id).filter(
-            Match.cancelled == False, Match.end_time.isnot(None))
+            Match.cancelled == False, Match.end_time.isnot(None), Match.winner.isnot(None))
         seasonsBoard = False
     else:
         totalMatches = Match.query.order_by(-Match.id).filter(
-            Match.cancelled == False, Match.end_time.isnot(None), Match.season_id == seasonid)
+            Match.cancelled == False, Match.end_time.isnot(None), 
+            Match.season_id == seasonid, Match.winner.isnot(None))
         seasonsBoard = True
         season = Season.query.get_or_404(seasonid)
     allTeams = Team.query.order_by(-Team.id)
@@ -30,31 +31,35 @@ def getLeaderboard(seasonid=None):
     # Build our own object with team and links, rank, and round diff?
     # Building our own object requires matches, map_stats for each match.
     # Just build a dictionary with each match and stats?
-    for match in totalMatches:
+    for match in totalMatches:     
         map_stats = MapStats.query.filter_by(
-            match_id=match.id).first()
-        # Get each winner ID and create a list that returns the Team Name, amount of wins for now.
-        winningTeam = Team.query.filter_by(id=map_stats.winner).first()
+            match_id=match.id)
         # Get the losing team, and scores for round difference.
-        if map_stats.winner == match.team1_id:
-            losingTeam = Team.query.filter_by(id=match.team2_id).first()
-            winningRounds = map_stats.team1_score
-            losingRounds = map_stats.team2_score
-        else:
-            losingTeam = Team.query.filter_by(id=match.team1_id).first()
-            losingRounds = map_stats.team1_score
-            winningRounds = map_stats.team2_score
+        for all_stats in map_stats:
+            winningRounds = 0
+            losingRounds = 0
+            # Get each winner ID and create a list that returns the Team Name, amount of wins for now.
+            winningTeam = Team.query.filter_by(id=all_stats.winner).first()
+            if all_stats.winner == match.team1_id:
+                losingTeam = Team.query.filter_by(id=match.team2_id).first()
+                winningRounds = winningRounds + all_stats.team1_score
+                losingRounds = losingRounds + all_stats.team2_score
+            else:
+                losingTeam = Team.query.filter_by(id=match.team1_id).first()
+                losingRounds = losingRounds + all_stats.team1_score
+                winningRounds = winningRounds + all_stats.team2_score
 
-        # Update winning and losing teams.
-        dTeamStandings[winningTeam.name]['teamid'] = winningTeam.id
-        dTeamStandings[winningTeam.name]['wins'] += 1
-        dTeamStandings[winningTeam.name]['rounddiff'] += (winningRounds - losingRounds)
+            # Update winning and losing teams.
+            dTeamStandings[winningTeam.name]['teamid'] = winningTeam.id
+            dTeamStandings[winningTeam.name]['wins'] += 1
+            dTeamStandings[winningTeam.name]['rounddiff'] += (winningRounds - losingRounds)
+            dTeamStandings[losingTeam.name]['teamid'] = losingTeam.id
+            dTeamStandings[losingTeam.name]['losses'] += 1
+            dTeamStandings[losingTeam.name]['rounddiff'] += (losingRounds - winningRounds)
 
-        dTeamStandings[losingTeam.name]['teamid'] = losingTeam.id
-        dTeamStandings[losingTeam.name]['losses'] += 1
-        dTeamStandings[losingTeam.name]['rounddiff'] += (losingRounds - winningRounds)
+            
+            
     # Sort teams via lexigraphical sort, very inefficient but it works for now.
-    # TODO: Create a class for this instead of using dicts, and make list of class.
     dTeamStandings = OrderedDict(
         sorted(dTeamStandings.items(), key=lambda x: (x[1].get('wins'), x[1].get('losses'), x[1].get('rounddiff')), reverse=True))
     # app.logger.info('Currently in dTeamStandings: \n{}'.format(dTeamStandings))
