@@ -30,7 +30,8 @@ def initialize_logos():
 
 def add_new_logo(tag):
     global _logos
-    _logos.add(tag)
+    if not has_logo(tag):
+        _logos.add(tag)
 
 
 def has_logo(tag):

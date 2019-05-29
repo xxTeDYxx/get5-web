@@ -94,7 +94,6 @@ def valid_file(form, field):
             raise ValidationError('SVG is not properly formatted.')
         if (width in {'64', '64px'}) and (height in {'64','64px'}):
             tree.write(app.config['PANO_LOGO_FOLDER'] + "/" + secure_filename(filename))
-            app.logger.info("Saved our SVG!")
         else:
             raise ValidationError("Error in saving SVG to folder.")    
     
@@ -172,6 +171,7 @@ def team_create():
                 newLogoDetail = filename[:index_of_dot]
                 # Reinit our logos.
                 logos.add_new_logo(newLogoDetail)
+                app.logger.info("Added new logo id {}".format(newLogoDetail))
                 data['logo'] = newLogoDetail
 
             team = Team.create(g.user, name, tag, flag, logo,
@@ -212,7 +212,6 @@ def team_edit(teamid):
         form.tag.data = team.tag
         form.country_flag.data = team.flag
         form.logo.data = team.logo
-        #TODO: FIND A LESS HACK FIX.
         for field in form:
             if "auth" in field.name:
                 try:
