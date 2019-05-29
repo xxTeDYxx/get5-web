@@ -4,59 +4,64 @@
 
 
 <div id="content">
-    <h1>Player Stats for <a href="{{ steam_url }}">{{ user_name }}</a></h1>
+    
     <div class="container">
-        <table class="table table-hover">
-            <thead>
-              <tr>
-                <th class="text-center">Kills</th>
-                <th class="text-center">Deaths</th>
-                <th class="text-center">Assists</th>
-                <th class="text-center"><acronym title="Flashbang Assists">FBA</acronym></th>
-                <th class="text-center"><acronym title="Kill/Death Average">KDA</acronym></th>
-                <th class="text-center"><acronym title="Average damage per round">ADR</acronym></th>
-                <th class="text-center">3K</th>
-                <th class="text-center">4K</th>
-                <th class="text-center">5K</th>
-                <th class="text-center">1v1</th>
-                <th class="text-center">1v2</th>
-                <th class="text-center">1v3</th>
-                <th class="text-center">1v4</th>
-                <th class="text-center">1v5</th>
-                <th class="text-center"><acronym title="Average Headshot Percentage">AHSP</acronym></th>
-                <th class="text-center"><acronym title="Total Rounds Played">TRP</acronym></th>
-                <th class="text-center">Rating</th>
-              </tr>
-            </thead>
-            <tbody>
+      <div class="panel panel-default">
+        <div class="panel-heading"><h1>Player Stats for <a href="{{ steam_url }}">{{ user_name }}</a></h1></div>
+        <div class="panel-body">
+          <table class="table table-hover">
+              <thead>
                 <tr>
-                    <td class="text-center"> {{ user_kills }} </td>
-                    <td class="text-center"> {{ user_deaths }} </td>
-                    <td class="text-center"> {{ user_assists }} </td>
-                    <td class="text-center"> {{ user_fbAssists }} </td>
-                  
-                    <td class="text-center"> {{ user_kdr | round(2) }} </td>
-                    <td class="text-center"> {{ user_adr | round(2) }} </td>
-
-                    <td class="text-center"> {{ user_3k }} </td>
-                    <td class="text-center"> {{ user_4k }} </td>
-                    <td class="text-center"> {{ user_5k }} </td>
+                  <th class="text-center">Kills</th>
+                  <th class="text-center">Deaths</th>
+                  <th class="text-center">Assists</th>
+                  <th class="text-center"><acronym title="Flashbang Assists">FBA</acronym></th>
+                  <th class="text-center"><acronym title="Kill/Death Average">KDA</acronym></th>
+                  <th class="text-center"><acronym title="Average damage per round">ADR</acronym></th>
+                  <th class="text-center">3K</th>
+                  <th class="text-center">4K</th>
+                  <th class="text-center">5K</th>
+                  <th class="text-center">1v1</th>
+                  <th class="text-center">1v2</th>
+                  <th class="text-center">1v3</th>
+                  <th class="text-center">1v4</th>
+                  <th class="text-center">1v5</th>
+                  <th class="text-center"><acronym title="Average Headshot Percentage">AHSP</acronym></th>
+                  <th class="text-center"><acronym title="Total Rounds Played">TRP</acronym></th>
+                  <th class="text-center">Rating</th>
+                </tr>
+              </thead>
+              <tbody>
+                  <tr>
+                      <td class="text-center"> {{ user_kills }} </td>
+                      <td class="text-center"> {{ user_deaths }} </td>
+                      <td class="text-center"> {{ user_assists }} </td>
+                      <td class="text-center"> {{ user_fbAssists }} </td>
                     
-                    <td class="text-center"> {{ user_1v1 }} </td>
-                    <td class="text-center"> {{ user_1v2 }} </td>
-                    <td class="text-center"> {{ user_1v3 }} </td>
-                    <td class="text-center"> {{ user_1v4 }} </td>
-                    <td class="text-center"> {{ user_1v5 }} </td>
+                      <td class="text-center"> {{ user_kdr | round(2) }} </td>
+                      <td class="text-center"> {{ user_adr | round(2) }} </td>
 
-                    <td class="text-center"> {{ user_headshot | round(2) }} </td>
-                    <td class="text-center"> {{ user_totalrounds }} </td>
-                    <td class="text-center"> {{ user_rating | round(2) }} </td>  
-                    
-                  </tr>
-            </tbody>
-  
-          </table>
-    </div>
+                      <td class="text-center"> {{ user_3k }} </td>
+                      <td class="text-center"> {{ user_4k }} </td>
+                      <td class="text-center"> {{ user_5k }} </td>
+                      
+                      <td class="text-center"> {{ user_1v1 }} </td>
+                      <td class="text-center"> {{ user_1v2 }} </td>
+                      <td class="text-center"> {{ user_1v3 }} </td>
+                      <td class="text-center"> {{ user_1v4 }} </td>
+                      <td class="text-center"> {{ user_1v5 }} </td>
+
+                      <td class="text-center"> {{ user_headshot | round(2) }} </td>
+                      <td class="text-center"> {{ user_totalrounds }} </td>
+                      <td class="text-center"> {{ user_rating | round(2) }} </td>  
+                      
+                    </tr>
+              </tbody>
+    
+            </table>
+        </div>
+      </div>
+  </div>
     
 </div>
 {% endblock %}

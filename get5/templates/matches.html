@@ -11,7 +11,7 @@
     {% elif all_matches %}
     All matches
     {% elif season_matches %}
-    Season Matches for <a href="/season/{{season_user.id}}/{{ season.id }}">{{season.name}}</a>
+    Season Matches for <a href="/season/{{ season.id }}">{{season.name}}</a>
     {% else %}
     Matches for <a href="/user/{{ match_owner.id }}"> {{ match_owner.name }}</a>
     {% endif%}

@@ -3,7 +3,7 @@ from flask import Blueprint, request, render_template, flash, g, redirect, jsoni
 import steamid
 import get5
 from get5 import app, db, BadRequestError, config_setting
-from models import User, Team, Match, GameServer, Season, Veto
+from models import User, Team, Match, GameServer, Season, Veto, match_audit
 from collections import OrderedDict
 from datetime import datetime
 import util
@@ -16,7 +16,7 @@ from wtforms import (
     SelectField, ValidationError, SelectMultipleField)
 
 match_blueprint = Blueprint('match', __name__)
-
+dbKey = app.config['DATABASE_KEY']
 
 class MultiCheckboxField(SelectMultipleField):
     widget = widgets.ListWidget(prefix_label=False)
@@ -190,7 +190,7 @@ def match_create():
                 message = 'Success'
             else:
                 json_reply, message = util.check_server_avaliability(
-                    server)
+                    server,dbKey)
                 server_available = (json_reply is not None)
 
             if server_available:
@@ -275,7 +275,6 @@ def match(matchid):
         is_owner = (g.user.id == match.user_id)
         has_admin_access = is_owner or (config_setting(
             'ADMINS_ACCESS_ALL_MATCHES') and g.user.admin)
-    #app.logger.info("Veto: \n{}".format(vetoes))
     return render_template(
         'match.html', user=g.user, admin_access=has_admin_access,
         match=match, team1=team1, team2=team2,
@@ -393,6 +392,9 @@ def match_rcon(matchid):
             else:
                 rcon_response = 'No output'
             flash(rcon_response)
+            # Store the command.
+            match_audit.create(g.user.id, matchid, datetime.now(), command)
+            db.session.commit()
         except util.RconError as e:
             print(e)
             flash('Failed to send command: ' + str(e))
@@ -445,6 +447,8 @@ def match_adduser(matchid):
         try:
             command = 'get5_addplayer {} {}'.format(new_auth, team)
             response = server.send_rcon_command(command, raise_errors=True)
+            match_audit.create(g.user.id, matchid, datetime.now(), command)
+            db.session.commit()
             flash(response)
         except util.RconError as e:
             flash('Failed to send command: ' + str(e))
@@ -453,22 +457,6 @@ def match_adduser(matchid):
         flash('Invalid steamid: {}'.format(auth))
 
     return redirect('/match/{}'.format(matchid))
-
-
-# @match_blueprint.route('/match/<int:matchid>/sendconfig')
-# def match_sendconfig(matchid):
-#     match = Match.query.get_or_404(matchid)
-#     admintools_check(g.user, match)
-#     server = GameServer.query.get_or_404(match.server_id)
-
-#     try:
-#         server.send_rcon_command('mp_unpause_match', raise_errors=True)
-#         flash('Unpaused match')
-#     except util.RconError as e:
-#         flash('Failed to send unpause command: ' + str(e))
-
-#     return redirect('/match/{}'.format(matchid))
-
 
 @match_blueprint.route('/match/<int:matchid>/backup', methods=['GET'])
 def match_backup(matchid):

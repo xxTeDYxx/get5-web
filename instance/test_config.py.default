@@ -1,6 +1,8 @@
 # These must be changed if you want test cases to pass.
 SQLALCHEMY_DATABASE_URI = 'mysql://user:password@host/test_db'
 STEAM_API_KEY = '???'
+DATABASE_KEY = '???'  # Used for encryption on database. MUST BE 16 BYTES.
+WEBPANEL_NAME = 'Get5' # Used for the title header on the webpage.
 
 # These should not be changed.
 DEBUG = False
@@ -11,3 +13,5 @@ USER_MAX_SERVERS = 10
 USER_MAX_TEAMS = 100
 USER_MAX_MATCHES = 1000
 DEFAULT_PAGE = '/matches'
+# Please make sure this is only located in test.
+WTF_CSRF_ENABLED = False

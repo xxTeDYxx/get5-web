@@ -12,6 +12,8 @@ import random
 import json
 import re
 
+dbKey = app.config['DATABASE_KEY']
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     steam_id = db.Column(db.String(40), unique=True)
@@ -55,7 +57,7 @@ class GameServer(db.Model):
     display_name = db.Column(db.String(32), default='')
     ip_string = db.Column(db.String(32))
     port = db.Column(db.Integer)
-    rcon_password = db.Column(db.String(32))
+    rcon_password = db.Column(db.String(128))
     in_use = db.Column(db.Boolean, default=False)
     public_server = db.Column(db.Boolean, default=False, index=True)
 
@@ -72,8 +74,11 @@ class GameServer(db.Model):
         return rv
 
     def send_rcon_command(self, command, raise_errors=False, num_retries=3, timeout=3.0):
+        encRcon = util.decrypt(dbKey, self.rcon_password)
+        if encRcon is None:
+            encRcon = self.rcon_password
         return util.send_rcon_command(
-            self.ip_string, self.port, self.rcon_password,
+            self.ip_string, self.port, encRcon,
             command, raise_errors, num_retries, timeout)
 
     def get_hostport(self):
@@ -116,22 +121,24 @@ class Team(db.Model):
     logo = db.Column(db.String(10), default='')
     auths = db.Column(db.PickleType)
     public_team = db.Column(db.Boolean, index=True)
+    preferred_names = db.Column(db.PickleType)
 
     @staticmethod
-    def create(user, name, tag, flag, logo, auths, public_team=False):
+    def create(user, name, tag, flag, logo, auths, public_team=False, preferred_names=None):
         rv = Team()
         rv.user_id = user.id
-        rv.set_data(name, tag, flag, logo, auths, public_team and user.admin)
+        rv.set_data(name, tag, flag, logo, auths, (public_team and user.admin), preferred_names)
         db.session.add(rv)
         return rv
 
-    def set_data(self, name, tag, flag, logo, auths, public_team):
+    def set_data(self, name, tag, flag, logo, auths, public_team, preferred_names=None):
         self.name = name
         self.tag = tag
         self.flag = flag.lower() if flag else ''
         self.logo = logo
         self.auths = auths
         self.public_team = public_team
+        self.preferred_names = preferred_names
 
     def can_edit(self, user):
         if not user:
@@ -225,6 +232,7 @@ class Team(db.Model):
             html = ('<img src="{}"  width="{}" height="{}">')
             return Markup(html.format(logos.get_logo_img(self.logo), width, height))
         else:
+            #app.logger.info("Looked for {} but found nothing.".format(self.logo))
             return ''
 
     def get_url(self):
@@ -300,6 +308,23 @@ class Season(db.Model):
         return 'Season(id={}, user_id={}, name={}, start_date={}, end_date={})'.format(
             self.id, self.user_id, self.name, self.start_date, self.end_date)
 
+class match_audit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer)
+    match_id = db.Column(db.Integer)
+    timeaffected = db.Column(db.DateTime)
+    cmd_used = db.Column(db.String(4000))
+
+    @staticmethod
+    def create(user_id, match_id, timeaffected, cmd_used):
+        rv = match_audit()
+        rv.user_id = user_id
+        rv.match_id = match_id
+        rv.timeaffected = timeaffected
+        rv.cmd_used = cmd_used
+        db.session.add(rv)
+
+
 class Match(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -325,12 +350,14 @@ class Match(db.Model):
     veto_mappool = db.Column(db.String(500))
     map_stats = db.relationship('MapStats', backref='match', lazy='dynamic')
 
+    demoFile = db.Column(db.String(256))
+
     team1_score = db.Column(db.Integer, default=0)
     team2_score = db.Column(db.Integer, default=0)
 
     @staticmethod
     def create(user, team1_id, team2_id, team1_string, team2_string,
-               max_maps, skip_veto, title, veto_mappool, season_id, veto_first, server_id=None):
+               max_maps, skip_veto, title, veto_mappool, season_id, veto_first, server_id=None, demoFile=None):
         rv = Match()
         rv.user_id = user.id
         rv.team1_id = team1_id
@@ -349,6 +376,7 @@ class Match(db.Model):
             rv.veto_first = None
         rv.api_key = ''.join(random.SystemRandom().choice(
             string.ascii_uppercase + string.digits) for _ in range(24))
+        rv.demoFile = demoFile
         db.session.add(rv)
         return rv
 
@@ -492,7 +520,15 @@ class Match(db.Model):
             add_if('flag', team.flag.upper())
             add_if('logo', team.logo)
             add_if('matchtext', matchtext)
-            d[teamkey]['players'] = filter(lambda x: x != '', team.auths)
+            # Attempt to send in KV Pairs of preferred names. 
+            # If none, send in the regular list.
+            try:
+                d[teamkey]['players'] = {}
+                for uid, name in zip(filter(lambda x: x != '', team.auths), team.preferred_names):
+                    d[teamkey]['players'][uid] = name
+            except:
+                d[teamkey]['players'] = filter(lambda x: x != '', team.auths)
+
 
         add_team_data('team1', self.team1_id, self.team1_string)
         add_team_data('team2', self.team2_id, self.team2_string)
@@ -508,6 +544,7 @@ class Match(db.Model):
                 d['maplist'].append(map)
 
         return d
+
 
     def __repr__(self):
         return 'Match(id={})'.format(self.id)

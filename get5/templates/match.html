@@ -133,6 +133,9 @@
     </div>
     {% endif %}
 
+    {% if match.demoFile is not none and match.demoFile != '' %}
+      <a type="button" class="btn btn-success" href="/static/demos/{{ match.demoFile }}">Download Demo</a>
+    {% endif %}
     {% if vetoes.count() > 0 %}
     <div class="panel panel-primary">
       <div class="panel-heading">Vetoes</div>

@@ -18,6 +18,8 @@ install:
   # Update steam api key
   - sed -i -e 's/YOUR_API_KEY/$STEAM_API_KEY/g' instance/test_config.py
 
+  # Update database key
+  - sed -i -e 's/YOUR_DB_KEY_HERE/$DB_ENC_KEY/g' instance/test_config.py
   # Copy to prod config
   - cp instance/test_config.py instance/prod_config.py
 

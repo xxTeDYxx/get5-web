@@ -8,7 +8,7 @@ from wtforms import Form, validators, StringField, IntegerField, BooleanField
 
 
 server_blueprint = Blueprint('server', __name__)
-
+dbKey = app.config['DATABASE_KEY']
 
 class ServerForm(Form):
     display_name = StringField('Display Name',
@@ -32,7 +32,6 @@ class ServerForm(Form):
 
     public_server = BooleanField('Publicly usable server')
 
-
 @server_blueprint.route('/server/create', methods=['GET', 'POST'])
 def server_create():
     if not g.user:
@@ -48,15 +47,19 @@ def server_create():
 
         elif form.validate():
             mock = config_setting('TESTING')
-
             data = form.data
+            if not mock:
+                encRcon = util.encrypt(dbKey, str(data['rcon_password']))
+            else:
+                encRcon = data['rcon_password']
+            
             server = GameServer.create(g.user,
                                        data['display_name'],
                                        data['ip_string'], data['port'],
-                                       data['rcon_password'],
+                                       encRcon,
                                        data['public_server'] and g.user.admin)
 
-            if mock or util.check_server_connection(server):
+            if mock or util.check_server_connection(server, dbKey):
                 db.session.commit()
                 app.logger.info(
                     'User {} created server {}'.format(g.user.id, server.id))
@@ -79,25 +82,30 @@ def server_edit(serverid):
     if not is_owner:
         return 'Not your server', 400
 
+    # Attempt encryption/decryption
+    rconDecrypt = util.decrypt(dbKey, server.rcon_password)
     form = ServerForm(request.form,
                       display_name=server.display_name,
                       ip_string=server.ip_string,
                       port=server.port,
-                      rcon_password=server.rcon_password,
+                      rcon_password=server.rcon_password if rconDecrypt is None else rconDecrypt,
                       public_server=server.public_server)
 
     if request.method == 'POST':
         if form.validate():
             mock = app.config['TESTING']
-
             data = form.data
+            if not mock:
+                encRcon = util.encrypt(dbKey, str(data['rcon_password']))
+            else:
+                encRcon = data['rcon_password']
             server.display_name = data['display_name']
             server.ip_string = data['ip_string']
             server.port = data['port']
-            server.rcon_password = data['rcon_password']
+            server.rcon_password = encRcon
             server.public_server = (data['public_server'] and g.user.admin)
 
-            if mock or util.check_server_connection(server):
+            if mock or util.check_server_connection(server, dbKey):
                 db.session.commit()
                 return redirect('/myservers')
             else:

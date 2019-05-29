@@ -1,7 +1,7 @@
 from sqlalchemy.dialects import mysql
 import sqlalchemy as sa
 from alembic import op
-"""empty message
+"""Include Season Table.
 
 Revision ID: 6fff5b509b3b
 Revises: b28b5677726e

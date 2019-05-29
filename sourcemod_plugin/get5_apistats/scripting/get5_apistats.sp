@@ -22,13 +22,11 @@
 #include "include/logdebug.inc"
 #include <cstrike>
 #include <sourcemod>
-
-
 #include "get5/util.sp"
 #include "get5/version.sp"
 
 #include <SteamWorks>
-
+#include <system2> // github.com/dordnung/System2/
 #include <json> // github.com/clugg/sm-json
 #include "get5/jsonhelpers.sp"
 
@@ -43,15 +41,33 @@ char g_APIKey[128];
 ConVar g_APIURLCvar;
 char g_APIURL[128];
 
-#define LOGO_DIR "resource/flash/econ/tournaments/teams"
+ConVar g_FTPHostCvar;
+char g_FTPHost[128];
 
+ConVar g_FTPUsernameCvar;
+char g_FTPUsername[128];
+
+ConVar g_FTPPasswordCvar;
+char g_FTPPassword[128];
+
+ConVar g_FTPPortCvar;
+int g_FTPPort;
+
+ConVar g_FTPEnableCvar;
+bool g_FTPEnable;
+
+ConVar g_CompressEnableCvar;
+bool g_CompressEnable;
+
+#define LOGO_DIR "resource/flash/econ/tournaments/teams"
+#define PANO_DIR "materials/panorama/images/tournaments/teams"
 // clang-format off
 public Plugin myinfo = {
   name = "Get5 Web API Integration",
-  author = "splewis",
+  author = "splewis/phlexplexico",
   description = "Records match stats to a get5-web api",
-  version = PLUGIN_VERSION,
-  url = "https://github.com/splewis/get5"
+  version = "0.2",
+  url = "https://github.com/phlexplexico/get5-web"
 };
 // clang-format on
 
@@ -63,13 +79,34 @@ public void OnPluginStart() {
       CreateConVar("get5_web_api_key", "", "Match API key, this is automatically set through rcon");
   HookConVarChange(g_APIKeyCvar, ApiInfoChanged);
 
-  g_APIURLCvar = CreateConVar("get5_web_api_url", "", "URL the get5 api is hosted at");
+  g_APIURLCvar = CreateConVar("get5_web_api_url", "", "URL the get5 api is hosted at, IGNORE AS IT IS SYSTEM SET.");
 
   HookConVarChange(g_APIURLCvar, ApiInfoChanged);
 
   RegConsoleCmd("get5_web_avaliable",
                 Command_Avaliable);  // legacy version since I'm bad at spelling
   RegConsoleCmd("get5_web_available", Command_Avaliable);
+
+  g_FTPHostCvar = 
+      CreateConVar("get5_api_ftp_host", "ftp://example.com", "Remote FTP Host. Make sure you do NOT have the trailing slash. Include the path to the directory you wish to have.");
+
+  g_FTPPortCvar = 
+      CreateConVar("get5_api_ftp_port", "21", "Remote FTP Port");
+
+  g_FTPUsernameCvar =
+      CreateConVar("get5_api_ftp_username", "username", "Username for the FTP connection.");
+
+  g_FTPPasswordCvar = 
+      CreateConVar("get5_api_ftp_password", "supersecret", "Password for the FTP user. Leave blank if no password.");
+
+  g_FTPEnableCvar = 
+      CreateConVar("get5_api_ftp_enabled", "0", "0 Disables FTP Upload, 1 Enables.");
+
+  g_CompressEnableCvar =
+      CreateConVar("get5_enabled_7z_compression", "0", "0 Disables zipping files, 1 enables.");
+
+  /** Create and exec plugin's configuration file **/
+  AutoExecConfig(true, "get5api");
 }
 
 public Action Command_Avaliable(int client, int args) {
@@ -161,6 +198,11 @@ public void Get5_OnSeriesInit() {
       LogError("Failed to create logo directory: %s", LOGO_DIR);
     }
   }
+  if (!DirExists(PANO_DIR)) {
+    if (!CreateDirectory(PANO_DIR, 755)) {
+      LogError("Failed to create logo directory: %s", PANO_DIR);
+    }
+  }
 
   char logo1[32];
   char logo2[32];
@@ -176,12 +218,14 @@ public void CheckForLogo(const char[] logo) {
   }
 
   char logoPath[PLATFORM_MAX_PATH + 1];
+  char svgLogoPath[PLATFORM_MAX_PATH +1];
   Format(logoPath, sizeof(logoPath), "%s/%s.png", LOGO_DIR, logo);
+  Format(svgLogoPath, sizeof(svgLogoPath), "%s/%s.svg", PANO_DIR, logo);
 
   // Try to fetch the file if we don't have it.
   if (!FileExists(logoPath)) {
     LogDebug("Fetching logo for %s", logo);
-    Handle req = CreateRequest(k_EHTTPMethodGET, "/static/img/logos/%s.png", logo);
+    Handle req = CreateRequest(k_EHTTPMethodGET, "/static/resource/csgo/resource/flash/econ/tournaments/teams/%s.png", logo);
     if (req == INVALID_HANDLE) {
       return;
     }
@@ -191,6 +235,22 @@ public void CheckForLogo(const char[] logo) {
 
     SteamWorks_SetHTTPRequestContextValue(req, view_as<int>(pack));
     SteamWorks_SetHTTPCallbacks(req, LogoCallback);
+    SteamWorks_SendHTTPRequest(req);
+  }
+
+  //Attempt to get SVG.
+  if (!FileExists(svgLogoPath)) {
+    LogDebug("Fetching logo for %s", logo);
+    Handle req = CreateRequest(k_EHTTPMethodGET, "/static/resource/csgo/materials/panorama/images/tournaments/teams/%s.svg", logo);
+    if (req == INVALID_HANDLE) {
+      return;
+    }
+
+    Handle svgPack = CreateDataPack();
+    WritePackString(svgPack, logo);
+
+    SteamWorks_SetHTTPRequestContextValue(req, view_as<int>(svgPack));
+    SteamWorks_SetHTTPCallbacks(req, LogoCallbackSvg);
     SteamWorks_SendHTTPRequest(req);
   }
 }
@@ -211,6 +271,24 @@ public int LogoCallback(Handle request, bool failure, bool successful, EHTTPStat
 
   LogMessage("Saved logo for %s to %s", logo, logoPath);
   SteamWorks_WriteHTTPResponseBodyToFile(request, logoPath);
+}
+
+public int LogoCallbackSvg(Handle request, bool failure, bool successful, EHTTPStatusCode status, int data) {
+  if (failure || !successful) {
+    LogError("Logo request failed, status code = %d", status);
+    return;
+  }
+
+  DataPack pack = view_as<DataPack>(data);
+  pack.Reset();
+  char logo[32];
+  pack.ReadString(logo, sizeof(logo));
+
+  char svgLogoPath[PLATFORM_MAX_PATH + 1];
+  Format(svgLogoPath, sizeof(svgLogoPath), "%s/%s.svg", PANO_DIR, logo);
+
+  LogMessage("Saved logo for %s to %s", logo, svgLogoPath);
+  SteamWorks_WriteHTTPResponseBodyToFile(request, svgLogoPath);
 }
 
 public void Get5_OnGoingLive(int mapNumber) {
@@ -354,6 +432,112 @@ public void Get5_OnMapVetoed(MatchTeam team, const char[] map){
   }
   LogDebug("Accepted Map Veto.");
 }
+
+public void Get5_OnDemoFinished(const char[] filename){
+  LogDebug("About to enter UploadDemo.");
+  char zippedFile[PLATFORM_MAX_PATH];
+  UploadDemo(filename, zippedFile);
+  LogDebug("Demo upload finished, now sending upload request to API.");
+  Handle req = CreateRequest(k_EHTTPMethodPOST, "match/%d/map/%d/demo", g_MatchID, MapNumber());
+  // Send filename to append to match in database maybe?
+  if (req != INVALID_HANDLE) {
+      AddStringParam(req, "demoFile", zippedFile);
+      SteamWorks_SendHTTPRequest(req);
+  }
+}
+
+public void UploadDemo(const char[] filename, char zippedFile[PLATFORM_MAX_PATH]){
+  char remoteDemoPath[PLATFORM_MAX_PATH];
+  g_FTPEnable = g_FTPEnableCvar.BoolValue;
+  g_CompressEnable = g_CompressEnableCvar.BoolValue;
+  if(g_FTPEnable && filename[0]){
+    g_FTPHostCvar.GetString(g_FTPHost, sizeof(g_FTPHost));
+    g_FTPPort = g_FTPPortCvar.IntValue;
+    g_FTPUsernameCvar.GetString(g_FTPUsername, sizeof(g_FTPUsername));
+    g_FTPPasswordCvar.GetString(g_FTPPassword, sizeof(g_FTPPassword));
+
+    // Will either be a zipped file or default filename.
+    if(g_CompressEnable){
+      CompressFile(filename, zippedFile);
+    } else {
+      Format(zippedFile, sizeof(zippedFile), "%s", filename);
+    }
+    
+    System2FTPRequest ftpRequest = new System2FTPRequest(FtpResponseCallback, remoteDemoPath);
+    ftpRequest.AppendToFile = false;
+    ftpRequest.CreateMissingDirs = true;
+    ftpRequest.SetAuthentication(g_FTPUsername, g_FTPPassword);
+    ftpRequest.SetPort(g_FTPPort);
+    ftpRequest.SetProgressCallback(FtpProgressCallback);
+    LogMessage("Our File is: %s", zippedFile);
+
+    ftpRequest.SetInputFile(zippedFile);
+    ftpRequest.StartRequest(); 
+  } else{
+    LogDebug("FTP Uploads Disabled OR Filename was empty (no demo to upload). Change config to enable.");
+  }
+}
+
+public void CompressFile(const char[] filename, char zippedFile[PLATFORM_MAX_PATH]) {
+  // Boolean which holds the knowledge whether we have to force using the 32-bit executable
+  bool force32Bit = false;
+
+  char binDir[PLATFORM_MAX_PATH];
+  char binDir32Bit[PLATFORM_MAX_PATH];
+  Format(zippedFile, sizeof(zippedFile), "%s.zip", filename);
+  // First check if we can use the 7-ZIP executable which is suitable for the running machine
+  if (!System2_Check7ZIP(binDir, sizeof(binDir))) {
+      // If not: Check if 32-bit 7-ZIP can be used
+      if (!System2_Check7ZIP(binDir32Bit, sizeof(binDir32Bit), true)) {
+          // Print an error if both can't be executed
+          if (StrEqual(binDir, binDir32Bit)) {
+              LogMessage("NOTE: 7-ZIP was not found or is not executable at '%s', uploading as regular file.", binDir);
+              Format(zippedFile, sizeof(zippedFile), "%s", filename);
+	      return;
+          } else {
+              LogMessage("NOTE: 7-ZIP was not found or is not executable at '%s' or '%s', uploading as regular file.", binDir, binDir32Bit);
+              Format(zippedFile, sizeof(zippedFile), "%s", filename);
+	      return;
+          }
+      } else {
+          // 64-bit does not seem to work, but 32-bit do. We have to memorize this.
+          force32Bit = true;
+      }
+  }
+  // Now use the knowledge whether we have to force 32-bit or not.
+  System2_Compress(ExecuteCallback, filename, zippedFile, ARCHIVE_ZIP, LEVEL_9, 0, force32Bit);
+}
+
+
+public void FtpProgressCallback(System2FTPRequest request, int dlTotal, int dlNow, int ulTotal, int ulNow) {
+  char file[PLATFORM_MAX_PATH];
+  request.GetInputFile(file, sizeof(file));
+  if (strlen(file) > 0) {
+      LogMessage("Uploading %s file with %d bytes total, %d now", file, ulTotal, ulNow);
+  }
+}  
+
+public void FtpResponseCallback(bool success, const char[] error, System2FTPRequest request, System2FTPResponse response) {
+    if (success || StrContains(error, "Uploaded unaligned file size") > -1) {
+        char file[PLATFORM_MAX_PATH];
+        request.GetInputFile(file, sizeof(file));
+        if (strlen(file) > 0) {
+            LogMessage("Delete file after complete.");
+        }
+    } else{
+      LogMessage("There was a problem: %s", error);
+    }
+}  
+
+public void ExecuteCallback(bool success, const char[] command, System2ExecuteOutput output, any data) {
+    if (!success || output.ExitStatus != 0) {
+        LogMessage("Couldn't execute commands %s successfully", command);
+    } else {
+        char outputString[128];
+        output.GetOutput(outputString, sizeof(outputString));
+        LogMessage("Output of the command %s: %s", command, outputString);
+    }
+}  
 
 public void Get5_OnMapPicked(MatchTeam team, const char[] map){
   char teamString[64];

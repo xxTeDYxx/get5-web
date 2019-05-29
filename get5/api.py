@@ -4,6 +4,7 @@ from models import Match, MapStats, PlayerStats, GameServer, Veto, Team
 
 from flask import Blueprint, request
 import flask_limiter
+import threading
 
 import re
 import datetime
@@ -63,6 +64,12 @@ def match_finish(matchid):
         elif winner == 'team2':
             match.team1_score = 0
             match.team2_score = 1
+        else:
+            match.team1_score = 0
+            match.team2_score = 0
+
+        if match.start_time is None:
+            match.start_time = datetime.datetime.utcnow()
 
     match.end_time = datetime.datetime.utcnow()
     server = GameServer.query.get(match.server_id)
@@ -71,9 +78,7 @@ def match_finish(matchid):
 
     db.session.commit()
     app.logger.info('Finished match {}, winner={}'.format(match, winner))
-
     return 'Success'
-
 
 @api_blueprint.route('/match/<int:matchid>/map/<int:mapnumber>/start', methods=['POST'])
 @limiter.limit('60 per hour', key_func=rate_limit_key)
@@ -119,7 +124,6 @@ def match_veto_update(matchid):
     match = Match.query.get_or_404(matchid)
     match_api_check(request, match)
     if request.values.get('teamString') == "team1":
-        # GameServer.query.get(match.server_id)
         teamName = Team.query.get(match.team1_id).name
     elif request.values.get('teamString') == "team2":
         teamName = Team.query.get(match.team2_id).name
@@ -132,6 +136,14 @@ def match_veto_update(matchid):
         teamName, request.values.get('map')))
     return 'Success'
 
+@api_blueprint.route('/match/<int:matchid>/map/<int:mapnumber>/demo', methods=['POST'])
+@limiter.limit('60 per hour', key_func=rate_limit_key)
+def match_demo_name(matchid, mapnumber):
+    # Upload demo name into database to reference later.
+    match = Match.query.get_or_404(matchid)
+    match_api_check(request, match)
+    match.demoFile = request.values.get('demoFile')
+    db.session.commit()
 
 @api_blueprint.route('/match/<int:matchid>/map/<int:mapnumber>/finish', methods=['POST'])
 @limiter.limit('60 per hour', key_func=rate_limit_key)

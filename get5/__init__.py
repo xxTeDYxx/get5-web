@@ -21,6 +21,7 @@ import logging
 import logging.handlers
 import re
 import sys
+import os 
 
 import logos
 import steamid
@@ -42,7 +43,10 @@ sys.setdefaultencoding('utf-8')
 # Import the Flask Framework
 app = Flask(__name__, instance_relative_config=True)
 app.config.from_pyfile('prod_config.py')
-
+LOGO_FOLDER = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__), 'static', 'resource', 'csgo', 'resource', 'flash', 'econ', 'tournaments', 'teams'))
+PANO_LOGO_FOLDER = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__), 'static', 'resource', 'csgo', 'materials', 'panorama', 'images', 'tournaments', 'teams'))
+app.config['LOGO_FOLDER'] = LOGO_FOLDER
+app.config['PANO_LOGO_FOLDER'] = PANO_LOGO_FOLDER
 # Setup caching
 cache = flask_cache.Cache(app, config={
     'CACHE_TYPE': 'filesystem',
@@ -57,7 +61,7 @@ oid = flask_openid.OpenID(app)
 
 # Setup database connection
 db = flask_sqlalchemy.SQLAlchemy(app)
-from models import User, Team, GameServer, Match, MapStats, PlayerStats  # noqa: E402
+from models import User, Team, GameServer, Match, MapStats, PlayerStats, Season  # noqa: E402
 
 # Setup rate limiting
 limiter = flask_limiter.Limiter(
@@ -84,6 +88,8 @@ app.logger.setLevel(logging.INFO)
 
 # Find version info
 app.jinja_env.globals.update(COMMIT_STRING=util.get_version())
+#Set our webpanel name.
+app.jinja_env.globals.update(WEBPANEL_NAME=app.config['WEBPANEL_NAME'])
 
 # Setup any data structures needed
 logos.initialize_logos()
@@ -268,6 +274,7 @@ _config_defaults = {
         'de_overpass',
         'de_train',
     ],
+    LOGO_FOLDER: '/var/www/get5-web/get5/static/img/logos',
 }
 
 

@@ -16,6 +16,9 @@ class UtilTest(get5_test.Get5Test):
         self.assertEqual(util.format_mapname('de_dust2'), 'Dust II')
         self.assertEqual(util.format_mapname('de_cbble'), 'Cobblestone')
 
+    def test_encrypt_decrypt(self):
+        encWords = util.encrypt('THISASIXTEENCHAR', 'these are words')
+        self.assertEqual(util.decrypt('THISASIXTEENCHAR', encWords), 'these are words')
 
 if __name__ == '__main__':
     unittest.main()

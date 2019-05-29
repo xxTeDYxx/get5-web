@@ -20,6 +20,7 @@
       <div class="panel-body">
           {% for auth,name in team.get_players() %}
           <a href="http://steamcommunity.com/profiles/{{auth}}" class="col-sm-offset-0"> {{auth}}</a>
+          <a href="/stats/{{ auth }}" class="col-sm-offset-0"> Stats</a>
           {% if name %}
           {{name}}
           {% endif %}
