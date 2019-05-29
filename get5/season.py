@@ -74,20 +74,19 @@ def season_create():
         'season_create.html', form=form, user=g.user)
 
 
-@season_blueprint.route("/season/<int:userid>/<int:seasonid>")
-def season_matches(userid, seasonid):
-    user = User.query.get_or_404(userid)
+@season_blueprint.route("/season/<int:seasonid>")
+def season_matches(seasonid):
     season_info = Season.query.get_or_404(seasonid)
     page = util.as_int(request.values.get('page'), on_fail=1)
-    matches = user.matches.order_by(-Match.id).filter_by(season_id=seasonid,
+    matches = Match.query.order_by(-Match.id).filter_by(season_id=seasonid,
                                                          cancelled=False).paginate(page, 20)
 
     return render_template('matches.html', user=g.user, matches=matches,
-                           season_matches=True, all_matches=False, season_user=user,
+                           season_matches=True, all_matches=False,
                            page=page, season=season_info)
 
 
-@season_blueprint.route("/season/<int:userid>")
+@season_blueprint.route("/season/user/<int:userid>")
 def seasons_user(userid):
     user = User.query.get_or_404(userid)
     page = util.as_int(request.values.get('page'), on_fail=1)
