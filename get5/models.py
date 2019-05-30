@@ -351,18 +351,19 @@ class Match(db.Model):
     map_stats = db.relationship('MapStats', backref='match', lazy='dynamic')
 
     demoFile = db.Column(db.String(256))
-
+    side_type = db.Column(db.String(32))
     team1_score = db.Column(db.Integer, default=0)
     team2_score = db.Column(db.Integer, default=0)
 
     @staticmethod
     def create(user, team1_id, team2_id, team1_string, team2_string,
-               max_maps, skip_veto, title, veto_mappool, season_id, veto_first, server_id=None, demoFile=None):
+               max_maps, skip_veto, title, veto_mappool, season_id, side_type, veto_first, server_id=None, demoFile=None):
         rv = Match()
         rv.user_id = user.id
         rv.team1_id = team1_id
         rv.team2_id = team2_id
         rv.season_id = season_id
+        rv.side_type = side_type
         rv.skip_veto = skip_veto
         rv.title = title
         rv.veto_mappool = ' '.join(veto_mappool)
@@ -492,6 +493,7 @@ class Match(db.Model):
         d = {}
         d['matchid'] = str(self.id)
         d['match_title'] = self.title
+        d['side_type'] = self.side_type
         
         if self.veto_first == "CT":
             d['veto_first'] = "team1"

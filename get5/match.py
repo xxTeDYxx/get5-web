@@ -63,7 +63,14 @@ class MatchForm(Form):
                                  ('bo5', 'Bo5 with map vetoes'),
                                  ('bo7', 'Bo7 with map vetoes'),
                              ])
-
+    side_type = RadioField('Side type',
+                             validators=[validators.required()],
+                             default='standard',
+                             choices=[
+                                ('standard', 'Standard: Team that doesn\'t pick map gets side choice'),
+                                ('never_knife', 'Never Knife: Team 1 is CT and Team 2 is T.'),
+                                ('always_knife', 'Always Knife: Always have knife round.'),
+                             ])
     team1_id = SelectField('Team 1', coerce=int,
                            validators=[validators.required()])
 
@@ -207,8 +214,9 @@ def match_create():
                     g.user, form.data['team1_id'], form.data['team2_id'],
                     form.data['team1_string'], form.data['team2_string'],
                     max_maps, skip_veto,
-                    form.data['match_title'], form.data['veto_mappool'], season_id,
-                    form.data['veto_first'], form.data['server_id'])
+                    form.data['match_title'], form.data['veto_mappool'], season_id, 
+                    form.data['side_type'], form.data['veto_first'], 
+                    form.data['server_id'])
 
                 # Save plugin version data if we have it
                 if json_reply and 'plugin_version' in json_reply:
