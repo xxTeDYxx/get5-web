@@ -41,6 +41,8 @@ def valid_file(form, field):
     mock = config_setting("TESTING")
     if mock:
         return
+    elif not g.user.admin:
+        return
     filename = secure_filename(field.data.filename)
     # Safe method.
     if filename == '':
@@ -165,7 +167,7 @@ def team_create():
             logo = data['logo']
 
             # Update the logo. Passing validation we have the filename in the list now.
-            if not mock and form.upload_logo.data.filename != '':
+            if not mock and g.user.admin and form.upload_logo.data.filename != '':
                 filename = secure_filename(form.upload_logo.data.filename)
                 index_of_dot = filename.index('.')
                 newLogoDetail = filename[:index_of_dot]
@@ -235,7 +237,7 @@ def team_edit(teamid):
                 public_team = data['public_team']
 
             # Update the logo. Passing validation we have the filename in the list now.
-            if not mock and form.upload_logo.data.filename != '':
+            if not mock and g.user.admin and form.upload_logo.data.filename != '':
                 filename = secure_filename(form.upload_logo.data.filename)
                 index_of_dot = filename.index('.')
                 newLogoDetail = filename[:index_of_dot]
