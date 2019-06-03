@@ -465,10 +465,12 @@ public void UploadDemo(const char[] filename, char zippedFile[PLATFORM_MAX_PATH]
     }
     
     System2FTPRequest ftpRequest = new System2FTPRequest(FtpResponseCallback, remoteDemoPath);
+    LogDebug("Request Created.");
     ftpRequest.AppendToFile = false;
     ftpRequest.CreateMissingDirs = true;
     ftpRequest.SetAuthentication(g_FTPUsername, g_FTPPassword);
     ftpRequest.SetPort(g_FTPPort);
+    LogDebug("Username: %s, Port: %d, Password: %s, Host: %s.", g_FTPUsername, g_FTPPort, g_FTPPassword, remoteDemoPath);
     ftpRequest.SetProgressCallback(FtpProgressCallback);
     LogDebug("Our File is: %s", zippedFile);
 
@@ -492,11 +494,11 @@ public void CompressFile(const char[] filename, char zippedFile[PLATFORM_MAX_PAT
       if (!System2_Check7ZIP(binDir32Bit, sizeof(binDir32Bit), true)) {
           // Print an error if both can't be executed
           if (StrEqual(binDir, binDir32Bit)) {
-              LogMessage("NOTE: 7-ZIP was not found or is not executable at '%s', uploading as regular file.", binDir);
+              LogDebug("NOTE: 7-ZIP was not found or is not executable at '%s', uploading as regular file.", binDir);
               Format(zippedFile, sizeof(zippedFile), "%s", filename);
 	      return;
           } else {
-              LogMessage("NOTE: 7-ZIP was not found or is not executable at '%s' or '%s', uploading as regular file.", binDir, binDir32Bit);
+              LogDebug("NOTE: 7-ZIP was not found or is not executable at '%s' or '%s', uploading as regular file.", binDir, binDir32Bit);
               Format(zippedFile, sizeof(zippedFile), "%s", filename);
 	      return;
           }
@@ -514,7 +516,7 @@ public void FtpProgressCallback(System2FTPRequest request, int dlTotal, int dlNo
   char file[PLATFORM_MAX_PATH];
   request.GetInputFile(file, sizeof(file));
   if (strlen(file) > 0) {
-      LogMessage("Uploading %s file with %d bytes total, %d now", file, ulTotal, ulNow);
+      LogDebug("Uploading %s file with %d bytes total, %d now", file, ulTotal, ulNow);
   }
 }  
 
@@ -523,20 +525,20 @@ public void FtpResponseCallback(bool success, const char[] error, System2FTPRequ
         char file[PLATFORM_MAX_PATH];
         request.GetInputFile(file, sizeof(file));
         if (strlen(file) > 0) {
-            LogMessage("Delete file after complete.");
+            LogDebug("Delete file after complete.");
         }
     } else{
-      LogMessage("There was a problem: %s", error);
+      LogDebug("There was a problem: %s", error);
     }
 }  
 
 public void ExecuteCallback(bool success, const char[] command, System2ExecuteOutput output, any data) {
     if (!success || output.ExitStatus != 0) {
-        LogMessage("Couldn't execute commands %s successfully", command);
+        LogDebug("Couldn't execute commands %s successfully", command);
     } else {
         char outputString[128];
         output.GetOutput(outputString, sizeof(outputString));
-        LogMessage("Output of the command %s: %s", command, outputString);
+        LogDebug("Output of the command %s: %s", command, outputString);
     }
 }  
 
