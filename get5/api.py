@@ -144,6 +144,7 @@ def match_demo_name(matchid, mapnumber):
     match_api_check(request, match)
     match.demoFile = request.values.get('demoFile')
     db.session.commit()
+    return 'Success'
 
 @api_blueprint.route('/match/<int:matchid>/map/<int:mapnumber>/finish', methods=['POST'])
 @limiter.limit('60 per hour', key_func=rate_limit_key)
