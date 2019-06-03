@@ -455,6 +455,7 @@ public void UploadDemo(const char[] filename, char zippedFile[PLATFORM_MAX_PATH]
     g_FTPPort = g_FTPPortCvar.IntValue;
     g_FTPUsernameCvar.GetString(g_FTPUsername, sizeof(g_FTPUsername));
     g_FTPPasswordCvar.GetString(g_FTPPassword, sizeof(g_FTPPassword));
+    Format(remoteDemoPath, sizeof(remoteDemoPath), "%s/%s", g_FTPHost, filename);
 
     // Will either be a zipped file or default filename.
     if(g_CompressEnable){
@@ -469,7 +470,7 @@ public void UploadDemo(const char[] filename, char zippedFile[PLATFORM_MAX_PATH]
     ftpRequest.SetAuthentication(g_FTPUsername, g_FTPPassword);
     ftpRequest.SetPort(g_FTPPort);
     ftpRequest.SetProgressCallback(FtpProgressCallback);
-    LogMessage("Our File is: %s", zippedFile);
+    LogDebug("Our File is: %s", zippedFile);
 
     ftpRequest.SetInputFile(zippedFile);
     ftpRequest.StartRequest(); 
