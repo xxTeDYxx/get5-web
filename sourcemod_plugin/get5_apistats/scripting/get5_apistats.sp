@@ -59,6 +59,8 @@ bool g_FTPEnable;
 ConVar g_CompressEnableCvar;
 bool g_CompressEnable;
 
+char g_fileName[PLATFORM_MAX_PATH];
+
 #define LOGO_DIR "resource/flash/econ/tournaments/teams"
 #define PANO_DIR "materials/panorama/images/tournaments/teams"
 // clang-format off
@@ -469,6 +471,8 @@ public void UploadDemo(const char[] filename, char zippedFile[PLATFORM_MAX_PATH]
     // Will either be a zipped file or default filename.
     if(g_CompressEnable) {
       Format(zippedFile, sizeof(zippedFile), "%s.zip", filename);
+      // Callback has no way of getting filename really.
+      Format(g_fileName, sizeof(g_fileName), "%s.zip", filename);
       System2_Compress(ExecuteCallback, filename, zippedFile);
     } else {
       Format(zippedFile, sizeof(zippedFile), "%s", filename);
@@ -490,6 +494,7 @@ public void UploadDemo(const char[] filename, char zippedFile[PLATFORM_MAX_PATH]
   }
 }
 
+
 public void FtpProgressCallback(System2FTPRequest request, int dlTotal, int dlNow, int ulTotal, int ulNow) {
   char file[PLATFORM_MAX_PATH];
   request.GetInputFile(file, sizeof(file));
@@ -506,7 +511,6 @@ public void FtpResponseCallback(bool success, const char[] error, System2FTPRequ
             if (DeleteFileIfExists(file)) {
                 LogDebug("Deleted file after complete.");
             }
-            
         }
     } else{
       LogError("There was a problem: %s", error);
@@ -517,9 +521,21 @@ public void ExecuteCallback(bool success, const char[] command, System2ExecuteOu
     if (!success || output.ExitStatus != 0) {
         LogError("Couldn't execute commands %s successfully", command);
     } else {
+        char remoteDemoPath[PLATFORM_MAX_PATH];
         char outputString[128];
         output.GetOutput(outputString, sizeof(outputString));
-        LogDebug("Output of the command %s: %s", command, outputString);
+        LogDebug("Output of the command %s: %s \n and our data: %s", command, outputString, data);
+        Format(remoteDemoPath, sizeof(remoteDemoPath), "%s/%s", g_FTPHost, g_fileName);
+        LogDebug("Our File is: %s and remote demo path of %s", g_fileName, remoteDemoPath);
+        System2FTPRequest ftpRequest = new System2FTPRequest(FtpResponseCallback, remoteDemoPath);
+        ftpRequest.AppendToFile = false;
+        ftpRequest.CreateMissingDirs = true;
+        ftpRequest.SetAuthentication(g_FTPUsername, g_FTPPassword);
+        ftpRequest.SetPort(g_FTPPort);
+        ftpRequest.SetProgressCallback(FtpProgressCallback);
+        LogDebug("Our File is: %s", g_fileName);
+        ftpRequest.SetInputFile(g_fileName);
+        ftpRequest.StartRequest(); 
     }
 }  
 

@@ -140,7 +140,7 @@ def match_veto_update(matchid):
     return 'Success'
 
 @api_blueprint.route('/match/<int:matchid>/map/<int:mapnumber>/demo', methods=['POST'])
-@limiter.limit('1000 per hour', key_func=rate_limit_key)
+@limiter.limit('60 per hour', key_func=rate_limit_key)
 def match_demo_name(matchid, mapnumber):
     # Upload demo name into database to reference later.
     app.logger.info("Our demo file is: {}".format(request.values.get('demoFile')))
