@@ -133,9 +133,7 @@
     </div>
     {% endif %}
 
-    {% if match.demoFile is not none and match.demoFile != '' %}
-      <a type="button" class="btn btn-success" href="{{ match.demoFile }}">Download Demo</a>
-    {% endif %}
+    
     {% if vetoes.count() > 0 %}
     <div class="panel panel-primary">
       <div class="panel-heading">Vetoes</div>
@@ -173,6 +171,9 @@
       </div>
 
       <div class="panel-body">
+        {% if map_stats.demoFile is not none and map_stats.demoFile != '' %}
+          <a type="button" class="btn btn-success" href="{{ map_stats.demoFile }}">Download Demo</a>
+        {% endif %}
         <p>Started at {{ map_stats.start_time.strftime('%Y-%m-%d %H:%M') }}</p>
 
         {% if map_stats.end_time is not none %}

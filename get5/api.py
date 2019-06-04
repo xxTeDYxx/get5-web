@@ -143,11 +143,10 @@ def match_veto_update(matchid):
 @limiter.limit('60 per hour', key_func=rate_limit_key)
 def match_demo_name(matchid, mapnumber):
     # Upload demo name into database to reference later.
-    app.logger.info("Our demo file is: {}".format(request.values.get('demoFile')))
     match = Match.query.get_or_404(matchid)
     match_demo_api_check(request, match)
-    app.logger.info("Our demo file is: {}".format(request.values.get('demoFile')))
-    match.demoFile = request.values.get('demoFile')
+    map_stats = match.map_stats.filter_by(map_number=mapnumber).first()
+    map_stats.demoFile = request.values.get('demoFile')
     db.session.commit()
     return 'Success'
 
