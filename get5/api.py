@@ -39,6 +39,9 @@ def match_api_check(request, match):
     if match.finalized():
         raise BadRequestError('Match already finalized')
 
+def match_demo_api_check(request, match):
+    if match.api_key != request.values.get('key'):
+        raise BadRequestError('Wrong API key')
 
 @api_blueprint.route('/match/<int:matchid>/finish', methods=['POST'])
 @limiter.limit('60 per hour', key_func=rate_limit_key)
@@ -137,11 +140,13 @@ def match_veto_update(matchid):
     return 'Success'
 
 @api_blueprint.route('/match/<int:matchid>/map/<int:mapnumber>/demo', methods=['POST'])
-@limiter.limit('60 per hour', key_func=rate_limit_key)
+@limiter.limit('1000 per hour', key_func=rate_limit_key)
 def match_demo_name(matchid, mapnumber):
     # Upload demo name into database to reference later.
+    app.logger.info("Our demo file is: {}".format(request.values.get('demoFile')))
     match = Match.query.get_or_404(matchid)
-    match_api_check(request, match)
+    match_demo_api_check(request, match)
+    app.logger.info("Our demo file is: {}".format(request.values.get('demoFile')))
     match.demoFile = request.values.get('demoFile')
     db.session.commit()
     return 'Success'
