@@ -493,11 +493,7 @@ class Match(db.Model):
         d['matchid'] = str(self.id)
         d['match_title'] = self.title
         d['side_type'] = self.side_type
-        
-        if self.veto_first == "CT":
-            d['veto_first'] = "team1"
-        else:
-            d['veto_first'] = "team2"
+        d['veto_first'] = self.veto_first
 
         d['skip_veto'] = self.skip_veto
         if self.max_maps == 2:
