@@ -158,10 +158,35 @@ static Handle CreateRequest(EHTTPMethod httpMethod, const char[] apiMethod, any:
   char formattedUrl[1024];
   VFormat(formattedUrl, sizeof(formattedUrl), url, 3);
 
-  LogDebug("Trying to create request to url %s", formattedUrl);
+  LogMessage("Trying to create request to url %s", formattedUrl);
 
   Handle req = SteamWorks_CreateHTTPRequest(httpMethod, formattedUrl);
   if (StrEqual(g_APIKey, "")) {
+    // Not using a web interface.
+    return INVALID_HANDLE;
+
+  } else if (req == INVALID_HANDLE) {
+    LogError("Failed to create request to %s", formattedUrl);
+    return INVALID_HANDLE;
+
+  } else {
+    SteamWorks_SetHTTPCallbacks(req, RequestCallback);
+    AddStringParam(req, "key", g_APIKey);
+    return req;
+  }
+}
+
+static Handle CreateDemoRequest(EHTTPMethod httpMethod, const char[] apiMethod, any:...) {
+  char url[1024];
+  Format(url, sizeof(url), "%s%s", g_storedAPIURL, apiMethod);
+
+  char formattedUrl[1024];
+  VFormat(formattedUrl, sizeof(formattedUrl), url, 3);
+
+  LogMessage("Trying to create request to url %s", formattedUrl);
+
+  Handle req = SteamWorks_CreateHTTPRequest(httpMethod, formattedUrl);
+  if (StrEqual(g_storedAPIKey, "")) {
     // Not using a web interface.
     return INVALID_HANDLE;
 
@@ -307,14 +332,14 @@ public void Get5_OnGoingLive(int mapNumber) {
     AddStringParam(req, "mapname", mapName);
     SteamWorks_SendHTTPRequest(req);
   }
-
-  Get5_AddLiveCvar("get5_web_api_key", g_APIKey);
-  Get5_AddLiveCvar("get5_web_api_url", g_APIURL);
   // Store Cvar since it gets reset after match finishes?
   if (g_FTPEnable) {
-    g_APIKeyCvar.GetString(g_storedAPIKey, sizeof(g_storedAPIKey));
-    g_APIURLCvar.GetString(g_storedAPIURL, sizeof(g_storedAPIURL));
+    Format(g_storedAPIKey, sizeof(g_storedAPIKey), g_APIKey);
+    Format(g_storedAPIURL, sizeof(g_storedAPIURL), g_APIURL);
   }
+  Get5_AddLiveCvar("get5_web_api_key", g_APIKey);
+  Get5_AddLiveCvar("get5_web_api_url", g_APIURL);
+  
 }
 
 public void UpdateRoundStats(int mapNumber) {
@@ -455,27 +480,20 @@ public void Get5_OnDemoFinished(const char[] filename){
     char formattedURL[PLATFORM_MAX_PATH];
     UploadDemo(filename, zippedFile);
 
-    // Hack fix for the way get5 handles match finishing
-    // before demos finish.
-    Format(g_APIURL, sizeof(g_APIURL), g_storedAPIURL);
-    Format(g_APIKey, sizeof(g_APIKey), g_storedAPIKey);
-    
-    Handle req = CreateRequest(k_EHTTPMethodPOST, "match/%d/map/%d/demo", g_MatchID, mapNumber);
-    LogDebug("Our api url: %s", g_APIURL);
+    Handle req = CreateDemoRequest(k_EHTTPMethodPOST, "match/%d/map/%d/demo", g_MatchID, mapNumber-1);
+    LogDebug("Our api url: %s", g_storedAPIURL);
     // Send URL to store in database to show users at end of match.
     // This requires anonmyous downloads on the FTP server unless
     // you give out usernames.
     if (req != INVALID_HANDLE) {
-        Format(formattedURL, sizeof(formattedURL), "%s/%s", g_FTPHost, zippedFile);
-        LogDebug("Our URL: %s", formattedURL);
+        Format(formattedURL, sizeof(formattedURL), "%s%s", g_storedAPIURL, zippedFile);
+        LogMessage("Our URL: %s", formattedURL);
         AddStringParam(req, "demoFile", formattedURL);
         SteamWorks_SendHTTPRequest(req);
     }
     // Need to store as get5 recycles the configs before the demos finish recording.
-    Format(g_APIKey, sizeof(g_APIKey), "");
     Format(g_storedAPIKey, sizeof(g_storedAPIKey), "");
     Format(g_storedAPIURL, sizeof(g_storedAPIURL), "");
-    Format(g_APIURL, sizeof(g_APIURL), "");
   }
 }
 

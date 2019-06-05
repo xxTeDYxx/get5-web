@@ -151,6 +151,7 @@ def match_demo_name(matchid, mapnumber):
         db.session.commit()
     else:
         return 'Failed to find map stats object', 400
+    app.logger.info("Made it through the demo post.")
     return 'Success'
 
 @api_blueprint.route('/match/<int:matchid>/map/<int:mapnumber>/finish', methods=['POST'])
