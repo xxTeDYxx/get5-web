@@ -42,6 +42,8 @@ Note: when using this web panel, the CS:GO game servers **must** be have both th
 
 ![Season Creation Page](/screenshots/season_create.png?raw=true "Season creation Page")
 
+![Season View Page](/screenshots/season_standings.png?raw=true "Season creation Page")
+
 ## Requirements:
 
 - python2.7

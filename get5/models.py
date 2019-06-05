@@ -350,19 +350,20 @@ class Match(db.Model):
     veto_mappool = db.Column(db.String(500))
     map_stats = db.relationship('MapStats', backref='match', lazy='dynamic')
 
-    demoFile = db.Column(db.String(256))
-
+    
+    side_type = db.Column(db.String(32))
     team1_score = db.Column(db.Integer, default=0)
     team2_score = db.Column(db.Integer, default=0)
 
     @staticmethod
     def create(user, team1_id, team2_id, team1_string, team2_string,
-               max_maps, skip_veto, title, veto_mappool, season_id, veto_first, server_id=None, demoFile=None):
+               max_maps, skip_veto, title, veto_mappool, season_id, side_type, veto_first, server_id=None):
         rv = Match()
         rv.user_id = user.id
         rv.team1_id = team1_id
         rv.team2_id = team2_id
         rv.season_id = season_id
+        rv.side_type = side_type
         rv.skip_veto = skip_veto
         rv.title = title
         rv.veto_mappool = ' '.join(veto_mappool)
@@ -376,7 +377,6 @@ class Match(db.Model):
             rv.veto_first = None
         rv.api_key = ''.join(random.SystemRandom().choice(
             string.ascii_uppercase + string.digits) for _ in range(24))
-        rv.demoFile = demoFile
         db.session.add(rv)
         return rv
 
@@ -492,11 +492,8 @@ class Match(db.Model):
         d = {}
         d['matchid'] = str(self.id)
         d['match_title'] = self.title
-        
-        if self.veto_first == "CT":
-            d['veto_first'] = "team1"
-        else:
-            d['veto_first'] = "team2"
+        d['side_type'] = self.side_type
+        d['veto_first'] = self.veto_first
 
         d['skip_veto'] = self.skip_veto
         if self.max_maps == 2:
@@ -562,9 +559,9 @@ class MapStats(db.Model):
     team2_score = db.Column(db.Integer, default=0)
     player_stats = db.relationship(
         'PlayerStats', backref='mapstats', lazy='dynamic')
-
+    demoFile = db.Column(db.String(256))
     @staticmethod
-    def get_or_create(match_id, map_number, map_name=''):
+    def get_or_create(match_id, map_number, map_name='', demoFile=None):
         match = Match.query.get(match_id)
         if match is None or map_number >= match.max_maps:
             return None
@@ -579,6 +576,7 @@ class MapStats(db.Model):
             rv.start_time = datetime.datetime.utcnow()
             rv.team1_score = 0
             rv.team2_score = 0
+            rv.demoFile = demoFile
             db.session.add(rv)
         return rv
 

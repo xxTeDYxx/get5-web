@@ -39,6 +39,9 @@ def match_api_check(request, match):
     if match.finalized():
         raise BadRequestError('Match already finalized')
 
+def match_demo_api_check(request, match):
+    if match.api_key != request.values.get('key'):
+        raise BadRequestError('Wrong API key')
 
 @api_blueprint.route('/match/<int:matchid>/finish', methods=['POST'])
 @limiter.limit('60 per hour', key_func=rate_limit_key)
@@ -141,9 +144,15 @@ def match_veto_update(matchid):
 def match_demo_name(matchid, mapnumber):
     # Upload demo name into database to reference later.
     match = Match.query.get_or_404(matchid)
-    match_api_check(request, match)
-    match.demoFile = request.values.get('demoFile')
-    db.session.commit()
+    match_demo_api_check(request, match)
+    map_stats = match.map_stats.filter_by(map_number=mapnumber).first()
+    if map_stats:
+        map_stats.demoFile = request.values.get('demoFile')
+        db.session.commit()
+    else:
+        return 'Failed to find map stats object', 400
+    app.logger.info("Made it through the demo post.")
+    return 'Success'
 
 @api_blueprint.route('/match/<int:matchid>/map/<int:mapnumber>/finish', methods=['POST'])
 @limiter.limit('60 per hour', key_func=rate_limit_key)

@@ -47,7 +47,7 @@ class Get5Test(unittest.TestCase):
         db.session.commit()
 
         Match.create(user, team1.id, team2.id, '', '', 1, False,
-                     'Map {MAPNUMBER}', ['de_dust2', 'de_cache', 'de_mirage'], season.id, 'CT', server.id)
+                     'Map {MAPNUMBER}', ['de_dust2', 'de_cache', 'de_mirage'], season.id, 'always_knife', 'CT', server.id)
         db.session.commit()
 
         vetoBan = Veto.create(1, 'EnvyUs', 'de_dust2', 'ban')

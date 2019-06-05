@@ -41,6 +41,9 @@ char g_APIKey[128];
 ConVar g_APIURLCvar;
 char g_APIURL[128];
 
+char g_storedAPIURL[128];
+char g_storedAPIKey[128];
+
 ConVar g_FTPHostCvar;
 char g_FTPHost[128];
 
@@ -59,6 +62,8 @@ bool g_FTPEnable;
 ConVar g_CompressEnableCvar;
 bool g_CompressEnable;
 
+char g_fileName[PLATFORM_MAX_PATH];
+
 #define LOGO_DIR "resource/flash/econ/tournaments/teams"
 #define PANO_DIR "materials/panorama/images/tournaments/teams"
 // clang-format off
@@ -74,18 +79,6 @@ public Plugin myinfo = {
 public void OnPluginStart() {
   InitDebugLog("get5_debug", "get5_api");
   LogDebug("OnPluginStart version=%s", PLUGIN_VERSION);
-
-  g_APIKeyCvar =
-      CreateConVar("get5_web_api_key", "", "Match API key, this is automatically set through rcon");
-  HookConVarChange(g_APIKeyCvar, ApiInfoChanged);
-
-  g_APIURLCvar = CreateConVar("get5_web_api_url", "", "URL the get5 api is hosted at, IGNORE AS IT IS SYSTEM SET.");
-
-  HookConVarChange(g_APIURLCvar, ApiInfoChanged);
-
-  RegConsoleCmd("get5_web_avaliable",
-                Command_Avaliable);  // legacy version since I'm bad at spelling
-  RegConsoleCmd("get5_web_available", Command_Avaliable);
 
   g_FTPHostCvar = 
       CreateConVar("get5_api_ftp_host", "ftp://example.com", "Remote FTP Host. Make sure you do NOT have the trailing slash. Include the path to the directory you wish to have.");
@@ -107,6 +100,19 @@ public void OnPluginStart() {
 
   /** Create and exec plugin's configuration file **/
   AutoExecConfig(true, "get5api");
+
+  g_APIKeyCvar =
+      CreateConVar("get5_web_api_key", "", "Match API key, this is automatically set through rcon");
+  HookConVarChange(g_APIKeyCvar, ApiInfoChanged);
+
+  g_APIURLCvar = CreateConVar("get5_web_api_url", "", "URL the get5 api is hosted at, IGNORE AS IT IS SYSTEM SET.");
+
+  HookConVarChange(g_APIURLCvar, ApiInfoChanged);
+
+  RegConsoleCmd("get5_web_avaliable",
+                Command_Avaliable);  // legacy version since I'm bad at spelling
+  RegConsoleCmd("get5_web_available", Command_Avaliable);
+  
 }
 
 public Action Command_Avaliable(int client, int args) {
@@ -156,6 +162,31 @@ static Handle CreateRequest(EHTTPMethod httpMethod, const char[] apiMethod, any:
 
   Handle req = SteamWorks_CreateHTTPRequest(httpMethod, formattedUrl);
   if (StrEqual(g_APIKey, "")) {
+    // Not using a web interface.
+    return INVALID_HANDLE;
+
+  } else if (req == INVALID_HANDLE) {
+    LogError("Failed to create request to %s", formattedUrl);
+    return INVALID_HANDLE;
+
+  } else {
+    SteamWorks_SetHTTPCallbacks(req, RequestCallback);
+    AddStringParam(req, "key", g_APIKey);
+    return req;
+  }
+}
+
+static Handle CreateDemoRequest(EHTTPMethod httpMethod, const char[] apiMethod, any:...) {
+  char url[1024];
+  Format(url, sizeof(url), "%s%s", g_storedAPIURL, apiMethod);
+
+  char formattedUrl[1024];
+  VFormat(formattedUrl, sizeof(formattedUrl), url, 3);
+
+  LogDebug("Trying to create request to url %s", formattedUrl);
+
+  Handle req = SteamWorks_CreateHTTPRequest(httpMethod, formattedUrl);
+  if (StrEqual(g_storedAPIKey, "")) {
     // Not using a web interface.
     return INVALID_HANDLE;
 
@@ -293,15 +324,22 @@ public int LogoCallbackSvg(Handle request, bool failure, bool successful, EHTTPS
 
 public void Get5_OnGoingLive(int mapNumber) {
   char mapName[64];
+  g_FTPEnable = g_FTPEnableCvar.BoolValue;
+  
   GetCurrentMap(mapName, sizeof(mapName));
   Handle req = CreateRequest(k_EHTTPMethodPOST, "match/%d/map/%d/start", g_MatchID, mapNumber);
   if (req != INVALID_HANDLE) {
     AddStringParam(req, "mapname", mapName);
     SteamWorks_SendHTTPRequest(req);
   }
-
+  // Store Cvar since it gets reset after match finishes?
+  if (g_FTPEnable) {
+    Format(g_storedAPIKey, sizeof(g_storedAPIKey), g_APIKey);
+    Format(g_storedAPIURL, sizeof(g_storedAPIURL), g_APIURL);
+  }
   Get5_AddLiveCvar("get5_web_api_key", g_APIKey);
   Get5_AddLiveCvar("get5_web_api_url", g_APIURL);
+  
 }
 
 public void UpdateRoundStats(int mapNumber) {
@@ -434,42 +472,60 @@ public void Get5_OnMapVetoed(MatchTeam team, const char[] map){
 }
 
 public void Get5_OnDemoFinished(const char[] filename){
-  LogDebug("About to enter UploadDemo.");
-  char zippedFile[PLATFORM_MAX_PATH];
-  UploadDemo(filename, zippedFile);
-  LogDebug("Demo upload finished, now sending upload request to API.");
-  Handle req = CreateRequest(k_EHTTPMethodPOST, "match/%d/map/%d/demo", g_MatchID, MapNumber());
-  // Send filename to append to match in database maybe?
-  if (req != INVALID_HANDLE) {
-      AddStringParam(req, "demoFile", zippedFile);
-      SteamWorks_SendHTTPRequest(req);
+  g_FTPEnable = g_FTPEnableCvar.BoolValue;
+  if (g_FTPEnable) {
+    LogDebug("About to enter UploadDemo.");
+    int mapNumber = MapNumber();
+    char zippedFile[PLATFORM_MAX_PATH];
+    char formattedURL[PLATFORM_MAX_PATH];
+    UploadDemo(filename, zippedFile);
+
+    Handle req = CreateDemoRequest(k_EHTTPMethodPOST, "match/%d/map/%d/demo", g_MatchID, mapNumber-1);
+    LogDebug("Our api url: %s", g_storedAPIURL);
+    // Send URL to store in database to show users at end of match.
+    // This requires anonmyous downloads on the FTP server unless
+    // you give out usernames.
+    if (req != INVALID_HANDLE) {
+        Format(formattedURL, sizeof(formattedURL), "%sstatic/demos/%s", g_storedAPIURL, zippedFile);
+        LogDebug("Our URL: %s", formattedURL);
+        AddStringParam(req, "demoFile", formattedURL);
+        SteamWorks_SendHTTPRequest(req);
+    }
+    // Need to store as get5 recycles the configs before the demos finish recording.
+    Format(g_storedAPIKey, sizeof(g_storedAPIKey), "");
+    Format(g_storedAPIURL, sizeof(g_storedAPIURL), "");
   }
 }
 
 public void UploadDemo(const char[] filename, char zippedFile[PLATFORM_MAX_PATH]){
   char remoteDemoPath[PLATFORM_MAX_PATH];
-  g_FTPEnable = g_FTPEnableCvar.BoolValue;
   g_CompressEnable = g_CompressEnableCvar.BoolValue;
-  if(g_FTPEnable && filename[0]){
+  if(filename[0]){
     g_FTPHostCvar.GetString(g_FTPHost, sizeof(g_FTPHost));
     g_FTPPort = g_FTPPortCvar.IntValue;
     g_FTPUsernameCvar.GetString(g_FTPUsername, sizeof(g_FTPUsername));
     g_FTPPasswordCvar.GetString(g_FTPPassword, sizeof(g_FTPPassword));
+    
 
     // Will either be a zipped file or default filename.
-    if(g_CompressEnable){
-      CompressFile(filename, zippedFile);
+    if(g_CompressEnable) {
+      Format(zippedFile, sizeof(zippedFile), "%s.zip", filename);
+      // Callback has no way of getting filename really.
+      Format(g_fileName, sizeof(g_fileName), "%s.zip", filename);
+      System2_Compress(ExecuteCallback, filename, zippedFile);
     } else {
       Format(zippedFile, sizeof(zippedFile), "%s", filename);
     }
-    
+
+    Format(remoteDemoPath, sizeof(remoteDemoPath), "%s/%s", g_FTPHost, zippedFile);
+    LogDebug("Our File is: %s and remote demo path of %s", zippedFile, remoteDemoPath);
     System2FTPRequest ftpRequest = new System2FTPRequest(FtpResponseCallback, remoteDemoPath);
     ftpRequest.AppendToFile = false;
     ftpRequest.CreateMissingDirs = true;
     ftpRequest.SetAuthentication(g_FTPUsername, g_FTPPassword);
     ftpRequest.SetPort(g_FTPPort);
     ftpRequest.SetProgressCallback(FtpProgressCallback);
-    LogMessage("Our File is: %s", zippedFile);
+    LogDebug("Our File is: %s", zippedFile);
 
     ftpRequest.SetInputFile(zippedFile);
     ftpRequest.StartRequest(); 
@@ -478,42 +534,12 @@ public void UploadDemo(const char[] filename, char zippedFile[PLATFORM_MAX_PATH]
   }
 }
 
-public void CompressFile(const char[] filename, char zippedFile[PLATFORM_MAX_PATH]) {
-  // Boolean which holds the knowledge whether we have to force using the 32-bit executable
-  bool force32Bit = false;
-
-  char binDir[PLATFORM_MAX_PATH];
-  char binDir32Bit[PLATFORM_MAX_PATH];
-  Format(zippedFile, sizeof(zippedFile), "%s.zip", filename);
-  // First check if we can use the 7-ZIP executable which is suitable for the running machine
-  if (!System2_Check7ZIP(binDir, sizeof(binDir))) {
-      // If not: Check if 32-bit 7-ZIP can be used
-      if (!System2_Check7ZIP(binDir32Bit, sizeof(binDir32Bit), true)) {
-          // Print an error if both can't be executed
-          if (StrEqual(binDir, binDir32Bit)) {
-              LogMessage("NOTE: 7-ZIP was not found or is not executable at '%s', uploading as regular file.", binDir);
-              Format(zippedFile, sizeof(zippedFile), "%s", filename);
-	      return;
-          } else {
-              LogMessage("NOTE: 7-ZIP was not found or is not executable at '%s' or '%s', uploading as regular file.", binDir, binDir32Bit);
-              Format(zippedFile, sizeof(zippedFile), "%s", filename);
-	      return;
-          }
-      } else {
-          // 64-bit does not seem to work, but 32-bit do. We have to memorize this.
-          force32Bit = true;
-      }
-  }
-  // Now use the knowledge whether we have to force 32-bit or not.
-  System2_Compress(ExecuteCallback, filename, zippedFile, ARCHIVE_ZIP, LEVEL_9, 0, force32Bit);
-}
-
 
 public void FtpProgressCallback(System2FTPRequest request, int dlTotal, int dlNow, int ulTotal, int ulNow) {
   char file[PLATFORM_MAX_PATH];
   request.GetInputFile(file, sizeof(file));
   if (strlen(file) > 0) {
-      LogMessage("Uploading %s file with %d bytes total, %d now", file, ulTotal, ulNow);
+      LogDebug("Uploading %s file with %d bytes total, %d now", file, ulTotal, ulNow);
   }
 }  
 
@@ -522,20 +548,34 @@ public void FtpResponseCallback(bool success, const char[] error, System2FTPRequ
         char file[PLATFORM_MAX_PATH];
         request.GetInputFile(file, sizeof(file));
         if (strlen(file) > 0) {
-            LogMessage("Delete file after complete.");
+            if (DeleteFileIfExists(file)) {
+                LogDebug("Deleted file after complete.");
+            }
         }
     } else{
-      LogMessage("There was a problem: %s", error);
+      LogError("There was a problem: %s", error);
     }
 }  
 
 public void ExecuteCallback(bool success, const char[] command, System2ExecuteOutput output, any data) {
     if (!success || output.ExitStatus != 0) {
-        LogMessage("Couldn't execute commands %s successfully", command);
+        LogError("Couldn't execute commands %s successfully", command);
     } else {
+        char remoteDemoPath[PLATFORM_MAX_PATH];
         char outputString[128];
         output.GetOutput(outputString, sizeof(outputString));
-        LogMessage("Output of the command %s: %s", command, outputString);
+        LogDebug("Output of the command %s: %s \n and our data: %s", command, outputString, data);
+        Format(remoteDemoPath, sizeof(remoteDemoPath), "%s/%s", g_FTPHost, g_fileName);
+        LogDebug("Our File is: %s and remote demo path of %s", g_fileName, remoteDemoPath);
+        System2FTPRequest ftpRequest = new System2FTPRequest(FtpResponseCallback, remoteDemoPath);
+        ftpRequest.AppendToFile = false;
+        ftpRequest.CreateMissingDirs = true;
+        ftpRequest.SetAuthentication(g_FTPUsername, g_FTPPassword);
+        ftpRequest.SetPort(g_FTPPort);
+        ftpRequest.SetProgressCallback(FtpProgressCallback);
+        LogDebug("Our File is: %s", g_fileName);
+        ftpRequest.SetInputFile(g_fileName);
+        ftpRequest.StartRequest(); 
     }
 }  
 
