@@ -158,7 +158,7 @@ static Handle CreateRequest(EHTTPMethod httpMethod, const char[] apiMethod, any:
   char formattedUrl[1024];
   VFormat(formattedUrl, sizeof(formattedUrl), url, 3);
 
-  LogMessage("Trying to create request to url %s", formattedUrl);
+  LogDebug("Trying to create request to url %s", formattedUrl);
 
   Handle req = SteamWorks_CreateHTTPRequest(httpMethod, formattedUrl);
   if (StrEqual(g_APIKey, "")) {
@@ -183,7 +183,7 @@ static Handle CreateDemoRequest(EHTTPMethod httpMethod, const char[] apiMethod, 
   char formattedUrl[1024];
   VFormat(formattedUrl, sizeof(formattedUrl), url, 3);
 
-  LogMessage("Trying to create request to url %s", formattedUrl);
+  LogDebug("Trying to create request to url %s", formattedUrl);
 
   Handle req = SteamWorks_CreateHTTPRequest(httpMethod, formattedUrl);
   if (StrEqual(g_storedAPIKey, "")) {
@@ -486,8 +486,8 @@ public void Get5_OnDemoFinished(const char[] filename){
     // This requires anonmyous downloads on the FTP server unless
     // you give out usernames.
     if (req != INVALID_HANDLE) {
-        Format(formattedURL, sizeof(formattedURL), "%s%s", g_storedAPIURL, zippedFile);
-        LogMessage("Our URL: %s", formattedURL);
+        Format(formattedURL, sizeof(formattedURL), "%sstatic/demos/%s", g_storedAPIURL, zippedFile);
+        LogDebug("Our URL: %s", formattedURL);
         AddStringParam(req, "demoFile", formattedURL);
         SteamWorks_SendHTTPRequest(req);
     }
