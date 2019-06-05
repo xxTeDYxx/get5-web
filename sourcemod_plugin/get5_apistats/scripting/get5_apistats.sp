@@ -41,6 +41,9 @@ char g_APIKey[128];
 ConVar g_APIURLCvar;
 char g_APIURL[128];
 
+char g_storedAPIURL[128];
+char g_storedAPIKey[128];
+
 ConVar g_FTPHostCvar;
 char g_FTPHost[128];
 
@@ -296,6 +299,7 @@ public int LogoCallbackSvg(Handle request, bool failure, bool successful, EHTTPS
 
 public void Get5_OnGoingLive(int mapNumber) {
   char mapName[64];
+  g_FTPEnable = g_FTPEnableCvar.BoolValue;
   
   GetCurrentMap(mapName, sizeof(mapName));
   Handle req = CreateRequest(k_EHTTPMethodPOST, "match/%d/map/%d/start", g_MatchID, mapNumber);
@@ -306,6 +310,11 @@ public void Get5_OnGoingLive(int mapNumber) {
 
   Get5_AddLiveCvar("get5_web_api_key", g_APIKey);
   Get5_AddLiveCvar("get5_web_api_url", g_APIURL);
+  // Store Cvar since it gets reset after match finishes?
+  if (g_FTPEnable) {
+    g_APIKeyCvar.GetString(g_storedAPIKey, sizeof(g_storedAPIKey));
+    g_APIURLCvar.GetString(g_storedAPIURL, sizeof(g_storedAPIURL));
+  }
 }
 
 public void UpdateRoundStats(int mapNumber) {
@@ -445,15 +454,28 @@ public void Get5_OnDemoFinished(const char[] filename){
     char zippedFile[PLATFORM_MAX_PATH];
     char formattedURL[PLATFORM_MAX_PATH];
     UploadDemo(filename, zippedFile);
+
+    // Hack fix for the way get5 handles match finishing
+    // before demos finish.
+    Format(g_APIURL, sizeof(g_APIURL), g_storedAPIURL);
+    Format(g_APIKey, sizeof(g_APIKey), g_storedAPIKey);
     
     Handle req = CreateRequest(k_EHTTPMethodPOST, "match/%d/map/%d/demo", g_MatchID, mapNumber);
     LogDebug("Our api url: %s", g_APIURL);
+    // Send URL to store in database to show users at end of match.
+    // This requires anonmyous downloads on the FTP server unless
+    // you give out usernames.
     if (req != INVALID_HANDLE) {
-        Format(formattedURL, sizeof(formattedURL), "%sstatic/demos/%s", g_APIURL, zippedFile);
+        Format(formattedURL, sizeof(formattedURL), "%s/%s", g_FTPHost, zippedFile);
         LogDebug("Our URL: %s", formattedURL);
         AddStringParam(req, "demoFile", formattedURL);
         SteamWorks_SendHTTPRequest(req);
     }
+    // Need to store as get5 recycles the configs before the demos finish recording.
+    Format(g_APIKey, sizeof(g_APIKey), "");
+    Format(g_storedAPIKey, sizeof(g_storedAPIKey), "");
+    Format(g_storedAPIURL, sizeof(g_storedAPIURL), "");
+    Format(g_APIURL, sizeof(g_APIURL), "");
   }
 }
 
@@ -475,21 +497,22 @@ public void UploadDemo(const char[] filename, char zippedFile[PLATFORM_MAX_PATH]
       System2_Compress(ExecuteCallback, filename, zippedFile);
     } else {
       Format(zippedFile, sizeof(zippedFile), "%s", filename);
-      Format(remoteDemoPath, sizeof(remoteDemoPath), "%s/%s", g_FTPHost, zippedFile);
-      LogDebug("Our File is: %s and remote demo path of %s", zippedFile, remoteDemoPath);
-      System2FTPRequest ftpRequest = new System2FTPRequest(FtpResponseCallback, remoteDemoPath);
-      ftpRequest.AppendToFile = false;
-      ftpRequest.CreateMissingDirs = true;
-      ftpRequest.SetAuthentication(g_FTPUsername, g_FTPPassword);
-      ftpRequest.SetPort(g_FTPPort);
-      ftpRequest.SetProgressCallback(FtpProgressCallback);
-      LogDebug("Our File is: %s", zippedFile);
-
-      ftpRequest.SetInputFile(zippedFile);
-      ftpRequest.StartRequest(); 
     }
+
+    Format(remoteDemoPath, sizeof(remoteDemoPath), "%s/%s", g_FTPHost, zippedFile);
+    LogDebug("Our File is: %s and remote demo path of %s", zippedFile, remoteDemoPath);
+    System2FTPRequest ftpRequest = new System2FTPRequest(FtpResponseCallback, remoteDemoPath);
+    ftpRequest.AppendToFile = false;
+    ftpRequest.CreateMissingDirs = true;
+    ftpRequest.SetAuthentication(g_FTPUsername, g_FTPPassword);
+    ftpRequest.SetPort(g_FTPPort);
+    ftpRequest.SetProgressCallback(FtpProgressCallback);
+    LogDebug("Our File is: %s", zippedFile);
+
+    ftpRequest.SetInputFile(zippedFile);
+    ftpRequest.StartRequest(); 
   } else{
-    LogDebug("Filename was empty (no demo to upload). Change config to enable.");
+    LogDebug("FTP Uploads Disabled OR Filename was empty (no demo to upload). Change config to enable.");
   }
 }
 
