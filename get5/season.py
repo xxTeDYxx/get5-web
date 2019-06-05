@@ -56,7 +56,13 @@ def season_create():
     form = SeasonForm(request.form)
 
     if request.method == 'POST':
-        if form.validate():
+        num_seasons = g.user.seasons.count()
+        max_seasons = config_setting('USER_MAX_SEASONS')
+        if max_seasons >= 0 and num_seasons >= max_seasons and not g.user.admin:
+            flash('You already have the maximum number of seasons ({}) created'.format(
+                num_seasons))
+        
+        elif form.validate():
             season = Season.create(
                 g.user, form.data['season_title'],
                 form.data['start_date'], form.data['end_date'])

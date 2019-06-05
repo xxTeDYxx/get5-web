@@ -174,7 +174,7 @@ def match_create():
             flash('You already have the maximum number of matches ({}) created'.format(
                 num_matches))
 
-        if form.validate():
+        elif form.validate():
             mock = config_setting('TESTING')
 
             server = GameServer.query.get_or_404(form.data['server_id'])

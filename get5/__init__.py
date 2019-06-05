@@ -249,6 +249,7 @@ _config_defaults = {
     'USER_MAX_SERVERS': 10,
     'USER_MAX_TEAMS': 100,
     'USER_MAX_MATCHES': 1000,
+    'USER_MAX_SEASONS': 100,
     'DEFAULT_PAGE': '/matches',
     'ADMINS_ACCESS_ALL_MATCHES': False,
     'CREATE_MATCH_TITLE_TEXT': False,
