@@ -146,8 +146,11 @@ def match_demo_name(matchid, mapnumber):
     match = Match.query.get_or_404(matchid)
     match_demo_api_check(request, match)
     map_stats = match.map_stats.filter_by(map_number=mapnumber).first()
-    map_stats.demoFile = request.values.get('demoFile')
-    db.session.commit()
+    if map_stats:
+        map_stats.demoFile = request.values.get('demoFile')
+        db.session.commit()
+    else:
+        return 'Failed to find map stats object', 400
     return 'Success'
 
 @api_blueprint.route('/match/<int:matchid>/map/<int:mapnumber>/finish', methods=['POST'])
