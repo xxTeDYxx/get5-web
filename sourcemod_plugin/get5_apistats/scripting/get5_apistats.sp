@@ -81,16 +81,16 @@ public void OnPluginStart() {
   LogDebug("OnPluginStart version=%s", PLUGIN_VERSION);
 
   g_FTPHostCvar = 
-      CreateConVar("get5_api_ftp_host", "ftp://example.com", "Remote FTP Host. Make sure you do NOT have the trailing slash. Include the path to the directory you wish to have.");
+      CreateConVar("get5_api_ftp_host", "ftp://example.com", "Remote FTP Host. Make sure you do NOT have the trailing slash. Include the path to the directory you wish to have.", FCVAR_PROTECTED);
 
   g_FTPPortCvar = 
-      CreateConVar("get5_api_ftp_port", "21", "Remote FTP Port");
+      CreateConVar("get5_api_ftp_port", "21", "Remote FTP Port", FCVAR_PROTECTED);
 
   g_FTPUsernameCvar =
-      CreateConVar("get5_api_ftp_username", "username", "Username for the FTP connection.");
+      CreateConVar("get5_api_ftp_username", "username", "Username for the FTP connection.", FCVAR_PROTECTED);
 
   g_FTPPasswordCvar = 
-      CreateConVar("get5_api_ftp_password", "supersecret", "Password for the FTP user. Leave blank if no password.");
+      CreateConVar("get5_api_ftp_password", "supersecret", "Password for the FTP user. Leave blank if no password.", FCVAR_PROTECTED);
 
   g_FTPEnableCvar = 
       CreateConVar("get5_api_ftp_enabled", "0", "0 Disables FTP Upload, 1 Enables.");
@@ -98,21 +98,19 @@ public void OnPluginStart() {
   g_CompressEnableCvar =
       CreateConVar("get5_enabled_7z_compression", "0", "0 Disables zipping files, 1 enables.");
 
-  /** Create and exec plugin's configuration file **/
-  AutoExecConfig(true, "get5api");
-
   g_APIKeyCvar =
-      CreateConVar("get5_web_api_key", "", "Match API key, this is automatically set through rcon");
+      CreateConVar("get5_web_api_key", "", "Match API key, this is automatically set through rcon", FCVAR_DONTRECORD);
   HookConVarChange(g_APIKeyCvar, ApiInfoChanged);
 
-  g_APIURLCvar = CreateConVar("get5_web_api_url", "", "URL the get5 api is hosted at, IGNORE AS IT IS SYSTEM SET.");
+  g_APIURLCvar = CreateConVar("get5_web_api_url", "", "URL the get5 api is hosted at, IGNORE AS IT IS SYSTEM SET.", FCVAR_DONTRECORD);
 
   HookConVarChange(g_APIURLCvar, ApiInfoChanged);
 
   RegConsoleCmd("get5_web_avaliable",
                 Command_Avaliable);  // legacy version since I'm bad at spelling
   RegConsoleCmd("get5_web_available", Command_Avaliable);
-  
+  /** Create and exec plugin's configuration file **/
+  AutoExecConfig(true, "get5api");
 }
 
 public Action Command_Avaliable(int client, int args) {
