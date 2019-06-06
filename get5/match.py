@@ -255,7 +255,10 @@ def match_create():
 def match(matchid):
     match = Match.query.get_or_404(matchid)
     vetoes = Veto.query.filter_by(match_id=matchid)
-    server = GameServer.query.get_or_404(match.server_id)
+    if match.server_id:
+        server = GameServer.query.get_or_404(match.server_id)
+    else:
+        server = None
     team1 = Team.query.get_or_404(match.team1_id)
     team2 = Team.query.get_or_404(match.team2_id)
     map_stat_list = match.map_stats.all()
