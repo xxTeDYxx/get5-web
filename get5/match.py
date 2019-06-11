@@ -13,7 +13,8 @@ from copy import deepcopy
 from wtforms import (
     Form, widgets, validators,
     StringField, RadioField,
-    SelectField, ValidationError, SelectMultipleField)
+    SelectField, ValidationError, 
+    SelectMultipleField, BooleanField)
 
 match_blueprint = Blueprint('match', __name__)
 dbKey = app.config['DATABASE_KEY']
@@ -105,6 +106,9 @@ class MatchForm(Form):
 
     season_selection = SelectField('Season', coerce=int,
                                    validators=[validators.optional()])
+
+    enforce_teams = BooleanField('Enforce Teams',
+                                default=True)
 
     def add_teams(self, user):
         if self.team1_id.choices is None:
@@ -228,7 +232,7 @@ def match_create():
                 # Force Get5 to auth on official matches. Don't raise errors
                 # if we cannot do this.
                 if server_available and not mock:
-                    server.send_rcon_command('get5_check_auths 1', num_retries=2, timeout=0.75)
+                    server.send_rcon_command('get5_check_auths ' + str(int(form.data['enforce_teams'])), num_retries=2, timeout=0.75)
 
                 server.in_use = True
 
