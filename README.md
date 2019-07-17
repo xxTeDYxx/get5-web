@@ -5,21 +5,22 @@
 [![GitHub Downloads](https://img.shields.io/github/downloads/phlexplexico/get5-web/total.svg?label=Downloads)](https://github.com/phlexplexico/get5-web/releases/latest)
 ---
 
-**Status: Third Party Supported**
+**Status: Supported**
 
 
 
-This is an _**experimental**_ web panel meant to be used in conjunction with the [get5](https://github.com/splewis/get5) CS:GO server plugin. It provides a more convenient way of managing matches and match servers.
+This is a web panel meant to be used in conjunction with the [get5](https://github.com/splewis/get5) CS:GO server plugin. It provides a more convenient way of managing matches and match servers.
 
-This fork of get5-web will probably be updated as more features are required for my use case (running a small league). Bugs will be fixed as I come across them, or based on priority (i.e. does it break everything for me). If you have any bugs you'd like to report, please create an issue. I'll try my best to help solve the issue, but I am still new to learning flask as well.
+This fork of get5 introduces a few new features that are used within get5 already, but were not originally ported over to the experimental web-panel. I've tried to make the web panel a little bit more secure (storing passwords, etc), and more handy for people to organize matches (Seasons and Leaderboards). Right now it's considered complete as it fits my needs and small-scale application. If you have any feature suggestions, *please create an issue*. It's extremely unlikely I'll put any more work into it, but pull requests are always welcome with features, provided they've been tested and pass CI!
 
-**WARNING: THIS BUILD OF THE WEB-PANEL IS _UNDER DEVELOPMENT_ AND IS STARTING TO USE MODIFIED GET5 MATERIAL, SUCH AS THE API_STATS PLUGIN. I DO NOT TAKE RESPONSIBILITY FOR ANY DATA LOSS, MISUSE, ETC. THAT THIS WEBAPP MAY INCUR.**
+**WARNING: THIS BUILD OF THE WEB-PANEL USES MODIFIED GET5-APISTATS MATERIAL. I DO NOT TAKE RESPONSIBILITY FOR ANY DATA LOSS, MISUSE, ETC. THAT THIS WEBAPP MAY INCUR.**
 
-_IF YOU HAVE ANY ISSUES, **PLEASE REPORT IT HERE.**_
+_IF YOU HAVE ANY ISSUES WITH THE WEBPANEL OR THE API_STATS PLUGIN, **PLEASE REPORT IT HERE.**_
 
 ## How to use it:
 
-1. Create your game servers on the "Add a server" page by giving their ip, port, and rcon password
+1a. Download the new get5_apistats.smx from the [releases](https://github.com/PhlexPlexico/get5-web/releases) page.
+1b. Create your game servers on the "Add a server" page by giving their ip, port, and rcon password
 2. Create teams on the "Create a Team" page by listing the steamids for each of the players
 3. Go to the "Create a Match" page, selecting the teams, server, and rules for the match
 4. Optional - Create a season with a given date range to keep track for a subset of matches.
@@ -28,7 +29,7 @@ Once you do this, the site will send an rcon command to the game server `get5_lo
 
 As the match owner, you will be able to cancel the match. Additionally, on its matchpage there is a dropdown to run admin commands: add players to the teams if a ringer is needed, pause the match, load a match backup, list match backups, and run any rcon command.
 
-Note: when using this web panel, the CS:GO game servers **must** be have both the core get5 plugin and the get5_apistats plugin. They are [released](https://github.com/splewis/get5/releases) together. This means the server must also be running the [Steamworks](https://forums.alliedmods.net/showthread.php?t=229556) and [SMJansson](https://forums.alliedmods.net/showthread.php?t=184604) extensions.
+Note: when using this web panel, the CS:GO game servers **must** be have both the core get5 plugin and the get5_apistats plugin. This means the server must also be running the [Steamworks](https://forums.alliedmods.net/showthread.php?t=229556) and [SMJansson](https://forums.alliedmods.net/showthread.php?t=184604) extensions, as well as [System2](https://github.com/dordnung/System2/releases) (for automated demo uploads, if you so choose). If you are using the public webpanel, please do not do FTP uploads, as they will not link properly on the web-panel.
 
 ## Screenshots
 
@@ -52,7 +53,7 @@ Note: when using this web panel, the CS:GO game servers **must** be have both th
 
 ## Installation
 
-Please see the [installation instructions](INSTALL.md) for Ubuntu 16.04 with apache2. You can use other distributions or web servers, but you will likely have to figure out how to install a python flask app yourself.
+Please see the [installation instructions](https://github.com/PhlexPlexico/get5-web/wiki/Installation) for Ubuntu 16.04 with apache2. You can use other distributions or web servers, but you will likely have to figure out how to install a python flask app yourself. Raspberry Pis do work, but require a few other packages to be installed for apache.
 
 ## How do the game server and web panel communicate?
 
