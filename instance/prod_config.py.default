@@ -4,7 +4,7 @@ STEAM_API_KEY = '???'  # See https://steamcommunity.com/dev/apikey
 SECRET_KEY = '???'  # Secret key used for flask cookies
 DATABASE_KEY = '???'  # Used for encryption on database. MUST BE 16 BYTES.
 WEBPANEL_NAME = 'Get5' # Used for the title header on the webpage.
-
+JSON_AS_ASCII = False #UTF-8 Encoding Issue.
 ##### Everything below this line is optional to change
 
 import os
