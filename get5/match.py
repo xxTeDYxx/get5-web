@@ -492,11 +492,6 @@ def match_backup(matchid):
         # Restore the backup file
         command = 'get5_loadbackup {}'.format(file)
         response = server.send_rcon_command(command)
-        # Make sure auths get enabled, silently.
-        try:
-            server.send_rcon_command('get5_check_auths 1')
-        except:
-            pass
           
         if response:
             flash('Restored backup file {}'.format(file))

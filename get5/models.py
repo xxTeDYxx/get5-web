@@ -621,6 +621,9 @@ class PlayerStats(db.Model):
     firstdeath_t = db.Column(db.Integer, default=0)
     firstdeath_Ct = db.Column(db.Integer, default=0)
 
+    def get_steam_id(self):
+        return self.steam_id
+
     def get_steam_url(self):
         return 'http://steamcommunity.com/profiles/{}'.format(self.steam_id)
 
@@ -689,6 +692,8 @@ class PlayerStats(db.Model):
         d[team.name][self.steam_id]['k5'] = round(float(self.k5), 1)
         d[team.name][self.steam_id]['ADR'] = round(float(self.get_adr()), 1)
         return d
+
+    
 
     def get_deaths(self):
         return float(self.deaths)
