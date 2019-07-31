@@ -558,22 +558,6 @@ public void FtpResponseCallback(bool success, const char[] error, System2FTPRequ
 public void ExecuteCallback(bool success, const char[] command, System2ExecuteOutput output, any data) {
     if (!success || output.ExitStatus != 0) {
         LogError("Couldn't execute commands %s successfully", command);
-    } else {
-        char remoteDemoPath[PLATFORM_MAX_PATH];
-        char outputString[128];
-        output.GetOutput(outputString, sizeof(outputString));
-        LogDebug("Output of the command %s: %s \n and our data: %s", command, outputString, data);
-        Format(remoteDemoPath, sizeof(remoteDemoPath), "%s/%s", g_FTPHost, g_fileName);
-        LogDebug("Our File is: %s and remote demo path of %s", g_fileName, remoteDemoPath);
-        System2FTPRequest ftpRequest = new System2FTPRequest(FtpResponseCallback, remoteDemoPath);
-        ftpRequest.AppendToFile = false;
-        ftpRequest.CreateMissingDirs = true;
-        ftpRequest.SetAuthentication(g_FTPUsername, g_FTPPassword);
-        ftpRequest.SetPort(g_FTPPort);
-        ftpRequest.SetProgressCallback(FtpProgressCallback);
-        LogDebug("Our File is: %s", g_fileName);
-        ftpRequest.SetInputFile(g_fileName);
-        ftpRequest.StartRequest(); 
     }
 }  
 
