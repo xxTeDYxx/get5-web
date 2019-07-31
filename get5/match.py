@@ -1,5 +1,6 @@
 from flask import Blueprint, request, render_template, flash, g, redirect, jsonify, Markup, json
-
+import csv
+from io import BytesIO as StringIO
 import steamid
 import get5
 from get5 import app, db, BadRequestError, config_setting
@@ -531,3 +532,30 @@ def mymatches():
         return redirect('/login')
 
     return redirect('/matches/' + str(g.user.id))
+
+@match_blueprint.route("/match/<int:matchid>/map/<int:mapid>/csv")
+def map_stat_to_csv(matchid, mapid):
+    def generate():
+        csvLst = ["team","steamid","name","kills","deaths","assists","rating","hsp","firstkills","k2","k3","k4","k5","adr"]
+        data = StringIO()
+        csvWrite = csv.writer(data)
+        csvWrite.writerow([g for g in csvLst])
+        yield data.getvalue()
+        data.seek(0)
+        data.truncate(0)
+        match = Match.query.get_or_404(matchid)
+        map_stat = match.map_stats.filter_by(map_number=mapid, match_id=matchid).first()
+        app.logger.info("{}".format(map_stat))
+        for player in map_stat.player_stats:
+            csvWrite.writerow(player.statsToCSVRow())
+            yield data.getvalue()
+            data.seek(0)
+            data.truncate(0)
+        # stream the response as the data is generated
+    logName = "export_data_match_{}_map_{}.csv".format(matchid, mapid)
+    response = app.response_class(
+        generate(),
+        mimetype='text/csv')
+    # add a filename
+    response.headers.set("Content-Disposition", "attachment", filename=logName)
+    return response

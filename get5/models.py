@@ -711,6 +711,20 @@ class PlayerStats(db.Model):
 
         return rv
 
+    def statsToCSVRow(self):
+        team = Team.query.get(self.team_id) 
+        ourCSVText = [team.name,
+        self.steam_id, get_steam_name(self.steam_id), 
+        round(float(self.kills), 1), round(float(self.deaths), 1), 
+        round(float(self.assists), 1), round(float(self.get_rating()*100), 2),
+        round(float(self.get_hsp()*100), 2),round(float(self.firstkill_ct + self.firstkill_t), 1),
+        round(float(self.k2), 1), round(float(self.k3), 1),
+        round(float(self.k4), 1), round(float(self.k5), 1),
+        round(float(self.get_adr()), 1)]
+        return (ourCSVText)
+
+    
+
 class Veto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     match_id = db.Column(db.Integer, db.ForeignKey('match.id'))
