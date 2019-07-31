@@ -533,10 +533,9 @@ class Match(db.Model):
         add_team_data('team2', self.team2_id, self.team2_string)
 
         d['cvars'] = {}
-        if self.enforce_teams:
-            d['cvars']['get5_check_auths'] = int(self.enforce_teams)
-        else:
-            d['cvars']['get5_check_auths'] = 1
+        # app.logger.info("Enforced? {}".format(self.enforce_teams))
+        d['cvars']['get5_check_auths'] = int(self.enforce_teams)
+
         d['cvars']['get5_web_api_url'] = url_for(
             'home', _external=True, _scheme='http')
 
