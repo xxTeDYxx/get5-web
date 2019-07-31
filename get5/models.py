@@ -348,6 +348,7 @@ class Match(db.Model):
     api_key = db.Column(db.String(32))
     veto_first = db.Column(db.String(5))
     veto_mappool = db.Column(db.String(500))
+    enforce_teams = db.Column(db.Boolean, default=True)
     map_stats = db.relationship('MapStats', backref='match', lazy='dynamic')
 
     
@@ -357,7 +358,7 @@ class Match(db.Model):
 
     @staticmethod
     def create(user, team1_id, team2_id, team1_string, team2_string,
-               max_maps, skip_veto, title, veto_mappool, season_id, side_type, veto_first, server_id=None):
+               max_maps, skip_veto, title, veto_mappool, season_id, side_type, veto_first, enforce_teams=True, server_id=None):
         rv = Match()
         rv.user_id = user.id
         rv.team1_id = team1_id
@@ -369,6 +370,7 @@ class Match(db.Model):
         rv.veto_mappool = ' '.join(veto_mappool)
         rv.server_id = server_id
         rv.max_maps = max_maps
+        rv.enforce_teams = enforce_teams
         if veto_first == "CT":
             rv.veto_first = "team1"
         elif veto_first == "T":
@@ -531,7 +533,7 @@ class Match(db.Model):
         add_team_data('team2', self.team2_id, self.team2_string)
 
         d['cvars'] = {}
-
+        d['cvars']['get5_check_auths'] = int(self.enforce_teams)
         d['cvars']['get5_web_api_url'] = url_for(
             'home', _external=True, _scheme='http')
 

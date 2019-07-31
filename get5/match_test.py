@@ -39,6 +39,7 @@ class MatchTests(get5_test.Get5Test):
                                   'series_type': 'bo3',
                                   'veto_first': 'CT',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
+                                  'enforce_teams': True,
                                   'season_id': None,
                               })
             self.assertEqual(response.status_code, 200)
@@ -64,6 +65,7 @@ class MatchTests(get5_test.Get5Test):
                                   'series_type': 'bo3',
                                   'veto_first': 'CT',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
+                                  'enforce_teams': True,
                                   'season_id': None,
                               })
             self.assertEqual(response.status_code, 200)
@@ -91,6 +93,7 @@ class MatchTests(get5_test.Get5Test):
                                   'series_type': 'bo3',
                                   'veto_first': 'CT',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
+                                  'enforce_teams': True,
                                   'season_id': None,
                               })
             self.assertEqual(response.status_code, 302)
@@ -142,6 +145,7 @@ class MatchTests(get5_test.Get5Test):
                                   'series_type': 'bo3',
                                   'veto_first': 'CT',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
+                                  'enforce_teams': True,
                                   'season_id': None,
                               })
             self.assertEqual(response.status_code, 302)

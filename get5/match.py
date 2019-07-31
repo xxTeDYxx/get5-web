@@ -220,19 +220,14 @@ def match_create():
                     max_maps, skip_veto,
                     form.data['match_title'], form.data['veto_mappool'], season_id, 
                     form.data['side_type'], form.data['veto_first'], 
-                    form.data['server_id'])
+                    form.data['enforce_teams'], form.data['server_id'])
 
                 # Save plugin version data if we have it
                 if json_reply and 'plugin_version' in json_reply:
                     match.plugin_version = json_reply['plugin_version']
                 else:
                     match.plugin_version = 'unknown'
-                # ADD FORM DATA FOR EXTRA GOODIES HERE LIKE CLAN TAG ETC.
-                # Essentially stuff that doesn't need to be stored in DB.
-                # Force Get5 to auth on official matches. Don't raise errors
-                # if we cannot do this.
-                if server_available and not mock:
-                    server.send_rcon_command('get5_check_auths ' + str(int(form.data['enforce_teams'])), num_retries=2, timeout=0.75)
+
 
                 server.in_use = True
 
