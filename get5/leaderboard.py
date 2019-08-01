@@ -3,9 +3,10 @@ from flask import Blueprint, request, render_template, flash, g, redirect, jsoni
 import steamid
 import get5
 from get5 import app, db, BadRequestError, config_setting
-from models import User, Team, Match, GameServer, MapStats, Season
+from models import User, Team, Match, GameServer, MapStats, PlayerStats, Season
 from collections import OrderedDict, defaultdict
 from datetime import datetime
+from statistics import mean
 import util
 import re
 from copy import deepcopy
@@ -80,3 +81,40 @@ def leaderboard():
 @leaderboard_blueprint.route('/leaderboard/season/<int:seasonid>/')
 def seasonal_leaderboard(seasonid):
     return getLeaderboard(seasonid)
+
+@leaderboard_blueprint.route('/leaderboard/players')
+def player_leaderboard():
+    dctPlayer = {'steamid': '', 'steamurl': '', 'name': '', 'kills': 0, 'deaths': 0, 'kdr': 0.0, 'assists': 0, 'adr': 0.0, '3k': 0, '4k': 0, '5k': 0, '1v1': 0, '1v2': 0, '1v3': 0, '1v4': 0, '1v5': 0, 'rating': 0.0, 'hsp': 0.0, 'trp': 0, 'fba': 0}
+    lstAllPlayerDict = []
+    playerValues = PlayerStats.query.all()
+    # Filter through every steam ID
+    for player in playerValues:
+        if any(d.get('steamid', None) == player.get_steam_id() for d in lstAllPlayerDict):
+            continue
+        totalStats = PlayerStats.query.filter_by(steam_id=player.get_steam_id())
+        dctPlayer['steamid'] = (player.get_steam_id())
+        dctPlayer['steamurl'] = (player.get_steam_url())
+        dctPlayer['name'] = (player.get_player_name())
+        dctPlayer['kills'] = (sum(c.kills for c in totalStats))
+        dctPlayer['deaths'] = (sum(c.deaths for c in totalStats))
+        dctPlayer['kdr'] = (mean(c.get_kdr() for c in totalStats))
+        dctPlayer['assists'] = (sum(c.assists for c in totalStats))
+        dctPlayer['adr'] = (mean(c.get_adr() for c in totalStats))
+        dctPlayer['3k'] = (sum(c.k3 for c in totalStats))
+        dctPlayer['4k']=(sum(c.k4 for c in totalStats))
+        dctPlayer['5k']=(sum(c.k5 for c in totalStats))
+        dctPlayer['1v1']=(sum(c.v1 for c in totalStats))
+        dctPlayer['1v2']=(sum(c.v2 for c in totalStats))
+        dctPlayer['1v3']=(sum(c.v3 for c in totalStats))
+        dctPlayer['1v4']=(sum(c.v4 for c in totalStats))
+        dctPlayer['1v5']=(sum(c.v5 for c in totalStats))
+        dctPlayer['rating']=(mean(c.get_rating() for c in totalStats))
+        dctPlayer['hsp']=(mean(c.get_hsp() for c in totalStats))
+        dctPlayer['trp']=(sum(c.roundsplayed for c in totalStats))
+        dctPlayer['fba']=(sum(c.flashbang_assists for c in totalStats))
+        lstAllPlayerDict.append(dctPlayer)
+        dctPlayer = {}
+
+    app.logger.info('{}'.format(lstAllPlayerDict))
+    #return jsonify(lstAllPlayerDict)
+    return render_template('statleaderboard.html', board=lstAllPlayerDict)
