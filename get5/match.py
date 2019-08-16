@@ -15,7 +15,8 @@ from wtforms import (
     Form, widgets, validators,
     StringField, RadioField,
     SelectField, ValidationError, 
-    SelectMultipleField, BooleanField)
+    SelectMultipleField, BooleanField,
+    IntegerField)
 
 match_blueprint = Blueprint('match', __name__)
 dbKey = app.config['DATABASE_KEY']
@@ -44,6 +45,12 @@ def mappool_validator(form, field):
     if len(form.veto_mappool.data) < max_maps:
         raise ValidationError(
             'You must have at least {} maps selected to do a Bo{}'.format(max_maps, max_maps))
+
+def series_score_validator(form, field):
+    team1 = form.team1_series_score.data if not None else 0
+    team2 = form.team2_series_score.data if not None else 0
+    if int(team1) < 0 or int(team2) < 0:
+        raise ValidationError("You cannot have a negative series score.")
 
 
 class MatchForm(Form):
@@ -110,6 +117,14 @@ class MatchForm(Form):
 
     enforce_teams = BooleanField('Enforce Teams',
                                 default=True)
+
+    team1_series_score = IntegerField('Team 1 Series Score',
+                                    default=0,
+                                    validators=[validators.NumberRange(0, 7)])
+
+    team2_series_score = IntegerField('Team 2 Series Score',
+                                    default=0,
+                                    validators=[validators.NumberRange(0, 7)])
 
     def add_teams(self, user):
         if self.team1_id.choices is None:
@@ -214,6 +229,9 @@ def match_create():
 
                 if form.data['season_selection'] != 0:
                     season_id = form.data['season_selection']
+                app.logger.info("{} and {}".format(form.data['team1_series_score'], form.data['team2_series_score']  ))
+                team1_series_score = form.data['team1_series_score'] if not None else 0
+                team2_series_score = form.data['team2_series_score'] if not None else 0
 
                 match = Match.create(
                     g.user, form.data['team1_id'], form.data['team2_id'],
@@ -221,7 +239,8 @@ def match_create():
                     max_maps, skip_veto,
                     form.data['match_title'], form.data['veto_mappool'], season_id, 
                     form.data['side_type'], form.data['veto_first'], 
-                    form.data['enforce_teams'], form.data['server_id'])
+                    form.data['enforce_teams'], form.data['server_id'],
+                    team1_series_score, team2_series_score)
 
                 # Save plugin version data if we have it
                 if json_reply and 'plugin_version' in json_reply:

@@ -2,7 +2,11 @@
 
 {% block content %}
 <div class="panel panel-default">
-    <div class="panel-heading"><h1>Player Leaderboard</h1></div>
+    {% if season %}
+      <div class="panel-heading"><h1>Player Leaderboard For Season {{season}}</h1></div>
+    {% else %}
+      <div class="panel-heading"><h1>Player Leaderboard All Time</h1></div>
+    {% endif %}
     <div class="panel-body">
             <table class="table table-hover" id="dataTable">
                     <thead>

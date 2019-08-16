@@ -69,21 +69,7 @@ def getLeaderboard(seasonid=None):
     else:
         return render_template('leaderboard.html', standings=dTeamStandings, user=g.user, seasonsBoard=seasonsBoard)
 
-
-leaderboard_blueprint = Blueprint('leaderboard', __name__)
-
-
-@leaderboard_blueprint.route('/leaderboard')
-def leaderboard():
-    return getLeaderboard()
-
-
-@leaderboard_blueprint.route('/leaderboard/season/<int:seasonid>/')
-def seasonal_leaderboard(seasonid):
-    return getLeaderboard(seasonid)
-
-@leaderboard_blueprint.route('/leaderboard/players')
-def player_leaderboard():
+def getPlayerLeaderboard(seasonid=None):
     dctPlayer = {'steamid': '', 'steamurl': '', 'name': '', 'kills': 0, 'deaths': 0, 'kdr': 0.0, 'assists': 0, 'adr': 0.0, '3k': 0, '4k': 0, '5k': 0, '1v1': 0, '1v2': 0, '1v3': 0, '1v4': 0, '1v5': 0, 'rating': 0.0, 'hsp': 0.0, 'trp': 0, 'fba': 0}
     lstAllPlayerDict = []
     playerValues = PlayerStats.query.all()
@@ -91,6 +77,11 @@ def player_leaderboard():
     for player in playerValues:
         if any(d.get('steamid', None) == player.get_steam_id() for d in lstAllPlayerDict):
             continue
+        # query match id to find season if we have one.
+        if (seasonid):
+            curMatch = Match.query.filter_by(id=player.match_id).first()
+            if (curMatch.season_id != seasonid):
+                continue
         totalStats = PlayerStats.query.filter_by(steam_id=player.get_steam_id())
         dctPlayer['steamid'] = (player.get_steam_id())
         dctPlayer['steamurl'] = (player.get_steam_url())
@@ -114,7 +105,27 @@ def player_leaderboard():
         dctPlayer['fba']=(sum(c.flashbang_assists for c in totalStats))
         lstAllPlayerDict.append(dctPlayer)
         dctPlayer = {}
+    return lstAllPlayerDict
 
-    app.logger.info('{}'.format(lstAllPlayerDict))
-    #return jsonify(lstAllPlayerDict)
-    return render_template('statleaderboard.html', board=lstAllPlayerDict)
+leaderboard_blueprint = Blueprint('leaderboard', __name__)
+
+
+@leaderboard_blueprint.route('/leaderboard')
+def leaderboard():
+    return getLeaderboard()
+
+
+@leaderboard_blueprint.route('/leaderboard/season/<int:seasonid>')
+def seasonal_leaderboard(seasonid):
+    return getLeaderboard(seasonid)
+
+@leaderboard_blueprint.route('/leaderboard/season/<int:seasonid>/players')
+def seasonal_player_leaderboard(seasonid):
+    season = Season.query.get_or_404(seasonid)
+    playerValues = getPlayerLeaderboard(seasonid)
+    return render_template('statleaderboard.html', board=playerValues, season=season.name)
+
+@leaderboard_blueprint.route('/leaderboard/players')
+def player_leaderboard():
+    playerValues = getPlayerLeaderboard()
+    return render_template('statleaderboard.html', board=playerValues)

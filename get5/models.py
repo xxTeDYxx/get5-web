@@ -355,10 +355,12 @@ class Match(db.Model):
     side_type = db.Column(db.String(32))
     team1_score = db.Column(db.Integer, default=0)
     team2_score = db.Column(db.Integer, default=0)
+    team1_series_score = db.Column(db.Integer, default=0)
+    team2_series_score = db.Column(db.Integer, default=0)
 
     @staticmethod
     def create(user, team1_id, team2_id, team1_string, team2_string,
-               max_maps, skip_veto, title, veto_mappool, season_id, side_type, veto_first, enforce_teams=True, server_id=None):
+               max_maps, skip_veto, title, veto_mappool, season_id, side_type, veto_first, enforce_teams=True, server_id=None, team1_series_score=None, team2_series_score=None):
         rv = Match()
         rv.user_id = user.id
         rv.team1_id = team1_id
@@ -379,6 +381,9 @@ class Match(db.Model):
             rv.veto_first = None
         rv.api_key = ''.join(random.SystemRandom().choice(
             string.ascii_uppercase + string.digits) for _ in range(24))
+        rv.team1_series_score = team1_series_score
+        rv.team2_series_score = team2_series_score
+
         db.session.add(rv)
         return rv
 
@@ -519,6 +524,11 @@ class Match(db.Model):
             add_if('flag', team.flag.upper())
             add_if('logo', team.logo)
             add_if('matchtext', matchtext)
+            # Add new series score.
+            if teamkey == 'team1':
+                add_if('series_score', self.team1_series_score)
+            else:
+                add_if('series_score', self.team2_series_score)
             # Attempt to send in KV Pairs of preferred names. 
             # If none, send in the regular list.
             try:

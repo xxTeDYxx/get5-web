@@ -41,6 +41,8 @@ class MatchTests(get5_test.Get5Test):
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
                                   'enforce_teams': True,
                                   'season_id': None,
+                                  'team1_series_score': 0,
+                                  'team2_series_score': 0,
                               })
             self.assertEqual(response.status_code, 200)
             self.assertIn('Error in the Server field', response.data)
@@ -67,6 +69,8 @@ class MatchTests(get5_test.Get5Test):
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
                                   'enforce_teams': True,
                                   'season_id': None,
+                                  'team1_series_score': 0,
+                                  'team2_series_score': 0,
                               })
             self.assertEqual(response.status_code, 200)
             self.assertIn('Error in the Server field', response.data)
@@ -95,6 +99,8 @@ class MatchTests(get5_test.Get5Test):
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
                                   'enforce_teams': True,
                                   'season_id': None,
+                                  'team1_series_score': 0,
+                                  'team2_series_score': 0,
                               })
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.location, url_for(
@@ -147,6 +153,8 @@ class MatchTests(get5_test.Get5Test):
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
                                   'enforce_teams': True,
                                   'season_id': None,
+                                  'team1_series_score': 0,
+                                  'team2_series_score': 0,
                               })
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.location, url_for(
