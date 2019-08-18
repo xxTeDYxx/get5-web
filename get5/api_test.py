@@ -64,14 +64,14 @@ class ApiTests(get5_test.Get5Test):
         # Send a player stats update
         response = self.app.post(
             '/match/1/map/0/player/76561198053858673/update',
-                                 data={
-                                     'roundsplayed': '5',
-                                     'kills': '5',
-                                     'deaths': '3',
-                                     'damage': '500',
-                                     'team': 'team1',
-                                     'key': matchkey,
-                                 })
+            data={
+                'roundsplayed': '5',
+                'kills': '5',
+                'deaths': '3',
+                'damage': '500',
+                'team': 'team1',
+                'key': matchkey,
+            })
         self.assertEqual(response.status_code, 200)
         playerstats = PlayerStats.query.filter_by(
             match_id=1, map_id=1, steam_id=76561198053858673).first()

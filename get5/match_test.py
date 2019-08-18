@@ -118,7 +118,8 @@ class MatchTests(get5_test.Get5Test):
 
     # Try starting a match using someone else's public server
     def test_match_create_not_my_server(self):
-        # Create a public server first, it will be id=3 (2 servers already exist)
+        # Create a public server first, it will be id=3 (2 servers already
+        # exist)
         with self.app as c:
             with c.session_transaction() as sess:
                 sess['user_id'] = 2
@@ -188,7 +189,7 @@ class MatchTests(get5_test.Get5Test):
         with self.app as c:
             with c.session_transaction() as sess:
                 sess['user_id'] = 1
-            
+
             response = c.get('/match/1/cancel')
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.location, url_for(

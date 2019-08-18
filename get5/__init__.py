@@ -21,7 +21,7 @@ import logging
 import logging.handlers
 import re
 import sys
-import os 
+import os
 
 import logos
 import steamid
@@ -44,8 +44,10 @@ sys.setdefaultencoding('utf-8')
 app = Flask(__name__, instance_relative_config=True)
 app.config.from_pyfile('prod_config.py')
 
-LOGO_FOLDER = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__), 'static', 'resource', 'csgo', 'resource', 'flash', 'econ', 'tournaments', 'teams'))
-PANO_LOGO_FOLDER = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__), 'static', 'resource', 'csgo', 'materials', 'panorama', 'images', 'tournaments', 'teams'))
+LOGO_FOLDER = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(
+    __file__), 'static', 'resource', 'csgo', 'resource', 'flash', 'econ', 'tournaments', 'teams'))
+PANO_LOGO_FOLDER = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(
+    __file__), 'static', 'resource', 'csgo', 'materials', 'panorama', 'images', 'tournaments', 'teams'))
 app.config['LOGO_FOLDER'] = LOGO_FOLDER
 app.config['PANO_LOGO_FOLDER'] = PANO_LOGO_FOLDER
 # Setup caching
@@ -89,7 +91,7 @@ app.logger.setLevel(logging.INFO)
 
 # Find version info
 app.jinja_env.globals.update(COMMIT_STRING=util.get_version())
-#Set our webpanel name.
+# Set our webpanel name.
 app.jinja_env.globals.update(WEBPANEL_NAME=app.config['WEBPANEL_NAME'])
 
 # Setup any data structures needed
@@ -118,6 +120,7 @@ def register_blueprints():
 
     from stats import stats_blueprint
     app.register_blueprint(stats_blueprint)
+
 
 @app.route('/login')
 @oid.loginhandler

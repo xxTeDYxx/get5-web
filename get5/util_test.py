@@ -18,7 +18,8 @@ class UtilTest(get5_test.Get5Test):
 
     def test_encrypt_decrypt(self):
         encWords = util.encrypt('THISASIXTEENCHAR', 'these are words')
-        self.assertEqual(util.decrypt('THISASIXTEENCHAR', encWords), 'these are words')
+        self.assertEqual(util.decrypt(
+            'THISASIXTEENCHAR', encWords), 'these are words')
 
 if __name__ == '__main__':
     unittest.main()

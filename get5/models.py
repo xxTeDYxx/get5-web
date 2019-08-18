@@ -14,6 +14,7 @@ import re
 
 dbKey = app.config['DATABASE_KEY']
 
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     steam_id = db.Column(db.String(40), unique=True)
@@ -95,17 +96,19 @@ class GameServer(db.Model):
             response = self.send_rcon_command(command, raise_errors=False)
             if response is not None:
                 pattern = r'"([A-Za-z0-9_\./\\-]*)"'
-                value = re.split(pattern, Markup(response.replace('\n', '<br>')))
+                value = re.split(pattern, Markup(
+                    response.replace('\n', '<br>')))
             else:
                 return None
-        except Exception as e: 
-            app.logger.info("Tried to receive value from server but failed.\n{}".format(e))
+        except Exception as e:
+            app.logger.info(
+                "Tried to receive value from server but failed.\n{}".format(e))
             return None
-        # Not sure how stable this will be, but send off for the third 
-        # value of the string split. Most values returned have format 
+        # Not sure how stable this will be, but send off for the third
+        # value of the string split. Most values returned have format
         # "sv_password" = "test" (def. "")
         return value[3]
-        
+
     def __repr__(self):
         return 'GameServer({})'.format(self.get_hostport())
 
@@ -127,7 +130,8 @@ class Team(db.Model):
     def create(user, name, tag, flag, logo, auths, public_team=False, preferred_names=None):
         rv = Team()
         rv.user_id = user.id
-        rv.set_data(name, tag, flag, logo, auths, (public_team and user.admin), preferred_names)
+        rv.set_data(name, tag, flag, logo, auths,
+                    (public_team and user.admin), preferred_names)
         db.session.add(rv)
         return rv
 
@@ -251,6 +255,7 @@ class Team(db.Model):
         return 'Team(id={}, user_id={}, name={}, flag={}, logo={}, public={})'.format(
             self.id, self.user_id, self.name, self.flag, self.logo, self.public_team)
 
+
 class Season(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -268,7 +273,7 @@ class Season(db.Model):
         rv.end_date = end_date
         db.session.add(rv)
         return rv
-        
+
     def get_season_name(self):
         return self.name
 
@@ -277,18 +282,18 @@ class Season(db.Model):
         self.name = name
         self.start_date = start_date
         self.end_date = end_date
-        
+
     def can_edit(self, user):
-            if not user:
-                return False
-            if self.user_id == user.id:
-                return True
+        if not user:
             return False
+        if self.user_id == user.id:
+            return True
+        return False
 
     def can_delete(self, user):
-            if not self.can_edit(user):
-                return False
-            return self.get_recent_matches().count() == 0
+        if not self.can_edit(user):
+            return False
+        return self.get_recent_matches().count() == 0
 
     def get_recent_matches(self, limit=10):
         season = Season.query.get_or_404(self.id)
@@ -302,11 +307,12 @@ class Season(db.Model):
         if recent_matches is None:
             return []
         else:
-            return recent_matches     
+            return recent_matches
 
     def __repr__(self):
         return 'Season(id={}, user_id={}, name={}, start_date={}, end_date={})'.format(
             self.id, self.user_id, self.name, self.start_date, self.end_date)
+
 
 class match_audit(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -328,7 +334,8 @@ class match_audit(db.Model):
 class Match(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    server_id = db.Column(db.Integer, db.ForeignKey('game_server.id'), index=True)
+    server_id = db.Column(db.Integer, db.ForeignKey(
+        'game_server.id'), index=True)
     team1_id = db.Column(db.Integer, db.ForeignKey('team.id'))
     team2_id = db.Column(db.Integer, db.ForeignKey('team.id'))
     season_id = db.Column(db.Integer, db.ForeignKey('season.id'))
@@ -337,7 +344,7 @@ class Match(db.Model):
     team2_string = db.Column(db.String(32), default='')
     winner = db.Column(db.Integer, db.ForeignKey('team.id'))
     plugin_version = db.Column(db.String(32), default='unknown')
-    
+
     forfeit = db.Column(db.Boolean, default=False)
     cancelled = db.Column(db.Boolean, default=False)
     start_time = db.Column(db.DateTime)
@@ -351,7 +358,6 @@ class Match(db.Model):
     enforce_teams = db.Column(db.Boolean, default=True)
     map_stats = db.relationship('MapStats', backref='match', lazy='dynamic')
 
-    
     side_type = db.Column(db.String(32))
     team1_score = db.Column(db.Integer, default=0)
     team2_score = db.Column(db.Integer, default=0)
@@ -361,8 +367,8 @@ class Match(db.Model):
 
     @staticmethod
     def create(user, team1_id, team2_id, team1_string, team2_string,
-               max_maps, skip_veto, title, veto_mappool, season_id, 
-               side_type, veto_first, enforce_teams=True, server_id=None, 
+               max_maps, skip_veto, title, veto_mappool, season_id,
+               side_type, veto_first, enforce_teams=True, server_id=None,
                team1_series_score=None, team2_series_score=None,
                spectator_auths=None):
         rv = Match()
@@ -533,7 +539,7 @@ class Match(db.Model):
                 add_if('series_score', self.team1_series_score)
             else:
                 add_if('series_score', self.team2_series_score)
-            # Attempt to send in KV Pairs of preferred names. 
+            # Attempt to send in KV Pairs of preferred names.
             # If none, send in the regular list.
             try:
                 d[teamkey]['players'] = {}
@@ -541,7 +547,6 @@ class Match(db.Model):
                     d[teamkey]['players'][uid] = name
             except:
                 d[teamkey]['players'] = filter(lambda x: x != '', team.auths)
-
 
         add_team_data('team1', self.team1_id, self.team1_string)
         add_team_data('team2', self.team2_id, self.team2_string)
@@ -555,8 +560,9 @@ class Match(db.Model):
 
         # Add in for spectators modification.
         d['min_spectators_to_ready'] = 0
-        
-        # Perm spectators will go within config, then can add more from match screen.
+
+        # Perm spectators will go within config, then can add more from match
+        # screen.
         d['spectators'] = {"players": app.config['SPECTATOR_IDS']}
 
         # If we don't have any perm spectators, create the new list.
@@ -573,7 +579,6 @@ class Match(db.Model):
                 d['maplist'].append(map)
 
         return d
-
 
     def __repr__(self):
         return 'Match(id={})'.format(self.id)
@@ -592,6 +597,7 @@ class MapStats(db.Model):
     player_stats = db.relationship(
         'PlayerStats', backref='mapstats', lazy='dynamic')
     demoFile = db.Column(db.String(256))
+
     @staticmethod
     def get_or_create(match_id, map_number, map_name='', demoFile=None):
         match = Match.query.get(match_id)
@@ -699,11 +705,12 @@ class PlayerStats(db.Model):
 
     """ Custom made individual scoreboard to work with VMIX and an Excel file.
         The values will be automagically updated and put straight into a broadcast (neat!)"""
+
     def get_ind_scoreboard(self, map_number):
         d = {}
         map_stats = MapStats.query.filter_by(
             match_id=self.match_id, map_number=map_number).first()
-        team = Team.query.get(self.team_id)       
+        team = Team.query.get(self.team_id)
         d['map'] = map_stats.map_name
         d[team.name] = {}
         d[team.name][self.steam_id] = {}
@@ -711,17 +718,17 @@ class PlayerStats(db.Model):
         d[team.name][self.steam_id]['kills'] = round(float(self.kills), 1)
         d[team.name][self.steam_id]['deaths'] = round(float(self.deaths), 1)
         d[team.name][self.steam_id]['assists'] = round(float(self.assists), 1)
-        d[team.name][self.steam_id]['rating'] = round(float(self.get_rating()), 2)
+        d[team.name][self.steam_id]['rating'] = round(
+            float(self.get_rating()), 2)
         d[team.name][self.steam_id]['hsp'] = round(float(self.get_hsp()), 2)
-        d[team.name][self.steam_id]['firstkill'] = round(float(self.firstkill_ct + self.firstkill_t), 1)
+        d[team.name][self.steam_id]['firstkill'] = round(
+            float(self.firstkill_ct + self.firstkill_t), 1)
         d[team.name][self.steam_id]['k2'] = round(float(self.k2), 1)
         d[team.name][self.steam_id]['k3'] = round(float(self.k3), 1)
         d[team.name][self.steam_id]['k4'] = round(float(self.k4), 1)
         d[team.name][self.steam_id]['k5'] = round(float(self.k5), 1)
         d[team.name][self.steam_id]['ADR'] = round(float(self.get_adr()), 1)
         return d
-
-    
 
     def get_deaths(self):
         return float(self.deaths)
@@ -745,18 +752,20 @@ class PlayerStats(db.Model):
         return rv
 
     def statsToCSVRow(self):
-        team = Team.query.get(self.team_id) 
+        team = Team.query.get(self.team_id)
         ourCSVText = [team.name,
-        self.steam_id, get_steam_name(self.steam_id), 
-        round(float(self.kills), 1), round(float(self.deaths), 1), 
-        round(float(self.assists), 1), round(float(self.get_rating()*100), 2),
-        round(float(self.get_hsp()*100), 2),round(float(self.firstkill_ct + self.firstkill_t), 1),
-        round(float(self.k2), 1), round(float(self.k3), 1),
-        round(float(self.k4), 1), round(float(self.k5), 1),
-        round(float(self.get_adr()), 1)]
+                      self.steam_id, get_steam_name(self.steam_id),
+                      round(float(self.kills), 1), round(
+                          float(self.deaths), 1),
+                      round(float(self.assists), 1), round(
+                          float(self.get_rating() * 100), 2),
+                      round(float(self.get_hsp() * 100),
+                            2), round(float(self.firstkill_ct + self.firstkill_t), 1),
+                      round(float(self.k2), 1), round(float(self.k3), 1),
+                      round(float(self.k4), 1), round(float(self.k5), 1),
+                      round(float(self.get_adr()), 1)]
         return (ourCSVText)
 
-    
 
 class Veto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -764,7 +773,7 @@ class Veto(db.Model):
     team_name = db.Column(db.String(64), default='')
     map = db.Column(db.String(32), default='')
     pick_or_veto = db.Column(db.String(4), default='veto')
-    
+
     @staticmethod
     def create(match_id, team_name, map_name, p_v):
         rv = Veto()
@@ -774,7 +783,7 @@ class Veto(db.Model):
         rv.pick_or_veto = p_v
         db.session.add(rv)
         return rv
-    
+
     def __repr__(self):
         return 'Veto(id={})'.format(self.id)
 

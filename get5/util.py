@@ -6,6 +6,7 @@ from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 from Crypto import Random
 
+
 def as_int(val, on_fail=0):
     if val is None:
         return on_fail
@@ -40,7 +41,7 @@ def check_server_connection(server, key=None):
     return response is not None
 
 
-def check_server_avaliability(server,key=None):
+def check_server_avaliability(server, key=None):
     import json
 
     if not server:
@@ -123,6 +124,7 @@ def strip_rcon_logline(response):
 
     return response
 
+
 def get_version():
     try:
         root_dir = os.path.realpath(os.path.join(
@@ -132,18 +134,26 @@ def get_version():
     except (OSError, subprocess.CalledProcessError):
         return None
 
+
 def encrypt(key, source, encode=True):
     if not source:
         return
-    key = SHA256.new(key).digest()  # use SHA-256 over our key to get a proper-sized AES key
+    # use SHA-256 over our key to get a proper-sized AES key
+    key = SHA256.new(key).digest()
     IV = Random.new().read(AES.block_size)  # generate IV
     encryptor = AES.new(key, AES.MODE_CBC, IV)
-    padding = AES.block_size - len(source) % AES.block_size  # calculate needed padding
-    source += chr(padding) * padding # Python 2.x: source += chr(padding) * padding # Python 3.x bytes([padding]) * padding
-    data = IV + encryptor.encrypt(source)  # store the IV at the beginning and encrypt
+    # calculate needed padding
+    padding = AES.block_size - len(source) % AES.block_size
+    # Python 2.x: source += chr(padding) * padding # Python 3.x
+    # bytes([padding]) * padding
+    source += chr(padding) * padding
+    # store the IV at the beginning and encrypt
+    data = IV + encryptor.encrypt(source)
     return base64.b64encode(data).decode("latin-1") if encode else data
 
 # Try excepts are to avoid any backwards compatibility issues.
+
+
 def decrypt(key, source, decode=True):
     if not source:
         return None
@@ -152,14 +162,19 @@ def decrypt(key, source, decode=True):
             source = base64.b64decode(source.encode("latin-1"))
         except:
             return None
-    key = SHA256.new(key).digest()  # use SHA-256 over our key to get a proper-sized AES key
+    # use SHA-256 over our key to get a proper-sized AES key
+    key = SHA256.new(key).digest()
     IV = source[:AES.block_size]  # extract the IV from the beginning
     try:
         decryptor = AES.new(key, AES.MODE_CBC, IV)
     except:
         return None
     data = decryptor.decrypt(source[AES.block_size:])  # decrypt
-    padding = ord(data[-1])  # pick the padding value from the end; Python 2.x: ord(data[-1]) # Python 3.x: data[-1]
-    if data[-padding:] != chr(padding) * padding:  # Python 2.x: chr(padding) * padding # Python 3.x: bytes([padding]) * padding:
+    # pick the padding value from the end; Python 2.x: ord(data[-1]) # Python
+    # 3.x: data[-1]
+    padding = ord(data[-1])
+    # Python 2.x: chr(padding) * padding # Python 3.x: bytes([padding]) *
+    # padding:
+    if data[-padding:] != chr(padding) * padding:
         return None
     return data[:-padding]  # remove the padding

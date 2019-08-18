@@ -61,7 +61,7 @@ def season_create():
         if max_seasons >= 0 and num_seasons >= max_seasons and not g.user.admin:
             flash('You already have the maximum number of seasons ({}) created'.format(
                 num_seasons))
-        
+
         elif form.validate():
             season = Season.create(
                 g.user, form.data['season_title'],
@@ -85,7 +85,7 @@ def season_matches(seasonid):
     season_info = Season.query.get_or_404(seasonid)
     page = util.as_int(request.values.get('page'), on_fail=1)
     matches = Match.query.order_by(-Match.id).filter_by(season_id=seasonid,
-                                                         cancelled=False).paginate(page, 20)
+                                                        cancelled=False).paginate(page, 20)
 
     return render_template('matches.html', user=g.user, matches=matches,
                            season_matches=True, all_matches=False,

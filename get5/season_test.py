@@ -43,9 +43,12 @@ class SeasonTests(get5_test.Get5Test):
         season = Season.query.get(2)
         self.assertEqual(season.user_id, 1)
         self.assertEqual(season.name, 'TestSeasonTwo')
-        self.assertEqual(season.start_date.strftime('%m/%d/%Y'), (datetime.today().strftime('%m/%d/%Y')))
-        self.assertEqual(season.end_date.strftime('%m/%d/%Y'), (datetime.today() + timedelta(days=1)).strftime('%m/%d/%Y'))
+        self.assertEqual(season.start_date.strftime('%m/%d/%Y'),
+                         (datetime.today().strftime('%m/%d/%Y')))
+        self.assertEqual(season.end_date.strftime(
+            '%m/%d/%Y'), (datetime.today() + timedelta(days=1)).strftime('%m/%d/%Y'))
     # Try creating a season with no start date given.
+
     def test_season_create_start_date_null(self):
         with self.app as c:
             with c.session_transaction() as sess:
@@ -65,7 +68,8 @@ class SeasonTests(get5_test.Get5Test):
                                   'end_date': (datetime.today().strftime('%m/%d/%Y')),
                               })
             self.assertEqual(response.status_code, 200)
-            self.assertIn('End date must be greater than start date', response.data)
+            self.assertIn(
+                'End date must be greater than start date', response.data)
 
     # Try editing a season that doesn't belong to you.
     def test_season_edit_not_my_season(self):

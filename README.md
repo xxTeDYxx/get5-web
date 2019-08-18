@@ -5,7 +5,7 @@
 [![GitHub Downloads](https://img.shields.io/github/downloads/phlexplexico/get5-web/total.svg?label=Downloads)](https://github.com/phlexplexico/get5-web/releases/latest)
 ---
 
-**Status: Supported, No Longer Under Development**
+**Status: Supported**
 
 
 
