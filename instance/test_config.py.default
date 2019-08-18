@@ -14,5 +14,6 @@ USER_MAX_TEAMS = 100
 USER_MAX_MATCHES = 1000
 USER_MAX_SEASONS = 100
 DEFAULT_PAGE = '/matches'
+SPECTATOR_IDS = []
 # Please make sure this is only located in test.
 WTF_CSRF_ENABLED = False
