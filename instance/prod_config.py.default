@@ -49,6 +49,10 @@ DEFAULT_MAPLIST = [
     'de_vertigo',
 ]
 
+# You may set the game server to allow whitelisted steam ids to specatate.
+# By default, NO users can spectate matches.
+SPECTATOR_IDS = []
+
 # You may set the server to allow allow whitelisted steamids to login.
 # By default any user can login and create teams/servers/matches.
 WHITELISTED_IDS = []

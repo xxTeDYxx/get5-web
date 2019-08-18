@@ -126,6 +126,9 @@ class MatchForm(Form):
                                     default=0,
                                     validators=[validators.NumberRange(0, 7)])
 
+    spectator_string = StringField('Spectator IDs',
+                               default='')
+
     def add_teams(self, user):
         if self.team1_id.choices is None:
             self.team1_id.choices = []
@@ -229,10 +232,20 @@ def match_create():
 
                 if form.data['season_selection'] != 0:
                     season_id = form.data['season_selection']
-                app.logger.info("{} and {}".format(form.data['team1_series_score'], form.data['team2_series_score']  ))
+                
+                # Series Score Feature.
                 team1_series_score = form.data['team1_series_score'] if not None else 0
                 team2_series_score = form.data['team2_series_score'] if not None else 0
+                # End Series Score Feature.
 
+                # Spectator Feature
+                specList = []
+                if form.data['spectator_string']:
+                    for auth in form.data['spectator_string'].split():
+                        suc, new_auth = steamid.auth_to_steam64(auth)
+                        if suc:
+                            specList.append(new_auth)
+                # End Spectator Feature
                 match = Match.create(
                     g.user, form.data['team1_id'], form.data['team2_id'],
                     form.data['team1_string'], form.data['team2_string'],
@@ -240,7 +253,7 @@ def match_create():
                     form.data['match_title'], form.data['veto_mappool'], season_id, 
                     form.data['side_type'], form.data['veto_first'], 
                     form.data['enforce_teams'], form.data['server_id'],
-                    team1_series_score, team2_series_score)
+                    team1_series_score, team2_series_score, specList)
 
                 # Save plugin version data if we have it
                 if json_reply and 'plugin_version' in json_reply:

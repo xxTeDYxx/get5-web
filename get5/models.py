@@ -357,10 +357,14 @@ class Match(db.Model):
     team2_score = db.Column(db.Integer, default=0)
     team1_series_score = db.Column(db.Integer, default=0)
     team2_series_score = db.Column(db.Integer, default=0)
+    spectator_auths = db.Column(db.PickleType)
 
     @staticmethod
     def create(user, team1_id, team2_id, team1_string, team2_string,
-               max_maps, skip_veto, title, veto_mappool, season_id, side_type, veto_first, enforce_teams=True, server_id=None, team1_series_score=None, team2_series_score=None):
+               max_maps, skip_veto, title, veto_mappool, season_id, 
+               side_type, veto_first, enforce_teams=True, server_id=None, 
+               team1_series_score=None, team2_series_score=None,
+               spectator_auths=None):
         rv = Match()
         rv.user_id = user.id
         rv.team1_id = team1_id
@@ -383,7 +387,7 @@ class Match(db.Model):
             string.ascii_uppercase + string.digits) for _ in range(24))
         rv.team1_series_score = team1_series_score
         rv.team2_series_score = team2_series_score
-
+        rv.spectator_auths = spectator_auths
         db.session.add(rv)
         return rv
 
@@ -548,6 +552,20 @@ class Match(db.Model):
 
         d['cvars']['get5_web_api_url'] = url_for(
             'home', _external=True, _scheme='http')
+
+        # Add in for spectators modification.
+        d['min_spectators_to_ready'] = 0
+        
+        # Perm spectators will go within config, then can add more from match screen.
+        d['spectators'] = {"players": app.config['SPECTATOR_IDS']}
+
+        # If we don't have any perm spectators, create the new list.
+        if not d['spectators']:
+            d['spectators'] = {"players": []}
+        # Append auths from match page if we have any.
+        if self.spectator_auths:
+            for spectator in self.spectator_auths:
+                d['spectators']["players"].append(spectator)
 
         if self.veto_mappool:
             d['maplist'] = []
