@@ -7,7 +7,9 @@
 
   <h1>
     {% if my_matches %}
-    Your matches
+    Your matches <h4><form action="{{ url_for('match.delete_cancelled_matches') }}" method=post>
+      <button class="btn btn-danger" type=submit>Delete Cancelled Matches</button>
+      </form></h4>
     {% elif all_matches %}
     All matches
     {% elif season_matches %}

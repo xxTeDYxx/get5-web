@@ -4,7 +4,7 @@ from io import BytesIO as StringIO
 import steamid
 import get5
 from get5 import app, db, BadRequestError, config_setting
-from models import User, Team, Match, GameServer, Season, Veto, match_audit
+from models import User, Team, Match, GameServer, Season, Veto, match_audit, MapStats, PlayerStats
 from collections import OrderedDict
 from datetime import datetime
 import util
@@ -558,6 +558,21 @@ def mymatches():
     if not g.user:
         return redirect('/login')
 
+    return redirect('/matches/' + str(g.user.id))
+
+# Allow users to keep match pages clean by removing anything to do with cancelled matches.
+@match_blueprint.route("/mymatches/delete", methods=['POST'])
+def delete_cancelled_matches():
+    if not g.user:
+        return redirect('/login')
+    user = User.query.get_or_404(g.user.id)
+    matches = user.matches.filter_by(cancelled=1)
+    for match in matches:
+        PlayerStats.query.filter_by(match_id=match.id).delete()
+        MapStats.query.filter_by(match_id=match.id).delete()
+        Veto.query.filter_by(match_id=match.id).delete()
+    matches.delete()
+    db.session.commit()
     return redirect('/matches/' + str(g.user.id))
 
 @match_blueprint.route("/match/<int:matchid>/map/<int:mapid>/csv")
