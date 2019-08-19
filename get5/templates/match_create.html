@@ -29,6 +29,13 @@
       <a href="/team/create" class="btn btn-primary">Create a team</a>
     </div>
 
+    <div class="form-group">
+        {{ form.team1_series_score.label(class="col-sm-2 control-label") }}
+        <div class="col-sm-4">
+          {{ form.team1_series_score(class="form-control input-sm") }}
+        </div>
+    </div>
+
     {% if match_text_option %}
     <div class="form-group">
       {{ form.team1_string.label(class="col-sm-2 control-label") }}
@@ -46,6 +53,13 @@
       <div class="col-sm-4">
         {{ form.team2_id(class="form-control input-sm") }}
       </div>
+    </div>
+
+    <div class="form-group">
+        {{ form.team2_series_score.label(class="col-sm-2 control-label") }}
+        <div class="col-sm-4">
+          {{ form.team2_series_score(class="form-control input-sm") }}
+        </div>
     </div>
 
     {% if match_text_option %}
@@ -136,6 +150,14 @@
       {{ form.enforce_teams.label(class="col-sm-2 control-label") }}
       <div class="col-sm-4">
         {{ form.enforce_teams(class="form-control input-sm") }}
+      </div>
+    </div>
+
+    <div class="form-group">
+      {{ form.spectator_string.label(class="col-sm-2 control-label") }}
+      <div class="col-sm-4">
+        {{ form.spectator_string(class="form-control input-sm") }}
+        <p class="help-block">Any Steam ID will work, please ensure values are separated by a comma.</p>
       </div>
     </div>
 

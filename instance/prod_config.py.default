@@ -4,7 +4,7 @@ STEAM_API_KEY = '???'  # See https://steamcommunity.com/dev/apikey
 SECRET_KEY = '???'  # Secret key used for flask cookies
 DATABASE_KEY = '???'  # Used for encryption on database. MUST BE 16 BYTES.
 WEBPANEL_NAME = 'Get5' # Used for the title header on the webpage.
-
+JSON_AS_ASCII = False #UTF-8 Encoding Issue.
 ##### Everything below this line is optional to change
 
 import os
@@ -48,6 +48,10 @@ DEFAULT_MAPLIST = [
     'de_train',
     'de_vertigo',
 ]
+
+# You may set the game server to allow whitelisted steam ids to specatate.
+# By default, NO users can spectate matches.
+SPECTATOR_IDS = []
 
 # You may set the server to allow allow whitelisted steamids to login.
 # By default any user can login and create teams/servers/matches.

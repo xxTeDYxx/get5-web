@@ -10,6 +10,7 @@ from wtforms import Form, validators, StringField, IntegerField, BooleanField
 server_blueprint = Blueprint('server', __name__)
 dbKey = app.config['DATABASE_KEY']
 
+
 class ServerForm(Form):
     display_name = StringField('Display Name',
                                validators=[
@@ -32,6 +33,7 @@ class ServerForm(Form):
 
     public_server = BooleanField('Publicly usable server')
 
+
 @server_blueprint.route('/server/create', methods=['GET', 'POST'])
 def server_create():
     if not g.user:
@@ -52,7 +54,7 @@ def server_create():
                 encRcon = util.encrypt(dbKey, str(data['rcon_password']))
             else:
                 encRcon = data['rcon_password']
-            
+
             server = GameServer.create(g.user,
                                        data['display_name'],
                                        data['ip_string'], data['port'],

@@ -39,7 +39,10 @@ class MatchTests(get5_test.Get5Test):
                                   'series_type': 'bo3',
                                   'veto_first': 'CT',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
+                                  'enforce_teams': True,
                                   'season_id': None,
+                                  'team1_series_score': 0,
+                                  'team2_series_score': 0,
                               })
             self.assertEqual(response.status_code, 200)
             self.assertIn('Error in the Server field', response.data)
@@ -64,7 +67,10 @@ class MatchTests(get5_test.Get5Test):
                                   'series_type': 'bo3',
                                   'veto_first': 'CT',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
+                                  'enforce_teams': True,
                                   'season_id': None,
+                                  'team1_series_score': 0,
+                                  'team2_series_score': 0,
                               })
             self.assertEqual(response.status_code, 200)
             self.assertIn('Error in the Server field', response.data)
@@ -91,7 +97,10 @@ class MatchTests(get5_test.Get5Test):
                                   'series_type': 'bo3',
                                   'veto_first': 'CT',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
+                                  'enforce_teams': True,
                                   'season_id': None,
+                                  'team1_series_score': 0,
+                                  'team2_series_score': 0,
                               })
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.location, url_for(
@@ -109,7 +118,8 @@ class MatchTests(get5_test.Get5Test):
 
     # Try starting a match using someone else's public server
     def test_match_create_not_my_server(self):
-        # Create a public server first, it will be id=3 (2 servers already exist)
+        # Create a public server first, it will be id=3 (2 servers already
+        # exist)
         with self.app as c:
             with c.session_transaction() as sess:
                 sess['user_id'] = 2
@@ -142,7 +152,10 @@ class MatchTests(get5_test.Get5Test):
                                   'series_type': 'bo3',
                                   'veto_first': 'CT',
                                   'veto_mappool': ['de_dust2', 'de_cache', 'de_mirage'],
+                                  'enforce_teams': True,
                                   'season_id': None,
+                                  'team1_series_score': 0,
+                                  'team2_series_score': 0,
                               })
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.location, url_for(
@@ -176,7 +189,7 @@ class MatchTests(get5_test.Get5Test):
         with self.app as c:
             with c.session_transaction() as sess:
                 sess['user_id'] = 1
-            
+
             response = c.get('/match/1/cancel')
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.location, url_for(

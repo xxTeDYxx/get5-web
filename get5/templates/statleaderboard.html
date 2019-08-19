@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="panel panel-default">
+    {% if season %}
+      <div class="panel-heading"><h1>Player Leaderboard For Season {{season}}</h1></div>
+    {% else %}
+      <div class="panel-heading"><h1>Player Leaderboard All Time</h1></div>
+    {% endif %}
+    <div class="panel-body">
+            <table class="table table-hover" id="dataTable">
+                    <thead>
+                            <tr>
+                              <th class="text-center">Name</th>  
+                              <th class="text-center">Kills</th>
+                              <th class="text-center">Deaths</th>
+                              <th class="text-center">Assists</th>
+                              <th class="text-center">Rating</th>
+                              
+                              <th class="text-center"><acronym title="Kill/Death Average">KDA</acronym></th>
+                              <th class="text-center"><acronym title="Average damage per round">ADR</acronym></th>
+
+                              <th class="text-center">3K</th>
+                              <th class="text-center">4K</th>
+                              <th class="text-center">5K</th>
+
+                              <th class="text-center">1v1</th>
+                              <th class="text-center">1v2</th>
+                              <th class="text-center">1v3</th>
+                              <th class="text-center">1v4</th>
+                              <th class="text-center">1v5</th>
+                              
+                              
+                              <th class="text-center"><acronym title="Flashbang Assists">FBA</acronym></th>
+                              <th class="text-center"><acronym title="Average Headshot Percentage">AHSP</acronym></th>
+                              <th class="text-center"><acronym title="Total Rounds Played">TRP</acronym></th>
+                              
+                            </tr>
+                          </thead>
+                          <tbody>
+                                {% for user in board %}
+                              <tr>
+                                  <td class="text-center"> {{ user.name }} </td>  
+                                  <td class="text-center"> {{ user.kills }} </td>
+                                  <td class="text-center"> {{ user.deaths }} </td>
+                                  <td class="text-center"> {{ user.assists }} </td>
+                                  <td class="text-center"> {{ user.rating | round(2) }} </td>  
+                                
+                                  <td class="text-center"> {{ user.kdr | round(2) }} </td>
+                                  <td class="text-center"> {{ user.adr | round(2) }} </td>
+            
+                                  <td class="text-center"> {{ user['3k'] }} </td>
+                                  <td class="text-center"> {{ user['4k'] }} </td>
+                                  <td class="text-center"> {{ user['5k'] }} </td>
+                                  
+                                  <td class="text-center"> {{ user['1v1'] }} </td>
+                                  <td class="text-center"> {{ user['1v2'] }} </td>
+                                  <td class="text-center"> {{ user['1v3'] }} </td>
+                                  <td class="text-center"> {{ user['1v4'] }} </td>
+                                  <td class="text-center"> {{ user['1v5'] }} </td>
+                                  <td class="text-center"> {{ user.fba }} </td>
+                                  <td class="text-center"> {{ user.hsp | round(2) }} </td>
+                                  <td class="text-center"> {{ user.trp }} </td>
+                                  
+                                  
+                                </tr>
+                                {% endfor %}
+                          </tbody>                       
+                 </table>
+    </div>
+    
+<script>
+    var data = "{{board}}"
+    $('#dataTable').DataTable( {
+    paging: true,
+    "order": [[ 1, "desc" ], [16, "desc"], [4, "desc"]],
+    "searchable": false
+} );
+</script>
+{% endblock %}

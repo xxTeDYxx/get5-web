@@ -11,7 +11,7 @@ import re
 import xml.etree.ElementTree as ET
 
 from werkzeug.utils import secure_filename
-from PIL import Image 
+from PIL import Image
 
 from flask import Blueprint, request, render_template, flash, g, redirect, jsonify
 
@@ -37,7 +37,10 @@ def valid_auth(form, field):
     else:
         raise ValidationError('Invalid Steam ID')
 
+
 def valid_file(form, field):
+    if not field.data:
+        return
     mock = config_setting("TESTING")
     if mock:
         return
@@ -47,12 +50,14 @@ def valid_file(form, field):
     # Safe method.
     if filename == '':
         return
-    
+
     index_of_dot = filename.index('.')
     file_name_without_extension = filename[:index_of_dot]
     extension = filename.rsplit('.', 1)[1].lower()
-    exists = os.path.isfile(app.config['LOGO_FOLDER'] + "/" + secure_filename(filename))
-    existsSVG = os.path.isfile(app.config['PANO_LOGO_FOLDER'] + "/" + secure_filename(filename))
+    exists = os.path.isfile(
+        app.config['LOGO_FOLDER'] + "/" + secure_filename(filename))
+    existsSVG = os.path.isfile(
+        app.config['PANO_LOGO_FOLDER'] + "/" + secure_filename(filename))
 
     if '.' not in filename:
         raise ValidationError('Image MUST be PNG or SVG.')
@@ -65,7 +70,6 @@ def valid_file(form, field):
     elif existsSVG:
         raise ValidationError('Image name already exists for SVG.')
 
-    
     if extension == 'png':
         file = request.files['upload_logo']
         img = Image.open(file)
@@ -73,20 +77,24 @@ def valid_file(form, field):
         out = io.BytesIO()
         if width != 64 or height != 64:
             app.logger.info("Resizing image as it is not 64x64.")
-            img = img.resize((64,64),Image.ANTIALIAS)
+            img = img.resize((64, 64), Image.ANTIALIAS)
             img.save(out, format=extension)
             # check once more for size.
             if out.tell() > 16384:
                 app.logger.info("Size: {}".format(out.tell()))
-                raise ValidationError('Image is too large, must be 10kB or less.')
-            img.save(os.path.join(app.config['LOGO_FOLDER'], filename),optimize=True)
+                raise ValidationError(
+                    'Image is too large, must be 10kB or less.')
+            img.save(os.path.join(
+                app.config['LOGO_FOLDER'], filename), optimize=True)
         elif out.tell() > 16384:
             raise ValidationError('Image is too large, must be 10kB or less.')
         else:
-            img.save(os.path.join(app.config['LOGO_FOLDER'], filename),optimize=True)
+            img.save(os.path.join(
+                app.config['LOGO_FOLDER'], filename), optimize=True)
     else:
         file = request.files['upload_logo']
-        #Limited - attempt to find width and height. If nothing then deny upload.
+        # Limited - attempt to find width and height. If nothing then deny
+        # upload.
         tree = ET.parse(file)
         root = tree.getroot()
         try:
@@ -94,11 +102,12 @@ def valid_file(form, field):
             height = root.attrib['height']
         except:
             raise ValidationError('SVG is not properly formatted.')
-        if (width in {'64', '64px'}) and (height in {'64','64px'}):
-            tree.write(app.config['PANO_LOGO_FOLDER'] + "/" + secure_filename(filename))
+        if (width in {'64', '64px'}) and (height in {'64', '64px'}):
+            tree.write(app.config['PANO_LOGO_FOLDER'] +
+                       "/" + secure_filename(filename))
         else:
-            raise ValidationError("Error in saving SVG to folder.")    
-    
+            raise ValidationError("Error in saving SVG to folder.")
+
 
 class TeamForm(FlaskForm):
     mock = config_setting("TESTING")
@@ -113,7 +122,7 @@ class TeamForm(FlaskForm):
     country_flag = SelectField(
         'Country Flag', choices=flag_choices, default='')
     if mock:
-        logo_choices=logos.get_logo_choices()
+        logo_choices = logos.get_logo_choices()
         logo = SelectField('Logo Name', choices=logo_choices, default='')
     else:
         logo = SelectField('Logo Name', default='')
@@ -124,7 +133,7 @@ class TeamForm(FlaskForm):
 
     def get_auth_list(self):
         auths = []
-        for i in range(1, Team.MAXPLAYERS+1):
+        for i in range(1, Team.MAXPLAYERS + 1):
             key = 'auth{}'.format(i)
             auths.append(self.data[key])
 
@@ -132,15 +141,18 @@ class TeamForm(FlaskForm):
 
     def get_pref_list(self):
         prefs = []
-        for i in range(1, Team.MAXPLAYERS+1):
+        for i in range(1, Team.MAXPLAYERS + 1):
             key = 'pref_name{}'.format(i)
             prefs.append(self.data[key])
 
         return prefs
 # Now can create a max player count based on your needs.
 for num in range(Team.MAXPLAYERS):
-    setattr(TeamForm, "auth"+str(num+1), StringField('Player '+str(num+1), validators=[valid_auth]))
-    setattr(TeamForm, "pref_name"+str(num+1), StringField("Player "+str(num+1)+"'s Name"))
+    setattr(TeamForm, "auth" + str(num + 1),
+            StringField('Player ' + str(num + 1), validators=[valid_auth]))
+    setattr(TeamForm, "pref_name" + str(num + 1),
+            StringField("Player " + str(num + 1) + "'s Name"))
+
 
 @team_blueprint.route('/team/create', methods=['GET', 'POST'])
 def team_create():
@@ -150,12 +162,13 @@ def team_create():
     form = TeamForm()
     # We wish to query this every time, since we can now upload photos.
     if not mock:
-        form.logo.choices=logos.get_logo_choices()
+        form.logo.choices = logos.get_logo_choices()
     if request.method == 'POST':
         num_teams = g.user.teams.count()
         max_teams = config_setting('USER_MAX_TEAMS')
         if max_teams >= 0 and num_teams >= max_teams and not g.user.admin:
-            flash('You already have the maximum number of teams ({}) stored'.format(num_teams))
+            flash(
+                'You already have the maximum number of teams ({}) stored'.format(num_teams))
 
         elif form.validate():
             data = form.data
@@ -166,8 +179,9 @@ def team_create():
             flag = data['country_flag']
             logo = data['logo']
 
-            # Update the logo. Passing validation we have the filename in the list now.
-            if not mock and g.user.admin and form.upload_logo.data.filename != '':
+            # Update the logo. Passing validation we have the filename in the
+            # list now.
+            if not mock and g.user.admin and form.upload_logo.data:
                 filename = secure_filename(form.upload_logo.data.filename)
                 index_of_dot = filename.index('.')
                 newLogoDetail = filename[:index_of_dot]
@@ -207,7 +221,7 @@ def team_edit(teamid):
     form = TeamForm()
     # We wish to query this every time, since we can now upload photos.
     if not mock:
-        form.logo.choices=logos.get_logo_choices()
+        form.logo.choices = logos.get_logo_choices()
     if request.method == 'GET':
         # Set values here, as per new FlaskForms.
         form.name.data = team.name
@@ -217,12 +231,14 @@ def team_edit(teamid):
         for field in form:
             if "auth" in field.name:
                 try:
-                    field.data = team.auths[int(re.search(r'\d+', field.name).group())-1]
+                    field.data = team.auths[
+                        int(re.search(r'\d+', field.name).group()) - 1]
                 except:
                     field.data = None
             if "pref_name" in field.name:
                 try:
-                    field.data = team.preferred_names[int(re.search(r'\d+', field.name).group())-1]
+                    field.data = team.preferred_names[
+                        int(re.search(r'\d+', field.name).group()) - 1]
                 except:
                     field.data = None
         form.public_team.data = team.public_team
@@ -236,8 +252,9 @@ def team_edit(teamid):
             if g.user.admin:
                 public_team = data['public_team']
 
-            # Update the logo. Passing validation we have the filename in the list now.
-            if not mock and g.user.admin and form.upload_logo.data.filename != '':
+            # Update the logo. Passing validation we have the filename in the
+            # list now.
+            if not mock and g.user.admin and form.upload_logo.data:
                 filename = secure_filename(form.upload_logo.data.filename)
                 index_of_dot = filename.index('.')
                 newLogoDetail = filename[:index_of_dot]
@@ -245,11 +262,10 @@ def team_edit(teamid):
                 logos.add_new_logo(newLogoDetail)
                 data['logo'] = newLogoDetail
 
-
             team.set_data(data['name'], data['tag'], data['country_flag'],
-                            data['logo'], form.get_auth_list(),
-                            public_team, form.get_pref_list())
-            
+                          data['logo'], form.get_auth_list(),
+                          public_team, form.get_pref_list())
+
             db.session.commit()
             return redirect('/teams/{}'.format(team.user_id))
         else:
@@ -257,7 +273,7 @@ def team_edit(teamid):
 
     return render_template(
         'team_create.html', user=g.user, form=form, edit=True,
-                           is_admin=g.user.admin, MAXPLAYER=Team.MAXPLAYERS)
+        is_admin=g.user.admin, MAXPLAYER=Team.MAXPLAYERS)
 
 
 @team_blueprint.route('/team/<int:teamid>/delete')
@@ -287,7 +303,8 @@ def teams_user(userid):
             team_dict['flag'] = team.flag
             team_dict['logo'] = team.logo
             team_dict['players'] = filter(lambda x: bool(x), team.auths)
-            team_dict['players_pref_names'] = filter(lambda x: bool(x), team.preferred_names)
+            team_dict['players_pref_names'] = filter(
+                lambda x: bool(x), team.preferred_names)
             teams_dict[team.id] = team_dict
         return jsonify(teams_dict)
 
@@ -297,7 +314,8 @@ def teams_user(userid):
         teams = user.teams.paginate(page, 20)
         return render_template(
             'teams.html', user=g.user, teams=teams, my_teams=my_teams,
-                               page=page, owner=user)
+            page=page, owner=user)
+
 
 @team_blueprint.route('/teams', methods=['GET'])
 def all_teams():
@@ -314,7 +332,8 @@ def all_teams():
             team_dict['flag'] = team.flag
             team_dict['logo'] = team.logo
             team_dict['players'] = filter(lambda x: bool(x), team.auths)
-            team_dict['players_pref_names'] = filter(lambda x: bool(x), team.preferred_names)
+            team_dict['players_pref_names'] = filter(
+                lambda x: bool(x), team.preferred_names)
             teams_dict[team.id] = team_dict
         return jsonify(teams_dict)
 
@@ -323,7 +342,7 @@ def all_teams():
         teams = all_public_teams.paginate(page, 20)
         return render_template(
             'teams.html', user=g.user, teams=teams, my_teams=False,
-                               page=page, owner=None)
+            page=page, owner=None)
 
 
 @team_blueprint.route('/myteams', methods=['GET'])

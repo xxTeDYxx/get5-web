@@ -1,9 +1,10 @@
 from flask import Blueprint, request, render_template, flash, g, redirect, jsonify, Markup, json
-
+import csv
+from io import BytesIO as StringIO
 import steamid
 import get5
 from get5 import app, db, BadRequestError, config_setting
-from models import User, Team, Match, GameServer, Season, Veto, match_audit
+from models import User, Team, Match, GameServer, Season, Veto, match_audit, MapStats, PlayerStats
 from collections import OrderedDict
 from datetime import datetime
 import util
@@ -13,11 +14,13 @@ from copy import deepcopy
 from wtforms import (
     Form, widgets, validators,
     StringField, RadioField,
-    SelectField, ValidationError, 
-    SelectMultipleField, BooleanField)
+    SelectField, ValidationError,
+    SelectMultipleField, BooleanField,
+    IntegerField)
 
 match_blueprint = Blueprint('match', __name__)
 dbKey = app.config['DATABASE_KEY']
+
 
 class MultiCheckboxField(SelectMultipleField):
     widget = widgets.ListWidget(prefix_label=False)
@@ -45,6 +48,13 @@ def mappool_validator(form, field):
             'You must have at least {} maps selected to do a Bo{}'.format(max_maps, max_maps))
 
 
+def series_score_validator(form, field):
+    team1 = form.team1_series_score.data if not None else 0
+    team2 = form.team2_series_score.data if not None else 0
+    if int(team1) < 0 or int(team2) < 0:
+        raise ValidationError("You cannot have a negative series score.")
+
+
 class MatchForm(Form):
     server_id = SelectField('Server', coerce=int,
                             validators=[validators.required()])
@@ -65,13 +75,15 @@ class MatchForm(Form):
                                  ('bo7', 'Bo7 with map vetoes'),
                              ])
     side_type = RadioField('Side type',
-                             validators=[validators.required()],
-                             default='standard',
-                             choices=[
-                                ('standard', 'Standard: Team that doesn\'t pick map gets side choice'),
-                                ('never_knife', 'Never Knife: Team 1 is CT and Team 2 is T.'),
-                                ('always_knife', 'Always Knife: Always have knife round.'),
-                             ])
+                           validators=[validators.required()],
+                           default='standard',
+                           choices=[
+                               ('standard', 'Standard: Team that doesn\'t pick map gets side choice'),
+                               ('never_knife',
+                                'Never Knife: Team 1 is CT and Team 2 is T.'),
+                               ('always_knife',
+                                'Always Knife: Always have knife round.'),
+                           ])
     team1_id = SelectField('Team 1', coerce=int,
                            validators=[validators.required()])
 
@@ -98,17 +110,28 @@ class MatchForm(Form):
                                       validators=[mappool_validator],
                                       )
     veto_first = RadioField('Veto',
-                             default='CT',
-                             choices=[
-                                 ('CT', 'CT gets first veto'),
-                                 ('T', 'T get first veto'),
-                             ])
+                            default='CT',
+                            choices=[
+                                ('CT', 'CT gets first veto'),
+                                ('T', 'T get first veto'),
+                            ])
 
     season_selection = SelectField('Season', coerce=int,
                                    validators=[validators.optional()])
 
     enforce_teams = BooleanField('Enforce Teams',
-                                default=True)
+                                 default=True)
+
+    team1_series_score = IntegerField('Team 1 Series Score',
+                                      default=0,
+                                      validators=[validators.NumberRange(0, 7)])
+
+    team2_series_score = IntegerField('Team 2 Series Score',
+                                      default=0,
+                                      validators=[validators.NumberRange(0, 7)])
+
+    spectator_string = StringField('Spectator IDs',
+                                   default='')
 
     def add_teams(self, user):
         if self.team1_id.choices is None:
@@ -201,7 +224,7 @@ def match_create():
                 message = 'Success'
             else:
                 json_reply, message = util.check_server_avaliability(
-                    server,dbKey)
+                    server, dbKey)
                 server_available = (json_reply is not None)
 
             if server_available:
@@ -214,25 +237,36 @@ def match_create():
                 if form.data['season_selection'] != 0:
                     season_id = form.data['season_selection']
 
+                # Series Score Feature.
+                team1_series_score = form.data[
+                    'team1_series_score'] if not None else 0
+                team2_series_score = form.data[
+                    'team2_series_score'] if not None else 0
+                # End Series Score Feature.
+
+                # Spectator Feature
+                specList = []
+                if form.data['spectator_string']:
+                    for auth in form.data['spectator_string'].split():
+                        suc, new_auth = steamid.auth_to_steam64(auth)
+                        if suc:
+                            specList.append(new_auth)
+                # End Spectator Feature
                 match = Match.create(
                     g.user, form.data['team1_id'], form.data['team2_id'],
                     form.data['team1_string'], form.data['team2_string'],
                     max_maps, skip_veto,
-                    form.data['match_title'], form.data['veto_mappool'], season_id, 
-                    form.data['side_type'], form.data['veto_first'], 
-                    form.data['server_id'])
+                    form.data['match_title'], form.data[
+                        'veto_mappool'], season_id,
+                    form.data['side_type'], form.data['veto_first'],
+                    form.data['enforce_teams'], form.data['server_id'],
+                    team1_series_score, team2_series_score, specList)
 
                 # Save plugin version data if we have it
                 if json_reply and 'plugin_version' in json_reply:
                     match.plugin_version = json_reply['plugin_version']
                 else:
                     match.plugin_version = 'unknown'
-                # ADD FORM DATA FOR EXTRA GOODIES HERE LIKE CLAN TAG ETC.
-                # Essentially stuff that doesn't need to be stored in DB.
-                # Force Get5 to auth on official matches. Don't raise errors
-                # if we cannot do this.
-                if server_available and not mock:
-                    server.send_rcon_command('get5_check_auths ' + str(int(form.data['enforce_teams'])), num_retries=2, timeout=0.75)
 
                 server.in_use = True
 
@@ -319,13 +353,14 @@ def match_scoreboard(matchid):
     app.logger.info('{}'.format(map_stat_list))
     for map_stats in map_stat_list:
         for player in map_stats.player_stats:
-            player_dict = merge(player_dict, player.get_ind_scoreboard(map_stats.map_number))
+            player_dict = merge(
+                player_dict, player.get_ind_scoreboard(map_stats.map_number))
         # Sort teams based on kills.
         sorted_player_dict[team1.name] = OrderedDict(
             sorted(player_dict[team1.name].items(), key=lambda x: x[1].get('kills'), reverse=True))
         sorted_player_dict[team2.name] = OrderedDict(
             sorted(player_dict[team2.name].items(), key=lambda x: x[1].get('kills'), reverse=True))
-        
+
         t1score = map_stats.team1_score
         t2score = map_stats.team2_score
         curMap = map_stats.map_name
@@ -334,8 +369,8 @@ def match_scoreboard(matchid):
         sorted_player_dict[team1.name]['TeamScore'] = t1score
         sorted_player_dict[team2.name]['TeamScore'] = t2score
         sorted_player_dict['map'] = curMap
-        matches['map_'+str(match_num)]=sorted_player_dict
-        match_num+=1
+        matches['map_' + str(match_num)] = sorted_player_dict
+        match_num += 1
         sorted_player_dict = OrderedDict()
         player_dict = {}
 
@@ -374,7 +409,7 @@ def match_cancel(matchid):
     app.logger.info("Match server id is: {}".format(matchid))
     match = Match.query.get_or_404(matchid)
     admintools_check(g.user, match)
-    
+
     match.cancelled = True
     server = GameServer.query.get(match.server_id)
     if server:
@@ -473,6 +508,7 @@ def match_adduser(matchid):
 
     return redirect('/match/{}'.format(matchid))
 
+
 @match_blueprint.route('/match/<int:matchid>/backup', methods=['GET'])
 def match_backup(matchid):
     match = Match.query.get_or_404(matchid)
@@ -496,12 +532,7 @@ def match_backup(matchid):
         # Restore the backup file
         command = 'get5_loadbackup {}'.format(file)
         response = server.send_rcon_command(command)
-        # Make sure auths get enabled, silently.
-        try:
-            server.send_rcon_command('get5_check_auths 1')
-        except:
-            pass
-          
+
         if response:
             flash('Restored backup file {}'.format(file))
         else:
@@ -536,3 +567,51 @@ def mymatches():
         return redirect('/login')
 
     return redirect('/matches/' + str(g.user.id))
+
+# Allow users to keep match pages clean by removing anything to do with
+# cancelled matches.
+
+
+@match_blueprint.route("/mymatches/delete", methods=['POST'])
+def delete_cancelled_matches():
+    if not g.user:
+        return redirect('/login')
+    user = User.query.get_or_404(g.user.id)
+    matches = user.matches.filter_by(cancelled=1)
+    for match in matches:
+        PlayerStats.query.filter_by(match_id=match.id).delete()
+        MapStats.query.filter_by(match_id=match.id).delete()
+        Veto.query.filter_by(match_id=match.id).delete()
+    matches.delete()
+    db.session.commit()
+    return redirect('/matches/' + str(g.user.id))
+
+
+@match_blueprint.route("/match/<int:matchid>/map/<int:mapid>/csv")
+def map_stat_to_csv(matchid, mapid):
+    def generate():
+        csvLst = ["team", "steamid", "name", "kills", "deaths", "assists",
+                  "rating", "hsp", "firstkills", "k2", "k3", "k4", "k5", "adr"]
+        data = StringIO()
+        csvWrite = csv.writer(data)
+        csvWrite.writerow([g for g in csvLst])
+        yield data.getvalue()
+        data.seek(0)
+        data.truncate(0)
+        match = Match.query.get_or_404(matchid)
+        map_stat = match.map_stats.filter_by(
+            map_number=mapid, match_id=matchid).first()
+        app.logger.info("{}".format(map_stat))
+        for player in map_stat.player_stats:
+            csvWrite.writerow(player.statsToCSVRow())
+            yield data.getvalue()
+            data.seek(0)
+            data.truncate(0)
+        # stream the response as the data is generated
+    logName = "export_data_match_{}_map_{}.csv".format(matchid, mapid)
+    response = app.response_class(
+        generate(),
+        mimetype='text/csv')
+    # add a filename
+    response.headers.set("Content-Disposition", "attachment", filename=logName)
+    return response
