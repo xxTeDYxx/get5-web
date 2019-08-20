@@ -77,22 +77,26 @@ def getPlayerLeaderboard(seasonid=None):
                  '3k': 0, '4k': 0, '5k': 0, '1v1': 0, '1v2': 0, '1v3': 0, '1v4': 0, '1v5': 0, 'rating': 0.0, 'hsp': 0.0, 'trp': 0, 'fba': 0}
     lstAllPlayerDict = []
     playerValues = PlayerStats.query.all()
+    matchQuery = Match.query.filter(Match.season_id==seasonid).with_entities(Match.id)
+    res = [int(r[0]) for r in matchQuery]
     # Filter through every steam ID
     for player in playerValues:
         if any(d.get('steamid', None) == player.get_steam_id() for d in lstAllPlayerDict):
             continue
-        # query match id to find season if we have one.
-        if (seasonid):
-            curMatch = Match.query.filter_by(id=player.match_id).first()
-            if (curMatch.season_id != seasonid):
+        if seasonid is not None:
+            totalStats = PlayerStats.query.filter(PlayerStats.steam_id==player.get_steam_id()).filter(PlayerStats.match_id.in_(res))
+            # Odd result set sometimes returning 0?
+            if totalStats.count() < 1:
                 continue
-        totalStats = PlayerStats.query.filter_by(
-            steam_id=player.get_steam_id())
+        else:
+            totalStats = PlayerStats.query.filter_by(
+                steam_id=player.get_steam_id())
         dctPlayer['steamid'] = (player.get_steam_id())
         dctPlayer['steamurl'] = (player.get_steam_url())
         dctPlayer['name'] = (player.get_player_name())
         dctPlayer['kills'] = (sum(c.kills for c in totalStats))
         dctPlayer['deaths'] = (sum(c.deaths for c in totalStats))
+        app.logger.info("{}".format(totalStats.count()))
         dctPlayer['kdr'] = (mean(c.get_kdr() for c in totalStats))
         dctPlayer['assists'] = (sum(c.assists for c in totalStats))
         dctPlayer['adr'] = (mean(c.get_adr() for c in totalStats))
