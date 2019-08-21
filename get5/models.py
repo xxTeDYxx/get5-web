@@ -4,6 +4,7 @@ import logos
 import util
 
 from flask import url_for, Markup
+from collections import OrderedDict
 import requests
 
 import datetime
@@ -542,9 +543,12 @@ class Match(db.Model):
             # Attempt to send in KV Pairs of preferred names.
             # If none, send in the regular list.
             try:
-                d[teamkey]['players'] = {}
-                for uid, name in zip(filter(lambda x: x != '', team.auths), team.preferred_names):
-                    d[teamkey]['players'][uid] = name
+                d[teamkey]['players'] = OrderedDict()
+                #for uid, name in zip(filter(lambda x: x != '', team.auths), team.preferred_names):
+                for uid, name in zip(team.auths, team.preferred_names):
+                    if uid:
+                        app.logger.info("{}".format(d[teamkey]['players']))
+                        d[teamkey]['players'][uid] = name
             except:
                 d[teamkey]['players'] = filter(lambda x: x != '', team.auths)
 
