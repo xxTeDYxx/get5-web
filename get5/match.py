@@ -546,21 +546,19 @@ def match_backup(matchid):
 
 @match_blueprint.route("/matches")
 def matches():
-    page = util.as_int(request.values.get('page'), on_fail=1)
     matches = Match.query.order_by(-Match.id).filter_by(
-        cancelled=False).paginate(page, 20)
+        cancelled=False)
     return render_template('matches.html', user=g.user, matches=matches,
-                           my_matches=False, all_matches=True, page=page)
+                           my_matches=False, all_matches=True)
 
 
 @match_blueprint.route("/matches/<int:userid>")
 def matches_user(userid):
     user = User.query.get_or_404(userid)
-    page = util.as_int(request.values.get('page'), on_fail=1)
-    matches = user.matches.order_by(-Match.id).paginate(page, 20)
+    matches = user.matches.order_by(-Match.id)
     is_owner = (g.user is not None) and (userid == g.user.id)
     return render_template('matches.html', user=g.user, matches=matches,
-                           my_matches=is_owner, all_matches=False, match_owner=user, page=page)
+                           my_matches=is_owner, all_matches=False, match_owner=user)
 
 
 @match_blueprint.route("/mymatches")

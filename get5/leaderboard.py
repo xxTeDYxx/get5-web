@@ -98,7 +98,6 @@ def getPlayerLeaderboard(seasonid=None):
         dctPlayer['name'] = (player.get_player_name())
         dctPlayer['kills'] = (sum(c.kills for c in totalStats))
         dctPlayer['deaths'] = (sum(c.deaths for c in totalStats))
-        app.logger.info("{}".format(totalStats.count()))
         dctPlayer['kdr'] = (mean(c.get_kdr() for c in totalStats))
         dctPlayer['assists'] = (sum(c.assists for c in totalStats))
         dctPlayer['adr'] = (mean(c.get_adr() for c in totalStats))

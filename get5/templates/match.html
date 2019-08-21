@@ -2,41 +2,51 @@
 
 {% extends "layout.html" %}
 
-{% macro player_stat_table(team, map_stats) %}
-<td> <b>{{ team.name }}</b> </td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
+{% macro ind_team_table(team, map_stats) %}
+<h3>{{team.name}}</h3>
+<table class="table table-hover" id="dataTable">
+  <thead>
+    <tr>
+      <th>Player</th>
+      <th class="text-center">Kills</th>
+      <th class="text-center">Deaths</th>
+      <th class="text-center">Assists</th>
+      <th class="text-center">Flash assists</th>
+      <th class="text-center">1v1</th>
+      <th class="text-center">1v2</th>
+      <th class="text-center">1v3</th>
+      <th class="text-center">Rating</th>
+      <th class="text-center"><acronym title="Frags per round">FPR</acronym></th>
+      <th class="text-center"><acronym title="Average damage per round">ADR</acronym></th>
+      <th class="text-center"><acronym title="Headshot percentage">HSP</acronym></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for player in map_stats.player_stats.filter_by(team_id=team.id)|sort(attribute='kills', reverse=True) %}
+    {% if player.roundsplayed > 0 %}
+    <tr>
+      <td> <a href="/stats/{{player.steam_id}}"> {{ player.get_player_name() }} </a></td>
+      <td class="text-center"> {{ player.kills }} </td>
+      <td class="text-center"> {{ player.deaths }} </td>
+      <td class="text-center"> {{ player.assists }} </td>
+      <td class="text-center"> {{ player.flashbang_assists }} </td>
 
-{% for player in map_stats.player_stats.filter_by(team_id=team.id)|sort(attribute='kills', reverse=True) %}
-{% if player.roundsplayed > 0 %}
-<tr>
-  <td> <a href="/stats/{{player.steam_id}}"> {{ player.get_player_name() }} </a></td>
-  <td class="text-center"> {{ player.kills }} </td>
-  <td class="text-center"> {{ player.deaths }} </td>
-  <td class="text-center"> {{ player.assists }} </td>
-  <td class="text-center"> {{ player.flashbang_assists }} </td>
+      <td class="text-center"> {{ player.v1 }} </td>
+      <td class="text-center"> {{ player.v2 }} </td>
+      <td class="text-center"> {{ player.v3 }} </td>
 
-  <td class="text-center"> {{ player.v1 }} </td>
-  <td class="text-center"> {{ player.v2 }} </td>
-  <td class="text-center"> {{ player.v3 }} </td>
+      <td class="text-center"> {{ player.get_rating() | round(2) }} </td>
+      <td class="text-center"> {{ player.get_fpr() | round(2) }} </td>
+      <td class="text-center"> {{ player.get_adr() | round(1) }} </td>
+      <td class="text-center"> {{ player.get_hsp() | round(2) }} </td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+  </tbody>
 
-  <td class="text-center"> {{ player.get_rating() | round(2) }} </td>
-  <td class="text-center"> {{ player.get_fpr() | round(2) }} </td>
-  <td class="text-center"> {{ player.get_adr() | round(1) }} </td>
-  <td class="text-center"> {{ player.get_hsp() | round(2) }} </td>
-</tr>
-{% endif %}
-{% endfor %}
+</table>
 {% endmacro %}
+
 
 {% block content %}
 
@@ -133,12 +143,12 @@
     </div>
     {% endif %}
 
-    
+
     {% if vetoes.count() > 0 %}
     <div class="panel panel-primary">
       <div class="panel-heading">Vetoes</div>
 
-      <table class="table table-hover">
+      <table class="table table-hover" id="dataTable">
         <thead>
           <tr>
             <th>Veto/Pick</th>
@@ -172,7 +182,7 @@
 
       <div class="panel-body">
         {% if map_stats.demoFile is not none and map_stats.demoFile != '' %}
-          <a type="button" class="btn btn-success" href="{{ map_stats.demoFile }}">Download Demo</a>
+        <a type="button" class="btn btn-success" href="{{ map_stats.demoFile }}">Download Demo</a>
         {% endif %}
         <p>Started at {{ map_stats.start_time.strftime('%Y-%m-%d %H:%M') }}</p>
 
@@ -180,29 +190,9 @@
         <p>Ended at {{ map_stats.end_time.strftime('%Y-%m-%d %H:%M') }}</p>
         {% endif %}
 
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th>Player</th>
-              <th class="text-center">Kills</th>
-              <th class="text-center">Deaths</th>
-              <th class="text-center">Assists</th>
-              <th class="text-center">Flash assists</th>
-              <th class="text-center">1v1</th>
-              <th class="text-center">1v2</th>
-              <th class="text-center">1v3</th>
-              <th class="text-center">Rating</th>
-              <th class="text-center"><acronym title="Frags per round">FPR</acronym></th>
-              <th class="text-center"><acronym title="Average damage per round">ADR</acronym></th>
-              <th class="text-center"><acronym title="Headshot percentage">HSP</acronym></th>
-            </tr>
-          </thead>
-          <tbody>
-            {{ player_stat_table(team1, map_stats) }}
-            {{ player_stat_table(team2, map_stats) }}
-          </tbody>
+        {{ind_team_table(team1, map_stats)}}
+        {{ind_team_table(team2, map_stats)}}
 
-        </table>
       </div>
 
     </div>
@@ -243,6 +233,13 @@
     }
   });
 </script>
-
+<script>
+  $('table.table').DataTable({
+    paging: false,
+    "order": [],
+    "filter": false,
+    "bInfo" : false
+  });
+</script>
 
 {% endblock %}
