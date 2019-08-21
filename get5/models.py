@@ -546,7 +546,6 @@ class Match(db.Model):
                 d[teamkey]['players'] = OrderedDict()
                 for uid, name in zip(team.auths, team.preferred_names):
                     if uid:
-                        app.logger.info("{}".format(d[teamkey]['players']))
                         d[teamkey]['players'][uid] = name
             except:
                 d[teamkey]['players'] = filter(lambda x: x != '', team.auths)
@@ -555,7 +554,6 @@ class Match(db.Model):
         add_team_data('team2', self.team2_id, self.team2_string)
 
         d['cvars'] = {}
-        # app.logger.info("Enforced? {}".format(self.enforce_teams))
         d['cvars']['get5_check_auths'] = int(self.enforce_teams)
 
         d['cvars']['get5_web_api_url'] = url_for(
