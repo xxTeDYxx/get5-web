@@ -541,10 +541,9 @@ class Match(db.Model):
             else:
                 add_if('series_score', self.team2_series_score)
             # Attempt to send in KV Pairs of preferred names.
-            # If none, send in the regular list.
+            # If none, or error, send in the regular list.
             try:
                 d[teamkey]['players'] = OrderedDict()
-                #for uid, name in zip(filter(lambda x: x != '', team.auths), team.preferred_names):
                 for uid, name in zip(team.auths, team.preferred_names):
                     if uid:
                         app.logger.info("{}".format(d[teamkey]['players']))
