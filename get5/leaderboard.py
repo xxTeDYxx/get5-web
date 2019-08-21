@@ -77,14 +77,16 @@ def getPlayerLeaderboard(seasonid=None):
                  '3k': 0, '4k': 0, '5k': 0, '1v1': 0, '1v2': 0, '1v3': 0, '1v4': 0, '1v5': 0, 'rating': 0.0, 'hsp': 0.0, 'trp': 0, 'fba': 0}
     lstAllPlayerDict = []
     playerValues = PlayerStats.query.all()
-    matchQuery = Match.query.filter(Match.season_id==seasonid).with_entities(Match.id)
+    matchQuery = Match.query.filter(
+        Match.season_id == seasonid).with_entities(Match.id)
     res = [int(r[0]) for r in matchQuery]
     # Filter through every steam ID
     for player in playerValues:
         if any(d.get('steamid', None) == player.get_steam_id() for d in lstAllPlayerDict):
             continue
         if seasonid is not None:
-            totalStats = PlayerStats.query.filter(PlayerStats.steam_id==player.get_steam_id()).filter(PlayerStats.match_id.in_(res))
+            totalStats = PlayerStats.query.filter(
+                PlayerStats.steam_id == player.get_steam_id()).filter(PlayerStats.match_id.in_(res))
             # Odd result set sometimes returning 0?
             if totalStats.count() < 1:
                 continue

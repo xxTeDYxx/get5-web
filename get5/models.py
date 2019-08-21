@@ -4,6 +4,7 @@ import logos
 import util
 
 from flask import url_for, Markup
+from collections import OrderedDict
 import requests
 
 import datetime
@@ -540,11 +541,12 @@ class Match(db.Model):
             else:
                 add_if('series_score', self.team2_series_score)
             # Attempt to send in KV Pairs of preferred names.
-            # If none, send in the regular list.
+            # If none, or error, send in the regular list.
             try:
-                d[teamkey]['players'] = {}
-                for uid, name in zip(filter(lambda x: x != '', team.auths), team.preferred_names):
-                    d[teamkey]['players'][uid] = name
+                d[teamkey]['players'] = OrderedDict()
+                for uid, name in zip(team.auths, team.preferred_names):
+                    if uid:
+                        d[teamkey]['players'][uid] = name
             except:
                 d[teamkey]['players'] = filter(lambda x: x != '', team.auths)
 
@@ -552,7 +554,6 @@ class Match(db.Model):
         add_team_data('team2', self.team2_id, self.team2_string)
 
         d['cvars'] = {}
-        # app.logger.info("Enforced? {}".format(self.enforce_teams))
         d['cvars']['get5_check_auths'] = int(self.enforce_teams)
 
         d['cvars']['get5_web_api_url'] = url_for(

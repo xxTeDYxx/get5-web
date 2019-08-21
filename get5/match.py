@@ -384,8 +384,10 @@ def match_scoreboard(matchid):
 def match_config(matchid):
     match = Match.query.get_or_404(matchid)
     dict = match.build_match_dict()
-    json_text = jsonify(dict)
-    return json_text
+    response = app.response_class(
+        json.dumps(dict, sort_keys=False),
+        mimetype='application/json')
+    return response
 
 
 def admintools_check(user, match):
