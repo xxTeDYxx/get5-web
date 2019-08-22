@@ -288,6 +288,40 @@ def match_create():
         'match_create.html', form=form, user=g.user, teams=g.user.teams,
         match_text_option=config_setting('CREATE_MATCH_TITLE_TEXT'))
 
+@match_blueprint.route('/match/<int:matchid>/forfeit/<int:teamwinner>')
+def match_forfeit(matchid, teamwinner):
+    app.logger.info("Match server id is: {}".format(matchid))
+    match = Match.query.get_or_404(matchid)
+    super_admintools_check(g.user, match)
+    if teamwinner == 1:
+        winnerId = match.team1_id
+    elif teamwinner == 2:
+        winnerId = match.team2_id
+    else:
+        raise BadRequestError('Did not select a proper team.')
+    
+    match.winner = winnerId
+    if teamwinner == 1:
+        match.team1_score = 1
+        match.team2_score = 0
+    else:
+        match.team1_score = 0
+        match.team2_score = 1
+
+    match.end_time = datetime.now()
+    match.forfeit = 1
+    server = GameServer.query.get(match.server_id)
+    if server:
+        server.in_use = False
+
+    db.session.commit()
+
+    try:
+        server.send_rcon_command('get5_endmatch', raise_errors=True)
+    except util.RconError as e:
+        flash('Failed to cancel match: ' + str(e))
+
+    return redirect('/mymatches')
 
 @match_blueprint.route('/match/<int:matchid>')
 def match(matchid):
@@ -302,7 +336,7 @@ def match(matchid):
     map_stat_list = match.map_stats.all()
     completed = match.winner
     try:
-        if server is not None and completed is None:
+        if server is not None and (completed is None and match.cancelled == 0):
             password = server.receive_rcon_value('sv_password')
             connect_string = str("steam://connect/") + str(server.ip_string) + str(":") + \
                 str(server.port) + str("/") + str(password)
@@ -324,11 +358,13 @@ def match(matchid):
         is_owner = (g.user.id == match.user_id)
         has_admin_access = is_owner or (config_setting(
             'ADMINS_ACCESS_ALL_MATCHES') and g.user.admin)
+        has_super_admin_access = (config_setting(
+        'ADMINS_ACCESS_ALL_MATCHES') and g.user.admin)
     return render_template(
         'match.html', user=g.user, admin_access=has_admin_access,
         match=match, team1=team1, team2=team2,
         map_stat_list=map_stat_list, completed=completed, connect_string=connect_string,
-        gotv_string=gotv_string, vetoes=vetoes)
+        gotv_string=gotv_string, super_admin_access=has_super_admin_access, vetoes=vetoes)
 
 
 @match_blueprint.route('/match/<int:matchid>/scoreboard')
@@ -389,6 +425,21 @@ def match_config(matchid):
         mimetype='application/json')
     return response
 
+
+def super_admintools_check(user, match):
+    if user is None:
+        raise BadRequestError('You do not have access to this page')
+
+    grant_admin_access = user.admin and get5.config_setting(
+        'ADMINS_ACCESS_ALL_MATCHES')
+    if not grant_admin_access:
+        raise BadRequestError('You do not have access to this page')
+
+    if match.finished():
+        raise BadRequestError('Match already finished')
+
+    if match.cancelled:
+        raise BadRequestError('Match is cancelled')
 
 def admintools_check(user, match):
     if user is None:

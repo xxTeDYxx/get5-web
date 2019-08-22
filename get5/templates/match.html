@@ -96,6 +96,10 @@
           <li><a id="rcon_command" href="#">Send rcon command</a></li>
           <li role="separator" class="divider"></li>
           <li><a id="backup_manager" href="{{request.path}}/backup">Load a backup file</a></li>
+          {% if super_admin_access %}
+          <li><a id="ffteam1" href="{{request.path}}/forfeit/2">Forfeit Team 1</a></li>
+          <li><a id="ffteam2" href="{{request.path}}/forfeit/1">Forfeit Team 2</a></li>
+          {% endif %}
           <li><a href="{{request.path}}/cancel">Cancel match</a></li>
         </ul>
       </div>
