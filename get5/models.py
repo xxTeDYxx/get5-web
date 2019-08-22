@@ -482,10 +482,10 @@ class Match(db.Model):
         return True
 
     def get_team1(self):
-        return Team.query.get(self.team1_id)
+        return Team.query.get(self.team1_id).with_entities(Team.name).first()
 
     def get_team2(self):
-        return Team.query.get(self.team2_id)
+        return Team.query.get(self.team2_id).with_entities(Team.name).first()
 
     def get_user(self):
         return User.query.get(self.user_id)
