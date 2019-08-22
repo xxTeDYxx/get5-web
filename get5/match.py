@@ -301,13 +301,16 @@ def match_forfeit(matchid, teamwinner):
         raise BadRequestError('Did not select a proper team.')
     
     match.winner = winnerId
+    map_stats = MapStats.get_or_create(match.id, 0, '', '')
     if teamwinner == 1:
         match.team1_score = 1
         match.team2_score = 0
+        map_stats.team1_score = 16
     else:
         match.team1_score = 0
         match.team2_score = 1
-
+        map_stats.team2_score = 16
+    match.start_time = datetime.now()
     match.end_time = datetime.now()
     match.forfeit = 1
     server = GameServer.query.get(match.server_id)
