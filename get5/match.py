@@ -313,6 +313,7 @@ def match_forfeit(matchid, teamwinner):
     match.start_time = datetime.now()
     match.end_time = datetime.now()
     match.forfeit = 1
+    map_stats.end_time = datetime.now()
     server = GameServer.query.get(match.server_id)
     if server:
         server.in_use = False
