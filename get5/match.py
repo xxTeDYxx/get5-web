@@ -354,6 +354,7 @@ def match(matchid):
 
     is_owner = False
     has_admin_access = False
+    has_super_admin_access = False
     if g.user:
         is_owner = (g.user.id == match.user_id)
         has_admin_access = is_owner or (config_setting(
