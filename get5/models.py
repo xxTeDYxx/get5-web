@@ -356,7 +356,6 @@ class Match(db.Model):
     api_key = db.Column(db.String(32))
     veto_first = db.Column(db.String(5))
     veto_mappool = db.Column(db.String(500))
-    enforce_teams = db.Column(db.Boolean, default=True)
     map_stats = db.relationship('MapStats', backref='match', lazy='dynamic')
 
     side_type = db.Column(db.String(32))
@@ -365,13 +364,14 @@ class Match(db.Model):
     team1_series_score = db.Column(db.Integer, default=0)
     team2_series_score = db.Column(db.Integer, default=0)
     spectator_auths = db.Column(db.PickleType)
+    private_match = db.Column(db.Boolean)
 
     @staticmethod
     def create(user, team1_id, team2_id, team1_string, team2_string,
                max_maps, skip_veto, title, veto_mappool, season_id,
-               side_type, veto_first, enforce_teams=True, server_id=None,
+               side_type, veto_first, server_id=None,
                team1_series_score=None, team2_series_score=None,
-               spectator_auths=None):
+               spectator_auths=None, private_match=False):
         rv = Match()
         rv.user_id = user.id
         rv.team1_id = team1_id
@@ -383,7 +383,6 @@ class Match(db.Model):
         rv.veto_mappool = ' '.join(veto_mappool)
         rv.server_id = server_id
         rv.max_maps = max_maps
-        rv.enforce_teams = enforce_teams
         if veto_first == "CT":
             rv.veto_first = "team1"
         elif veto_first == "T":
@@ -395,6 +394,7 @@ class Match(db.Model):
         rv.team1_series_score = team1_series_score
         rv.team2_series_score = team2_series_score
         rv.spectator_auths = spectator_auths
+        rv.private_match = private_match
         db.session.add(rv)
         return rv
 
@@ -421,6 +421,9 @@ class Match(db.Model):
 
         else:
             return 'Cancelled'
+
+    def is_private_match(self):
+        return self.private_match
 
     def get_vs_string(self):
         team1 = self.get_team1()
@@ -554,7 +557,6 @@ class Match(db.Model):
         add_team_data('team2', self.team2_id, self.team2_string)
 
         d['cvars'] = {}
-        d['cvars']['get5_check_auths'] = int(self.enforce_teams)
 
         d['cvars']['get5_web_api_url'] = url_for(
             'home', _external=True, _scheme='http')

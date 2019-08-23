@@ -119,9 +119,6 @@ class MatchForm(Form):
     season_selection = SelectField('Season', coerce=int,
                                    validators=[validators.optional()])
 
-    enforce_teams = BooleanField('Enforce Teams',
-                                 default=True)
-
     team1_series_score = IntegerField('Team 1 Series Score',
                                       default=0,
                                       validators=[validators.NumberRange(0, 7)])
@@ -132,6 +129,9 @@ class MatchForm(Form):
 
     spectator_string = StringField('Spectator IDs',
                                    default='')
+
+    private_match = BooleanField('Private Match?',
+                                 default=False)
 
     def add_teams(self, user):
         if self.team1_id.choices is None:
@@ -251,16 +251,18 @@ def match_create():
                         suc, new_auth = steamid.auth_to_steam64(auth)
                         if suc:
                             specList.append(new_auth)
+
                 # End Spectator Feature
+
                 match = Match.create(
                     g.user, form.data['team1_id'], form.data['team2_id'],
                     form.data['team1_string'], form.data['team2_string'],
                     max_maps, skip_veto,
-                    form.data['match_title'], form.data[
-                        'veto_mappool'], season_id,
-                    form.data['side_type'], form.data['veto_first'],
-                    form.data['enforce_teams'], form.data['server_id'],
-                    team1_series_score, team2_series_score, specList)
+                    form.data['match_title'], form.data['veto_mappool'],
+                    season_id, form.data['side_type'],
+                    form.data['veto_first'], form.data['server_id'],
+                    team1_series_score, team2_series_score, specList,
+                    form.data['private_match'])
 
                 # Save plugin version data if we have it
                 if json_reply and 'plugin_version' in json_reply:
@@ -288,6 +290,7 @@ def match_create():
         'match_create.html', form=form, user=g.user, teams=g.user.teams,
         match_text_option=config_setting('CREATE_MATCH_TITLE_TEXT'))
 
+
 @match_blueprint.route('/match/<int:matchid>/forfeit/<int:teamwinner>')
 def match_forfeit(matchid, teamwinner):
     app.logger.info("Match server id is: {}".format(matchid))
@@ -299,7 +302,7 @@ def match_forfeit(matchid, teamwinner):
         winnerId = match.team2_id
     else:
         raise BadRequestError('Did not select a proper team.')
-    
+
     match.winner = winnerId
     map_stats = MapStats.get_or_create(match.id, 0, '', '')
     if teamwinner == 1:
@@ -327,9 +330,12 @@ def match_forfeit(matchid, teamwinner):
 
     return redirect('/mymatches')
 
+
 @match_blueprint.route('/match/<int:matchid>')
 def match(matchid):
     match = Match.query.get_or_404(matchid)
+    # Begin Private/Public Match Implementation
+
     vetoes = Veto.query.filter_by(match_id=matchid)
     if match.server_id:
         server = GameServer.query.get_or_404(match.server_id)
@@ -337,6 +343,22 @@ def match(matchid):
         server = None
     team1 = Team.query.get_or_404(match.team1_id)
     team2 = Team.query.get_or_404(match.team2_id)
+    if match.is_private_match():
+        if not g.user:
+            raise BadRequestError("Please login before viewing this match.")
+        # Get team lists, and check if logged in user is part of match.
+        if not (g.user.id == match.user_id) or (config_setting(
+                'ADMINS_ACCESS_ALL_MATCHES') and g.user.admin):
+            isPlayer = False
+            playerList = list(set(team1.auths + team2.auths))
+            for player in playerList:
+                if g.user.steam_id == player:
+                    isPlayer = True
+                    break
+            if not isPlayer:
+                raise BadRequestError(
+                    "You cannot view this match as you were not a part of it!")
+
     map_stat_list = match.map_stats.all()
     completed = match.winner
     try:
@@ -364,7 +386,7 @@ def match(matchid):
         has_admin_access = is_owner or (config_setting(
             'ADMINS_ACCESS_ALL_MATCHES') and g.user.admin)
         has_super_admin_access = (config_setting(
-        'ADMINS_ACCESS_ALL_MATCHES') and g.user.admin)
+            'ADMINS_ACCESS_ALL_MATCHES') and g.user.admin)
     return render_template(
         'match.html', user=g.user, admin_access=has_admin_access,
         match=match, team1=team1, team2=team2,
@@ -445,6 +467,7 @@ def super_admintools_check(user, match):
 
     if match.cancelled:
         raise BadRequestError('Match is cancelled')
+
 
 def admintools_check(user, match):
     if user is None:

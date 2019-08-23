@@ -66,7 +66,6 @@ Please see the [installation instructions](https://github.com/PhlexPlexico/get5-
 Autoformatting:
 
 ```sh
-cd get5
 autopep8 -r get5 --in-place
 autopep8 -r get5 --diff # should have no output
 ```
