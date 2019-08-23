@@ -1,4 +1,4 @@
-from get5 import app, db, flash_errors, config_setting
+from get5 import app, db, flash_errors, config_setting, BadRequestError
 from models import User, Team
 
 import countries
@@ -44,7 +44,7 @@ def valid_file(form, field):
     mock = config_setting("TESTING")
     if mock:
         return
-    elif not g.user.admin:
+    elif not util.is_admin(g.user):
         return
     filename = secure_filename(field.data.filename)
     # Safe method.
@@ -166,7 +166,7 @@ def team_create():
     if request.method == 'POST':
         num_teams = g.user.teams.count()
         max_teams = config_setting('USER_MAX_TEAMS')
-        if max_teams >= 0 and num_teams >= max_teams and not g.user.admin:
+        if max_teams >= 0 and num_teams >= max_teams and not (util.is_admin(g.user) or util.is_super_admin(g.user)):
             flash(
                 'You already have the maximum number of teams ({}) stored'.format(num_teams))
 
@@ -181,7 +181,7 @@ def team_create():
 
             # Update the logo. Passing validation we have the filename in the
             # list now.
-            if not mock and g.user.admin and form.upload_logo.data:
+            if not mock and (util.is_admin(g.user) or util.is_super_admin(g.user)) and form.upload_logo.data:
                 filename = secure_filename(form.upload_logo.data.filename)
                 index_of_dot = filename.index('.')
                 newLogoDetail = filename[:index_of_dot]
@@ -191,7 +191,7 @@ def team_create():
                 data['logo'] = newLogoDetail
 
             team = Team.create(g.user, name, tag, flag, logo,
-                               auths, data['public_team'] and g.user.admin, pref_names)
+                               auths, data['public_team'] and (util.is_admin(g.user) or util.is_super_admin(g.user)), pref_names)
 
             db.session.commit()
             app.logger.info(
@@ -203,7 +203,7 @@ def team_create():
             flash_errors(form)
 
     return render_template('team_create.html', user=g.user, form=form,
-                           edit=False, is_admin=g.user.admin, MAXPLAYER=Team.MAXPLAYERS)
+                           edit=False, is_admin=(util.is_admin(g.user) or util.is_super_admin(g.user)), MAXPLAYER=Team.MAXPLAYERS)
 
 
 @team_blueprint.route('/team/<int:teamid>', methods=['GET'])
@@ -217,7 +217,7 @@ def team_edit(teamid):
     mock = config_setting("TESTING")
     team = Team.query.get_or_404(teamid)
     if not team.can_edit(g.user):
-        return 'Not your team', 400
+        raise BadRequestError("Not your team.")
     form = TeamForm()
     # We wish to query this every time, since we can now upload photos.
     if not mock:
@@ -243,18 +243,18 @@ def team_edit(teamid):
                     field.data = None
         form.public_team.data = team.public_team
         return render_template('team_create.html', user=g.user, form=form,
-                               edit=True, is_admin=g.user.admin, MAXPLAYER=Team.MAXPLAYERS)
+                               edit=True, is_admin=util.is_admin(g.user), MAXPLAYER=Team.MAXPLAYERS)
 
     elif request.method == 'POST':
         if form.validate():
             data = form.data
             public_team = team.public_team
-            if g.user.admin:
+            if util.is_admin(g.user):
                 public_team = data['public_team']
 
             # Update the logo. Passing validation we have the filename in the
             # list now.
-            if not mock and g.user.admin and form.upload_logo.data:
+            if not mock and util.is_admin(g.user) and form.upload_logo.data:
                 filename = secure_filename(form.upload_logo.data.filename)
                 index_of_dot = filename.index('.')
                 newLogoDetail = filename[:index_of_dot]
@@ -273,14 +273,14 @@ def team_edit(teamid):
 
     return render_template(
         'team_create.html', user=g.user, form=form, edit=True,
-        is_admin=g.user.admin, MAXPLAYER=Team.MAXPLAYERS)
+        is_admin=util.is_admin(g.user), MAXPLAYER=Team.MAXPLAYERS)
 
 
 @team_blueprint.route('/team/<int:teamid>/delete')
 def team_delete(teamid):
     team = Team.query.get_or_404(teamid)
     if not team.can_delete(g.user):
-        return 'Cannot delete this team', 400
+        raise BadRequestError("Cannot delete this team.")
 
     if Team.query.filter_by(id=teamid).delete():
         db.session.commit()
@@ -310,7 +310,7 @@ def teams_user(userid):
 
     else:
         # Render teams page
-        my_teams = (g.user is not None and userid == g.user.id)
+        my_teams = (g.user is not None and ((userid == g.user.id) or util.is_super_admin(g.user)))
         teams = user.teams.paginate(page, 20)
         return render_template(
             'teams.html', user=g.user, teams=teams, my_teams=my_teams,
@@ -340,8 +340,9 @@ def all_teams():
     else:
         # Render teams page
         teams = all_public_teams.paginate(page, 20)
+        editable = g.user is not None and util.is_super_admin(g.user)
         return render_template(
-            'teams.html', user=g.user, teams=teams, my_teams=False,
+            'teams.html', user=g.user, teams=teams, my_teams=editable,
             page=page, owner=None)
 
 

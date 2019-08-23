@@ -57,7 +57,7 @@ def season_create():
     if request.method == 'POST':
         num_seasons = g.user.seasons.count()
         max_seasons = config_setting('USER_MAX_SEASONS')
-        if max_seasons >= 0 and num_seasons >= max_seasons and not g.user.admin:
+        if max_seasons >= 0 and num_seasons >= max_seasons and not (util.is_admin(g.user) or util.is_super_admin(g.user)):
             flash('You already have the maximum number of seasons ({}) created'.format(
                 num_seasons))
 

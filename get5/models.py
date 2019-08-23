@@ -135,7 +135,7 @@ class Team(db.Model):
         rv = Team()
         rv.user_id = user.id
         rv.set_data(name, tag, flag, logo, auths,
-                    (public_team and user.admin), preferred_names)
+                    (public_team and util.is_admin(user)), preferred_names)
         db.session.add(rv)
         return rv
 
@@ -152,6 +152,8 @@ class Team(db.Model):
         if not user:
             return False
         if self.user_id == user.id:
+            return True
+        if util.is_super_admin(user):
             return True
         return False
 
@@ -291,6 +293,8 @@ class Season(db.Model):
         if not user:
             return False
         if self.user_id == user.id:
+            return True
+        if util.is_super_admin(user):
             return True
         return False
 

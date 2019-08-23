@@ -197,7 +197,7 @@ def match_create():
         max_matches = config_setting('USER_MAX_MATCHES')
         season_id = None
 
-        if max_matches >= 0 and num_matches >= max_matches and not g.user.admin:
+        if max_matches >= 0 and num_matches >= max_matches and not (util.is_admin(g.user) or util.is_super_admin(g.user)):
             flash('You already have the maximum number of matches ({}) created'.format(
                 num_matches))
 
@@ -293,7 +293,6 @@ def match_create():
 
 @match_blueprint.route('/match/<int:matchid>/forfeit/<int:teamwinner>')
 def match_forfeit(matchid, teamwinner):
-    app.logger.info("Match server id is: {}".format(matchid))
     match = Match.query.get_or_404(matchid)
     super_admintools_check(g.user, match)
     if teamwinner == 1:
@@ -330,25 +329,6 @@ def match_forfeit(matchid, teamwinner):
 
     return redirect('/mymatches')
 
-def check_private_or_public(user, match, team1, team2):
-    if match.is_private_match():
-        if not user:
-            raise BadRequestError("Please login before viewing this match.")
-        # Get team lists, and check if logged in user is part of match.
-        if not (user.id == match.user_id) or (config_setting(
-                'ADMINS_ACCESS_ALL_MATCHES') and user.admin) or user.super_admin:
-            isPlayer = False
-            playerstats_steam = PlayerStats.query(PlayerStats.steam_id).filter_by(
-            match_id=match.id)
-            playerList = list(set(team1.auths + team2.auths + playerstats_steam))
-            for player in playerList:
-                if user.steam_id == player:
-                    isPlayer = True
-                    break
-            if not isPlayer:
-                raise BadRequestError(
-                    "You cannot view this match as you were not a part of it!")
-
 @match_blueprint.route('/match/<int:matchid>')
 def match(matchid):
     match = Match.query.get_or_404(matchid)
@@ -382,22 +362,22 @@ def match(matchid):
         app.logger.info('Attempted to connect to server {}, but it is offline'
                         .format(server.ip_string))
 
-    is_owner = False
-    is_server_owner = False
+    is_match_owner = False
+    is_server_op = False
     has_admin_access = False
     has_super_admin_access = False
     if g.user:
-        is_owner = (g.user.id == match.user_id)
-        has_admin_access = is_owner or (config_setting(
-            'ADMINS_ACCESS_ALL_MATCHES') and g.user.admin)
-        has_super_admin_access = g.user.super_admin
-        is_server_owner = server_owner_check(g.user, server)
+        is_match_owner = (g.user.id == match.user_id)
+        has_admin_access = (config_setting(
+            'ADMINS_ACCESS_ALL_MATCHES') and util.is_admin(g.user))
+        has_super_admin_access = util.is_super_admin(g.user)
+        is_server_op = util.is_server_owner(g.user, server)
     return render_template(
         'match.html', user=g.user, admin_access=has_admin_access,
         match=match, team1=team1, team2=team2,
         map_stat_list=map_stat_list, completed=completed, connect_string=connect_string,
         gotv_string=gotv_string, super_admin_access=has_super_admin_access, vetoes=vetoes,
-        server_owner=is_server_owner)
+        server_owner=is_server_op, match_owner=is_match_owner)
 
 
 @match_blueprint.route('/match/<int:matchid>/scoreboard')
@@ -459,47 +439,6 @@ def match_config(matchid):
         mimetype='application/json')
     return response
 
-def server_owner_check(user, server):
-    if user is None or server is None:
-        return False
-    elif user.super_admin or user.id == server.user_id or (
-        user.admin and get5.config_setting(
-        'ADMINS_ACCESS_ALL_MATCHES')):
-        return True
-    else:
-        return False
-
-def super_admintools_check(user, match):
-    if user is None:
-        raise BadRequestError('You do not have access to this page')
-
-    grant_admin_access = user.super_admin
-
-    if not grant_admin_access:
-        raise BadRequestError('You do not have access to this page')
-
-    if match.finished():
-        raise BadRequestError('Match already finished')
-
-    if match.cancelled:
-        raise BadRequestError('Match is cancelled')
-
-
-def admintools_check(user, match):
-    if user is None:
-        raise BadRequestError('You do not have access to this page')
-
-    grant_admin_access = user.admin and get5.config_setting(
-        'ADMINS_ACCESS_ALL_MATCHES')
-    if user.id != match.user_id and not grant_admin_access:
-        raise BadRequestError('You do not have access to this page')
-
-    if match.finished():
-        raise BadRequestError('Match already finished')
-
-    if match.cancelled:
-        raise BadRequestError('Match is cancelled')
-
 
 @match_blueprint.route('/match/<int:matchid>/cancel')
 def match_cancel(matchid):
@@ -525,13 +464,14 @@ def match_cancel(matchid):
 @match_blueprint.route('/match/<int:matchid>/rcon')
 def match_rcon(matchid):
     match = Match.query.get_or_404(matchid)
-    admintools_check(g.user, match)
 
     command = request.values.get('command')
     server = GameServer.query.get_or_404(match.server_id)
+    owns_server = util.is_server_owner(g.user, server)
+    is_sadmin = util.is_super_admin(g.user)
     # Check to see if user owns server.
-    if public_server and not server_owner_check(g.user, server):
-        raise BadRequestError('You do not have access to this page')
+    if not owns_server or not is_sadmin:
+        raise BadRequestError('You are not the server owner.')
 
     if command:
         try:
@@ -713,3 +653,56 @@ def map_stat_to_csv(matchid, mapid):
     # add a filename
     response.headers.set("Content-Disposition", "attachment", filename=logName)
     return response
+
+
+# Begin Helper Functions
+
+
+def super_admintools_check(user, match):
+    if user is None:
+        raise BadRequestError('You do not have access to this page')
+
+    if not util.is_super_admin(user):
+        raise BadRequestError('You do not have access to this page')
+
+    if match.finished():
+        raise BadRequestError('Match already finished')
+
+    if match.cancelled:
+        raise BadRequestError('Match is cancelled')
+
+
+def admintools_check(user, match):
+    if user is None:
+        raise BadRequestError('You do not have access to this page')
+
+    grant_admin_access = util.is_admin(user) and get5.config_setting(
+        'ADMINS_ACCESS_ALL_MATCHES')
+    if user.id != match.user_id and not grant_admin_access:
+        raise BadRequestError('You do not have access to this page')
+
+    if match.finished():
+        raise BadRequestError('Match already finished')
+
+    if match.cancelled:
+        raise BadRequestError('Match is cancelled')
+
+def check_private_or_public(user, match, team1, team2):
+    if match.is_private_match():
+        if not user:
+            raise BadRequestError("Please login before viewing this match.")
+        # Get team lists, and check if logged in user is part of match.
+        if not (user.id == match.user_id) or (config_setting(
+                'ADMINS_ACCESS_ALL_MATCHES') and util.lis_admin(user)) or util.is_super_admin(user):
+            isPlayer = False
+            playerstats_steam = PlayerStats.query(PlayerStats.steam_id).filter_by(
+            match_id=match.id)
+            playerList = list(set(team1.auths + team2.auths + playerstats_steam))
+            for player in playerList:
+                if user.steam_id == player:
+                    isPlayer = True
+                    break
+            if not isPlayer:
+                raise BadRequestError(
+                    "You cannot view this match as you were not a part of it!")
+# End Helper Functions
