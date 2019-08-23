@@ -1,4 +1,4 @@
-"""Include private match option.
+"""Include private match option, remove enforce teams, include super_admin.
 
 Revision ID: f5efc36b3cc9
 Revises: ca309999b2ee
@@ -16,8 +16,10 @@ from sqlalchemy.dialects import mysql
 
 def upgrade():
     op.add_column('match', sa.Column('private_match', sa.Boolean(), nullable=True, default=False))
+    op.add_column('user', sa.Column('super_admin', sa.Boolean(), nullable=False, default=False))
     op.drop_column('match', 'enforce_teams')
 
 def downgrade():
     op.drop_column('match', 'private_match')
+    op.drop_column('user', 'super_admin')
     op.add_column('match', sa.Column('enforce_teams', sa.Boolean(), nullable=True))

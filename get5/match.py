@@ -330,6 +330,22 @@ def match_forfeit(matchid, teamwinner):
 
     return redirect('/mymatches')
 
+def check_private_or_public(user, match, team1, team2):
+    if match.is_private_match():
+        if not user:
+            raise BadRequestError("Please login before viewing this match.")
+        # Get team lists, and check if logged in user is part of match.
+        if not (user.id == match.user_id) or (config_setting(
+                'ADMINS_ACCESS_ALL_MATCHES') and user.admin) or user.super_admin:
+            isPlayer = False
+            playerList = list(set(team1.auths + team2.auths))
+            for player in playerList:
+                if user.steam_id == player:
+                    isPlayer = True
+                    break
+            if not isPlayer:
+                raise BadRequestError(
+                    "You cannot view this match as you were not a part of it!")
 
 @match_blueprint.route('/match/<int:matchid>')
 def match(matchid):
@@ -343,21 +359,7 @@ def match(matchid):
         server = None
     team1 = Team.query.get_or_404(match.team1_id)
     team2 = Team.query.get_or_404(match.team2_id)
-    if match.is_private_match():
-        if not g.user:
-            raise BadRequestError("Please login before viewing this match.")
-        # Get team lists, and check if logged in user is part of match.
-        if not (g.user.id == match.user_id) or (config_setting(
-                'ADMINS_ACCESS_ALL_MATCHES') and g.user.admin):
-            isPlayer = False
-            playerList = list(set(team1.auths + team2.auths))
-            for player in playerList:
-                if g.user.steam_id == player:
-                    isPlayer = True
-                    break
-            if not isPlayer:
-                raise BadRequestError(
-                    "You cannot view this match as you were not a part of it!")
+    check_private_or_public(g.user, match, team1, team2)
 
     map_stat_list = match.map_stats.all()
     completed = match.winner
@@ -379,19 +381,21 @@ def match(matchid):
                         .format(server.ip_string))
 
     is_owner = False
+    is_server_owner = False
     has_admin_access = False
     has_super_admin_access = False
     if g.user:
         is_owner = (g.user.id == match.user_id)
         has_admin_access = is_owner or (config_setting(
             'ADMINS_ACCESS_ALL_MATCHES') and g.user.admin)
-        has_super_admin_access = (config_setting(
-            'ADMINS_ACCESS_ALL_MATCHES') and g.user.admin)
+        has_super_admin_access = g.user.super_admin
+        is_server_owner = server_owner_check(g.user, server)
     return render_template(
         'match.html', user=g.user, admin_access=has_admin_access,
         match=match, team1=team1, team2=team2,
         map_stat_list=map_stat_list, completed=completed, connect_string=connect_string,
-        gotv_string=gotv_string, super_admin_access=has_super_admin_access, vetoes=vetoes)
+        gotv_string=gotv_string, super_admin_access=has_super_admin_access, vetoes=vetoes,
+        server_owner=is_server_owner)
 
 
 @match_blueprint.route('/match/<int:matchid>/scoreboard')
@@ -407,6 +411,7 @@ def match_scoreboard(matchid):
     match = Match.query.get_or_404(matchid)
     team1 = Team.query.get_or_404(match.team1_id)
     team2 = Team.query.get_or_404(match.team2_id)
+    check_private_or_public(g.user, match, team1, team2)
     map_num = 0
     map_stat_list = match.map_stats.all()
     player_dict = {}
@@ -452,13 +457,22 @@ def match_config(matchid):
         mimetype='application/json')
     return response
 
+def server_owner_check(user, server):
+    if user is None or server is None:
+        return False
+    elif user.super_admin or user.id == server.user_id or (
+        user.admin and get5.config_setting(
+        'ADMINS_ACCESS_ALL_MATCHES')):
+        return True
+    else:
+        return False
 
 def super_admintools_check(user, match):
     if user is None:
         raise BadRequestError('You do not have access to this page')
 
-    grant_admin_access = user.admin and get5.config_setting(
-        'ADMINS_ACCESS_ALL_MATCHES')
+    grant_admin_access = user.super_admin
+
     if not grant_admin_access:
         raise BadRequestError('You do not have access to this page')
 
@@ -513,6 +527,9 @@ def match_rcon(matchid):
 
     command = request.values.get('command')
     server = GameServer.query.get_or_404(match.server_id)
+    # Check to see if user owns server.
+    if public_server and not server_owner_check(g.user, server):
+        raise BadRequestError('You do not have access to this page')
 
     if command:
         try:

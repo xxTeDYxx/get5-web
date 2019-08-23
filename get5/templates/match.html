@@ -90,15 +90,22 @@
           <li><a id="pause" href="{{request.path}}/pause">Pause match</a></li>
           <li><a id="unpause" href="{{request.path}}/unpause">Unpause match</a></li>
           {% endif %}
+          {% if super_admin_access %}
           <li><a id="addplayer_team1" href="#">Add player to team1</a></li>
           <li><a id="addplayer_team2" href="#">Add player to team2</a></li>
           <li><a id="addplayer_spec" href="#">Add player to specator list</a></li>
+          {% else %}
+          <li><a id="addplayer_spec" href="#">Add player to specator list</a></li>
+          {% endif %}
+          {% if server_owner or super_admin_access %}
           <li><a id="rcon_command" href="#">Send rcon command</a></li>
+          {% endif %}
           <li role="separator" class="divider"></li>
           <li><a id="backup_manager" href="{{request.path}}/backup">Load a backup file</a></li>
           {% if super_admin_access %}
           <li><a id="ffteam1" href="{{request.path}}/forfeit/2">Forfeit Team 1</a></li>
           <li><a id="ffteam2" href="{{request.path}}/forfeit/1">Forfeit Team 2</a></li>
+          
           {% endif %}
           <li><a href="{{request.path}}/cancel">Cancel match</a></li>
         </ul>

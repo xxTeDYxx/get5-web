@@ -21,6 +21,7 @@ class User(db.Model):
     steam_id = db.Column(db.String(40), unique=True)
     name = db.Column(db.String(40))
     admin = db.Column(db.Boolean, default=False)
+    super_admin = db.Column(db.Boolean, default=False)
     servers = db.relationship('GameServer', backref='user', lazy='dynamic')
     teams = db.relationship('Team', backref='user', lazy='dynamic')
     matches = db.relationship('Match', backref='user', lazy='dynamic')
@@ -37,6 +38,8 @@ class User(db.Model):
 
         rv.admin = ('ADMIN_IDS' in app.config) and (
             steam_id in app.config['ADMIN_IDS'])
+        rv.super_admin = ('SUPER_ADMIN_IDS' in app.config) and (
+            steam_id in app.config['SUPER_ADMIN_IDS'])
         return rv
 
     def get_url(self):

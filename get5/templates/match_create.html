@@ -147,6 +147,13 @@
     </div>
 
     <div class="form-group">
+      {{ form.private_match.label(class="col-sm-2 control-label") }}
+      <div class="col-sm-4">
+        {{ form.private_match(class="form-control input-sm") }}
+      </div>
+    </div>
+
+    <div class="form-group">
       {{ form.spectator_string.label(class="col-sm-2 control-label") }}
       <div class="col-sm-4">
         {{ form.spectator_string(class="form-control input-sm") }}
