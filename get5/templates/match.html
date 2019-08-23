@@ -78,7 +78,7 @@
       {{ match.team2_score }}
       {{ team2.get_logo_or_flag_html(1.0, team1) }} <a href="/team/{{team2.id}}"> {{team2.name}}</a>
 
-      {% if admin_access and (match.live() or match.pending()) %}
+      {% if (admin_access or match_owner or super_admin_access) and (match.live() or match.pending()) %}
       <div class="dropdown dropdown-header pull-right">
         <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown"
           aria-haspopup="true" aria-expanded="true">
@@ -90,7 +90,7 @@
           <li><a id="pause" href="{{request.path}}/pause">Pause match</a></li>
           <li><a id="unpause" href="{{request.path}}/unpause">Unpause match</a></li>
           {% endif %}
-          {% if super_admin_access %}
+          {% if (super_admin_access or admin_access or server_owner) %}
           <li><a id="addplayer_team1" href="#">Add player to team1</a></li>
           <li><a id="addplayer_team2" href="#">Add player to team2</a></li>
           <li><a id="addplayer_spec" href="#">Add player to specator list</a></li>
@@ -102,7 +102,7 @@
           {% endif %}
           <li role="separator" class="divider"></li>
           <li><a id="backup_manager" href="{{request.path}}/backup">Load a backup file</a></li>
-          {% if super_admin_access %}
+          {% if super_admin_access or admin_access %}
           <li><a id="ffteam1" href="{{request.path}}/forfeit/2">Forfeit Team 1</a></li>
           <li><a id="ffteam2" href="{{request.path}}/forfeit/1">Forfeit Team 2</a></li>
           
