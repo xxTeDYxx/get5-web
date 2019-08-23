@@ -338,7 +338,10 @@ def check_private_or_public(user, match, team1, team2):
         if not (user.id == match.user_id) or (config_setting(
                 'ADMINS_ACCESS_ALL_MATCHES') and user.admin) or user.super_admin:
             isPlayer = False
-            playerList = list(set(team1.auths + team2.auths))
+            playerstats_steam = PlayerStats.query(PlayerStats.steam_id).filter_by(
+            match_id=match.id)
+            playerList = list(set(team1.auths + team2.auths + playerstats_steam))
+            app.logger.info("{}".format(playerList))
             for player in playerList:
                 if user.steam_id == player:
                     isPlayer = True
