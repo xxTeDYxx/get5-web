@@ -341,7 +341,6 @@ def check_private_or_public(user, match, team1, team2):
             playerstats_steam = PlayerStats.query(PlayerStats.steam_id).filter_by(
             match_id=match.id)
             playerList = list(set(team1.auths + team2.auths + playerstats_steam))
-            app.logger.info("{}".format(playerList))
             for player in playerList:
                 if user.steam_id == player:
                     isPlayer = True
