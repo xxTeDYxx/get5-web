@@ -60,3 +60,7 @@ WHITELISTED_IDS = []
 # Admins will have extra access to create "public" teams, and if ADMINS_ACCESS_ALL_MATCHES
 # is set, they can access admin info for all matches (can pause, cancel, etc.) ANY match.
 ADMIN_IDS = []
+
+# Super admins will have the most access, as if ADMINS_ACCESS_ALL_MATCHES was set.
+# They'll be able to access EVERYTHING for ANY match, as well as FORFEIT matches.
+SUPER_ADMIN_IDS = []

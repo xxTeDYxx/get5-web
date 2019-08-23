@@ -95,7 +95,7 @@ class TeamTests(get5_test.Get5Test):
                 sess['user_id'] = 1
             response = c.get('/server/1/delete')
             self.assertEqual(response.status_code, 400)
-            self.assertIn('Cannot delete when in use', response.data)
+            self.assertIn('{"message":"Cannot delete server when in use."}\n', response.data)
 
         # Can't delete some else's server when logged in
         with self.app as c:
@@ -103,13 +103,13 @@ class TeamTests(get5_test.Get5Test):
                 sess['user_id'] = 2
             response = c.get('/server/2/delete')
             self.assertEqual(response.status_code, 400)
-            self.assertIn('Not your server', response.data)
+            self.assertIn('{"message":"You do not have access to this server."}\n', response.data)
 
         # Can't delete some else's server without being logged in
         with self.app as c:
             response = c.get('/server/1/delete')
             self.assertEqual(response.status_code, 400)
-            self.assertIn('Not your server', response.data)
+            self.assertIn('{"message":"You do not have access to this server."}\n', response.data)
 
     # Make sure a user can't edit someone else's servers
     def test_edit_server_wronguser(self):

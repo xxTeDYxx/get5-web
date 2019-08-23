@@ -178,3 +178,23 @@ def decrypt(key, source, decode=True):
     if data[-padding:] != chr(padding) * padding:
         return None
     return data[:-padding]  # remove the padding
+
+def is_server_owner(user, server):
+    if user is None or server is None:
+        return False
+    elif user.id == server.user_id:
+        return True
+    else:
+        return False
+
+def is_super_admin(user):
+    if user is None:
+        return False
+
+    return user.super_admin
+
+def is_admin(user):
+    if user is None:
+        return False
+
+    return user.admin

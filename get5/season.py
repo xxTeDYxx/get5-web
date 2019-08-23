@@ -42,10 +42,9 @@ season_blueprint = Blueprint('season', __name__)
 
 @season_blueprint.route('/seasons')
 def seasons():
-    page = util.as_int(request.values.get('page'), on_fail=1)
-    seasons = Season.query.order_by(-Season.id).paginate(page, 20)
+    seasons = Season.query.order_by(-Season.id)
     return render_template('seasons.html', user=g.user, seasons=seasons,
-                           my_seasons=False, all_seasons=True, page=page)
+                           my_seasons=False, all_seasons=True)
 
 
 @season_blueprint.route('/season/create', methods=['GET', 'POST'])
@@ -58,7 +57,7 @@ def season_create():
     if request.method == 'POST':
         num_seasons = g.user.seasons.count()
         max_seasons = config_setting('USER_MAX_SEASONS')
-        if max_seasons >= 0 and num_seasons >= max_seasons and not g.user.admin:
+        if max_seasons >= 0 and num_seasons >= max_seasons and not (util.is_admin(g.user) or util.is_super_admin(g.user)):
             flash('You already have the maximum number of seasons ({}) created'.format(
                 num_seasons))
 
@@ -83,24 +82,21 @@ def season_create():
 @season_blueprint.route("/season/<int:seasonid>")
 def season_matches(seasonid):
     season_info = Season.query.get_or_404(seasonid)
-    page = util.as_int(request.values.get('page'), on_fail=1)
     matches = Match.query.order_by(-Match.id).filter_by(season_id=seasonid,
-                                                        cancelled=False).paginate(page, 20)
-
+                                                        cancelled=False)
     return render_template('matches.html', user=g.user, matches=matches,
                            season_matches=True, all_matches=False,
-                           page=page, season=season_info)
+                           season=season_info)
 
 
 @season_blueprint.route("/season/user/<int:userid>")
 def seasons_user(userid):
     user = User.query.get_or_404(userid)
-    page = util.as_int(request.values.get('page'), on_fail=1)
-    seasons = user.seasons.order_by(-Season.id).paginate(page, 20)
+    seasons = user.seasons.order_by(-Season.id)
     is_owner = (g.user is not None) and (userid == g.user.id)
     app.logger.info('User is {}'.format(g.user))
     return render_template('seasons.html', user=g.user, seasons=seasons,
-                           my_seasons=is_owner, all_matches=False, season_owner=user, page=page)
+                           my_seasons=is_owner, all_matches=False, season_owner=user)
 
 
 @season_blueprint.route('/season/<int:seasonid>/edit', methods=['GET', 'POST'])
