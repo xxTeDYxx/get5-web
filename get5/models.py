@@ -569,7 +569,7 @@ class Match(db.Model):
             'home', _external=True, _scheme='http')    
         d['cvars']['get5_check_auths'] = "1" if self.enforce_teams else "0"
         # Add in for spectators modification.
-        d['min_spectators_to_ready'] = "0"
+        d['min_spectators_to_ready'] = 0
 
         # Perm spectators will go within config, then can add more from match
         # screen.
