@@ -265,7 +265,7 @@ def match_create():
                     season_id, form.data['side_type'],
                     form.data['veto_first'], form.data['server_id'],
                     team1_series_score, team2_series_score, specList,
-                    form.data['private_match'])
+                    form.data['private_match'], form.data['enforce_auths'])
 
                 # Save plugin version data if we have it
                 if json_reply and 'plugin_version' in json_reply:
