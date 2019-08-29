@@ -133,7 +133,7 @@ class MatchForm(Form):
     private_match = BooleanField('Private Match?',
                                  default=False)
 
-    enforce_teams = BooleanField('Disable Check Auth',	
+    enforce_teams = BooleanField('Enforce Auths on Team',	
                                  default=True)
 
     def add_teams(self, user):
