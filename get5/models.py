@@ -566,8 +566,8 @@ class Match(db.Model):
 
         d['cvars'] = {}
         d['cvars']['get5_web_api_url'] = url_for(
-            'home', _external=True, _scheme='http')
-        d['cvars']['get5_check_auths'] = int(self.enforce_teams)
+            'home', _external=True, _scheme='http')    
+        d['cvars']['get5_check_auths'] = int(self.enforce_teams) if self.enforce_teams is not None else 0
         # Add in for spectators modification.
         d['min_spectators_to_ready'] = 0
 
