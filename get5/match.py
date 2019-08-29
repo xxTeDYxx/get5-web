@@ -133,6 +133,9 @@ class MatchForm(Form):
     private_match = BooleanField('Private Match?',
                                  default=False)
 
+    enforce_teams = BooleanField('Disable Check Auth',	
+                                 default=True)
+
     def add_teams(self, user):
         if self.team1_id.choices is None:
             self.team1_id.choices = []

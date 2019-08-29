@@ -372,13 +372,13 @@ class Match(db.Model):
     team2_series_score = db.Column(db.Integer, default=0)
     spectator_auths = db.Column(db.PickleType)
     private_match = db.Column(db.Boolean)
-
+    enforce_teams = db.Column(db.Boolean, default=True)
     @staticmethod
     def create(user, team1_id, team2_id, team1_string, team2_string,
                max_maps, skip_veto, title, veto_mappool, season_id,
                side_type, veto_first, server_id=None,
                team1_series_score=None, team2_series_score=None,
-               spectator_auths=None, private_match=False):
+               spectator_auths=None, private_match=False, enforce_teams=True):
         rv = Match()
         rv.user_id = user.id
         rv.team1_id = team1_id
@@ -402,6 +402,7 @@ class Match(db.Model):
         rv.team2_series_score = team2_series_score
         rv.spectator_auths = spectator_auths
         rv.private_match = private_match
+        rv.enforce_teams = enforce_teams
         db.session.add(rv)
         return rv
 
@@ -564,10 +565,9 @@ class Match(db.Model):
         add_team_data('team2', self.team2_id, self.team2_string)
 
         d['cvars'] = {}
-
         d['cvars']['get5_web_api_url'] = url_for(
             'home', _external=True, _scheme='http')
-
+        d['cvars']['get5_check_auths'] = int(self.enforce_teams)
         # Add in for spectators modification.
         d['min_spectators_to_ready'] = 0
 
