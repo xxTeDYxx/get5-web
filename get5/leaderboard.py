@@ -134,10 +134,10 @@ def seasonal_leaderboard(seasonid):
 def seasonal_player_leaderboard(seasonid):
     season = Season.query.get_or_404(seasonid)
     playerValues = getPlayerLeaderboard(seasonid)
-    return render_template('statleaderboard.html', board=playerValues, season=season.name)
+    return render_template('statleaderboard.html', user=g.user, board=playerValues, season=season.name)
 
 
 @leaderboard_blueprint.route('/leaderboard/players')
 def player_leaderboard():
     playerValues = getPlayerLeaderboard()
-    return render_template('statleaderboard.html', board=playerValues)
+    return render_template('statleaderboard.html', user=g.user, board=playerValues)

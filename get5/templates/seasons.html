@@ -20,7 +20,8 @@
         <th>Season Name</th>
         <th>Start Date</th>
         <th>End Date</th>
-        <th>Leaderboard</th>
+        <th>Team Leaderboard</th>
+        <th>Individual Leaderboard</th>
       </tr>
     </thead>
     <tbody>
@@ -40,9 +41,12 @@
           {% endif %}
         </td>
         <td>
-          <a href="/leaderboard/season/{{season.id}}"> Leaderboard</a>
+          <a href="/leaderboard/season/{{season.id}}">Team Leaderboard</a>
         </td>
 
+        <td>
+          <a href="/leaderboard/season/{{season.id}}/players">Indvidual Leaderboard</a>
+        </td>
 
         {% if season.can_edit(user) %}
         <td>
