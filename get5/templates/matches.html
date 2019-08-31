@@ -24,12 +24,15 @@
         <th>Team 1</th>
         <th>Team 2</th>
         <th>Status</th>
+        <th>Start Time</th>
+        <th>End Time</th>
         {% if my_matches %}
         <th>Server</th>
         <th></th>
         {% else %}
         <th>Owner</th>
         {% endif %}
+        <th>Season</th>
       </tr>
     </thead>
     <tbody>
@@ -51,7 +54,14 @@
         <td>
           {{ match.get_status_string() }}
         </td>
-
+        {% if match.live() or match.finished() %}
+        <td>
+          {{ match.get_start_time() }}
+        </td>
+        <td>
+          {{ match.get_end_time() }}
+        </td>
+        {% endif %}
         {% if my_matches %}
         <td>{% if match.get_server() is not none   %} {{ match.get_server().get_display() }} {% endif %}</td>
         <td>
@@ -62,7 +72,11 @@
         {% else %}
         <td> <a href="{{ match.get_user().get_url() }}"> {{ match.get_user().name }} </a> </td>
         {% endif %}
-
+        {% if match.get_season() %}
+        <td> <a href="/season/{{ match.get_season_id() }}"> {{ match.get_season().name }} </a> </td>
+        {% else %}
+        <td> <a> N/A </a> </td>
+        {%endif%}
       </tr>
       {% endfor %}
 

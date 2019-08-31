@@ -317,6 +317,9 @@ class Season(db.Model):
         else:
             return recent_matches
 
+    def get_url(self):
+        return url_for('season.seasons', seasonid=self.id)
+
     def __repr__(self):
         return 'Season(id={}, user_id={}, name={}, start_date={}, end_date={})'.format(
             self.id, self.user_id, self.name, self.start_date, self.end_date)
@@ -458,6 +461,21 @@ class Match(db.Model):
     def get_server(self):
         return GameServer.query.filter_by(id=self.server_id).first()
 
+    def get_start_time(self):
+        return self.start_time
+
+    def get_end_time(self):
+        return self.end_time
+
+    def get_season(self):
+        if self.season_id:
+            return Season.query.get(self.season_id)
+        else:
+            return None
+            
+    def get_season_id(self):
+        return self.season_id
+
     def get_current_score(self):
         if self.max_maps == 1:
             mapstat = self.map_stats.first()
@@ -582,6 +600,9 @@ class Match(db.Model):
         if self.spectator_auths:
             for spectator in self.spectator_auths:
                 d['spectators']["players"].append(spectator)
+
+        if not d['spectators']['players']:
+            d['spectators'] = None
 
         if self.veto_mappool:
             d['maplist'] = []

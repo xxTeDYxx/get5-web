@@ -254,7 +254,8 @@ def match_create():
                         suc, new_auth = steamid.auth_to_steam64(auth)
                         if suc:
                             specList.append(new_auth)
-
+                if not specList:
+                    specList = None
                 # End Spectator Feature
 
                 match = Match.create(
