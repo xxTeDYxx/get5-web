@@ -505,6 +505,9 @@ class Match(db.Model):
         server.send_rcon_command(
             'get5_web_api_key ' + self.api_key)
 
+        # ***HACK FIX TO ENSURE CHECK_AUTHS WORKS AS INTENDED***
+        server.send_rcon_command('map de_dust2')
+
         if loadmatch_response:  # There should be no response
             return False
 
