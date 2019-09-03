@@ -78,7 +78,8 @@ def getPlayerLeaderboard(seasonid=None):
     lstAllPlayerDict = []
     playerValues = PlayerStats.query.all()
     matchQuery = Match.query.filter(
-        Match.season_id == seasonid).with_entities(Match.id)
+        Match.season_id == seasonid,
+        Match.cancelled == False).with_entities(Match.id)
     res = [int(r[0]) for r in matchQuery]
     # Filter through every steam ID
     for player in playerValues:
