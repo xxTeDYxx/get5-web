@@ -1,5 +1,4 @@
 {% extends "layout.html" %}
-
 {% block content %}
 <div id="content">
 
@@ -20,7 +19,9 @@
         <th>Season Name</th>
         <th>Start Date</th>
         <th>End Date</th>
-        <th>Leaderboard</th>
+        <th>Total Matches</th>
+        <th>Team Leaderboard</th>
+        <th>Individual Leaderboard</th>
       </tr>
     </thead>
     <tbody>
@@ -39,10 +40,17 @@
           {{ season.end_date.strftime('%Y-%m-%d') }}
           {% endif %}
         </td>
+
+
+        <td>{{ matches | selectattr('season_id', 'equalto', season.id) | map(attribute='season_id') | list | length }}</td>
+
         <td>
-          <a href="/leaderboard/season/{{season.id}}"> Leaderboard</a>
+          <a href="/leaderboard/season/{{season.id}}">Team Leaderboard</a>
         </td>
 
+        <td>
+          <a href="/leaderboard/season/{{season.id}}/players">Indvidual Leaderboard</a>
+        </td>
 
         {% if season.can_edit(user) %}
         <td>

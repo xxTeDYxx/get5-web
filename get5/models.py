@@ -284,7 +284,7 @@ class Season(db.Model):
         return self.name
 
     def set_data(self, user, name, start_date, end_date):
-        self.user_id = user.id
+        self.user_id = self.user_id
         self.name = name
         self.start_date = start_date
         self.end_date = end_date
@@ -316,6 +316,9 @@ class Season(db.Model):
             return []
         else:
             return recent_matches
+
+    def get_url(self):
+        return url_for('season.seasons', seasonid=self.id)
 
     def __repr__(self):
         return 'Season(id={}, user_id={}, name={}, start_date={}, end_date={})'.format(
@@ -372,13 +375,13 @@ class Match(db.Model):
     team2_series_score = db.Column(db.Integer, default=0)
     spectator_auths = db.Column(db.PickleType)
     private_match = db.Column(db.Boolean)
-
+    enforce_teams = db.Column(db.Boolean, default=True)
     @staticmethod
     def create(user, team1_id, team2_id, team1_string, team2_string,
                max_maps, skip_veto, title, veto_mappool, season_id,
                side_type, veto_first, server_id=None,
                team1_series_score=None, team2_series_score=None,
-               spectator_auths=None, private_match=False):
+               spectator_auths=None, private_match=False, enforce_teams=True):
         rv = Match()
         rv.user_id = user.id
         rv.team1_id = team1_id
@@ -402,6 +405,7 @@ class Match(db.Model):
         rv.team2_series_score = team2_series_score
         rv.spectator_auths = spectator_auths
         rv.private_match = private_match
+        rv.enforce_teams = enforce_teams
         db.session.add(rv)
         return rv
 
@@ -457,6 +461,21 @@ class Match(db.Model):
     def get_server(self):
         return GameServer.query.filter_by(id=self.server_id).first()
 
+    def get_start_time(self):
+        return self.start_time
+
+    def get_end_time(self):
+        return self.end_time
+
+    def get_season(self):
+        if self.season_id:
+            return Season.query.get(self.season_id)
+        else:
+            return None
+            
+    def get_season_id(self):
+        return self.season_id
+
     def get_current_score(self):
         if self.max_maps == 1:
             mapstat = self.map_stats.first()
@@ -485,6 +504,9 @@ class Match(db.Model):
 
         server.send_rcon_command(
             'get5_web_api_key ' + self.api_key)
+
+        # ***HACK FIX TO ENSURE CHECK_AUTHS WORKS AS INTENDED***
+        server.send_rcon_command('map de_dust2')
 
         if loadmatch_response:  # There should be no response
             return False
@@ -564,10 +586,9 @@ class Match(db.Model):
         add_team_data('team2', self.team2_id, self.team2_string)
 
         d['cvars'] = {}
-
         d['cvars']['get5_web_api_url'] = url_for(
-            'home', _external=True, _scheme='http')
-
+            'home', _external=True, _scheme='http')    
+        d['cvars']['get5_check_auths'] = "1" if self.enforce_teams else "0"
         # Add in for spectators modification.
         d['min_spectators_to_ready'] = 0
 
@@ -582,6 +603,9 @@ class Match(db.Model):
         if self.spectator_auths:
             for spectator in self.spectator_auths:
                 d['spectators']["players"].append(spectator)
+
+        if not d['spectators']['players']:
+            d['spectators'] = None
 
         if self.veto_mappool:
             d['maplist'] = []
@@ -675,20 +699,22 @@ class PlayerStats(db.Model):
         return get_steam_name(self.steam_id)
 
     def get_rating(self):
-        AverageKPR = 0.679
-        AverageSPR = 0.317
-        AverageRMK = 1.277
-        KillRating = float(self.kills) / float(self.roundsplayed) / AverageKPR
-        SurvivalRating = float(self.roundsplayed -
-                               self.deaths) / self.roundsplayed / AverageSPR
-        killcount = float(self.k1 + 4 * self.k2 + 9 *
-                          self.k3 + 16 * self.k4 + 25 * self.k5)
-        RoundsWithMultipleKillsRating = killcount / \
-            self.roundsplayed / AverageRMK
-        rating = (KillRating + 0.7 * SurvivalRating +
-                  RoundsWithMultipleKillsRating) / 2.7
-        return rating
-
+        try:
+            AverageKPR = 0.679
+            AverageSPR = 0.317
+            AverageRMK = 1.277
+            KillRating = float(self.kills) / float(self.roundsplayed) / AverageKPR
+            SurvivalRating = float(self.roundsplayed -
+                                self.deaths) / self.roundsplayed / AverageSPR
+            killcount = float(self.k1 + 4 * self.k2 + 9 *
+                            self.k3 + 16 * self.k4 + 25 * self.k5)
+            RoundsWithMultipleKillsRating = killcount / \
+                self.roundsplayed / AverageRMK
+            rating = (KillRating + 0.7 * SurvivalRating +
+                    RoundsWithMultipleKillsRating) / 2.7
+            return rating
+        except ZeroDivisionError:
+            return 0
     def get_kdr(self):
         if self.deaths == 0:
             return float(self.kills)

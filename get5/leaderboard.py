@@ -78,7 +78,8 @@ def getPlayerLeaderboard(seasonid=None):
     lstAllPlayerDict = []
     playerValues = PlayerStats.query.all()
     matchQuery = Match.query.filter(
-        Match.season_id == seasonid).with_entities(Match.id)
+        Match.season_id == seasonid,
+        Match.cancelled == False).with_entities(Match.id)
     res = [int(r[0]) for r in matchQuery]
     # Filter through every steam ID
     for player in playerValues:
@@ -134,10 +135,10 @@ def seasonal_leaderboard(seasonid):
 def seasonal_player_leaderboard(seasonid):
     season = Season.query.get_or_404(seasonid)
     playerValues = getPlayerLeaderboard(seasonid)
-    return render_template('statleaderboard.html', board=playerValues, season=season.name)
+    return render_template('statleaderboard.html', user=g.user, board=playerValues, season=season.name)
 
 
 @leaderboard_blueprint.route('/leaderboard/players')
 def player_leaderboard():
     playerValues = getPlayerLeaderboard()
-    return render_template('statleaderboard.html', board=playerValues)
+    return render_template('statleaderboard.html', user=g.user, board=playerValues)

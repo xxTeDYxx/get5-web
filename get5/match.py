@@ -133,6 +133,9 @@ class MatchForm(Form):
     private_match = BooleanField('Private Match?',
                                  default=False)
 
+    enforce_teams = BooleanField('Enforce Auths on Team',	
+                                 default=True)
+
     def add_teams(self, user):
         if self.team1_id.choices is None:
             self.team1_id.choices = []
@@ -177,7 +180,7 @@ class MatchForm(Form):
             self.season_selection.choices = []
         season_tuples = []
         season_tuples.append((0, 'No Season'))
-        for seasons in Season.query.filter(Season.end_date >= datetime.now()).order_by(-Season.id):
+        for seasons in Season.query.filter((Season.end_date >= datetime.now()) | (Season.end_date.is_(None))).order_by(-Season.id):
             season_tuples.append((seasons.id, seasons.name))
         self.season_selection.choices += season_tuples
 
@@ -251,7 +254,8 @@ def match_create():
                         suc, new_auth = steamid.auth_to_steam64(auth)
                         if suc:
                             specList.append(new_auth)
-
+                if not specList:
+                    specList = None
                 # End Spectator Feature
 
                 match = Match.create(
@@ -262,7 +266,7 @@ def match_create():
                     season_id, form.data['side_type'],
                     form.data['veto_first'], form.data['server_id'],
                     team1_series_score, team2_series_score, specList,
-                    form.data['private_match'])
+                    form.data['private_match'], form.data['enforce_teams'])
 
                 # Save plugin version data if we have it
                 if json_reply and 'plugin_version' in json_reply:
@@ -400,7 +404,6 @@ def match_scoreboard(matchid):
     matches = OrderedDict()
     match_num = 0
     sorted_player_dict = OrderedDict()
-    app.logger.info('{}'.format(map_stat_list))
     for map_stats in map_stat_list:
         for player in map_stats.player_stats:
             player_dict = merge(

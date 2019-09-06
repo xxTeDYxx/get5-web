@@ -43,8 +43,9 @@ season_blueprint = Blueprint('season', __name__)
 @season_blueprint.route('/seasons')
 def seasons():
     seasons = Season.query.order_by(-Season.id)
+    seasoned_matches = Match.query.filter(Match.season_id.isnot(None), Match.cancelled==False)
     return render_template('seasons.html', user=g.user, seasons=seasons,
-                           my_seasons=False, all_seasons=True)
+                           my_seasons=False, matches=seasoned_matches, all_seasons=True)
 
 
 @season_blueprint.route('/season/create', methods=['GET', 'POST'])
@@ -94,7 +95,6 @@ def seasons_user(userid):
     user = User.query.get_or_404(userid)
     seasons = user.seasons.order_by(-Season.id)
     is_owner = (g.user is not None) and (userid == g.user.id)
-    app.logger.info('User is {}'.format(g.user))
     return render_template('seasons.html', user=g.user, seasons=seasons,
                            my_seasons=is_owner, all_matches=False, season_owner=user)
 

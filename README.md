@@ -9,7 +9,7 @@
 
 
 
-This is a web panel meant to be used in conjunction with the [get5](https://github.com/splewis/get5) CS:GO server plugin. It provides a more convenient way of managing matches and match servers.
+This is a web panel meant to be used in conjunction with the [get5](https://github.com/splewis/get5) CS:GO server plugin. It provides a more convenient way of managing matches and match servers. **This webpanel is intended for competitive 5v5 leagues and scrims, and nothing more.**
 
 This fork of get5 introduces a few new features that are used within get5 already, but were not originally ported over to the experimental web-panel. I've tried to make the web panel a little bit more secure (storing passwords, etc), and more handy for people to organize matches (Seasons and Leaderboards). Right now it's considered complete as it fits my needs and small-scale application. If you have any feature suggestions, *please create an issue*. It's extremely unlikely I'll put any more work into it, but pull requests are always welcome with features, provided they've been tested and pass CI!
 
@@ -29,7 +29,7 @@ Once you do this, the site will send an rcon command to the game server `get5_lo
 
 As the match owner, you will be able to cancel the match. Additionally, on its matchpage there is a dropdown to run admin commands: add players to the teams if a ringer is needed, pause the match, load a match backup, list match backups, and run any rcon command.
 
-Note: when using this web panel, the CS:GO game servers **must** be have both the core get5 plugin and the get5_apistats plugin. This means the server must also be running the [Steamworks](https://forums.alliedmods.net/showthread.php?t=229556) and [SMJansson](https://forums.alliedmods.net/showthread.php?t=184604) extensions, as well as [System2](https://github.com/dordnung/System2/releases) (for automated demo uploads, if you so choose). If you are using the public webpanel, please do not do FTP uploads, as they will not link properly on the web-panel.
+Note: when using this web panel, the CS:GO game servers **must** be have both the core get5 plugin and the get5_apistats plugin. This means the server must also be running the [Steamworks](https://forums.alliedmods.net/showthread.php?t=229556) and [SMJansson](https://forums.alliedmods.net/showthread.php?t=184604) extensions, as well as [System2](https://github.com/dordnung/System2/releases) (for automated demo uploads, if you so choose). If you are using the public webpanel, please do not do FTP uploads, as they will not link properly on the web-panel itself, but will still upload to your personal FTP server.
 
 ## Screenshots
 
