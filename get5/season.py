@@ -95,7 +95,6 @@ def seasons_user(userid):
     user = User.query.get_or_404(userid)
     seasons = user.seasons.order_by(-Season.id)
     is_owner = (g.user is not None) and (userid == g.user.id)
-    app.logger.info('User is {}'.format(g.user))
     return render_template('seasons.html', user=g.user, seasons=seasons,
                            my_seasons=is_owner, all_matches=False, season_owner=user)
 

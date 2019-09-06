@@ -284,7 +284,7 @@ class Season(db.Model):
         return self.name
 
     def set_data(self, user, name, start_date, end_date):
-        self.user_id = user.id
+        self.user_id = self.user_id
         self.name = name
         self.start_date = start_date
         self.end_date = end_date

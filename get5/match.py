@@ -404,7 +404,6 @@ def match_scoreboard(matchid):
     matches = OrderedDict()
     match_num = 0
     sorted_player_dict = OrderedDict()
-    app.logger.info('{}'.format(map_stat_list))
     for map_stats in map_stat_list:
         for player in map_stats.player_stats:
             player_dict = merge(
