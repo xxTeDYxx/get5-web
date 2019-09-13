@@ -237,7 +237,7 @@ def get_metrics():
         Match.end_time is not None).count())
     add_val('Servers added', GameServer.query.count())
     add_val('Maps with stats saved', MapStats.query.count())
-    add_val('Unique players', PlayerStats.query.distinct().count())
+    add_val('Unique players', PlayerStats.query.distinct(PlayerStats.steam_id).count())
 
     return values
 
