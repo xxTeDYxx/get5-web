@@ -462,10 +462,10 @@ class Match(db.Model):
         return GameServer.query.filter_by(id=self.server_id).first()
 
     def get_start_time(self):
-        return self.start_time
+        return self.start_time if self.start_time is not None else ''
 
     def get_end_time(self):
-        return self.end_time
+        return self.end_time if self.end_time is not None else ''
 
     def get_season(self):
         if self.season_id:
