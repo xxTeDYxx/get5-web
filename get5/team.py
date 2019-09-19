@@ -157,6 +157,7 @@ for num in range(Team.MAXPLAYERS):
 @team_blueprint.route('/team/create', methods=['GET', 'POST'])
 def team_create():
     mock = config_setting("TESTING")
+    customNames = config_setting("CUSTOM_PLAYER_NAMES")
     if not g.user:
         return redirect('/login')
     form = TeamForm()
@@ -203,7 +204,7 @@ def team_create():
             flash_errors(form)
 
     return render_template('team_create.html', user=g.user, form=form,
-                           edit=False, is_admin=(util.is_admin(g.user) or util.is_super_admin(g.user)), MAXPLAYER=Team.MAXPLAYERS)
+                           edit=False, is_admin=(util.is_admin(g.user) or util.is_super_admin(g.user)), MAXPLAYER=Team.MAXPLAYERS, customNames=customNames)
 
 
 @team_blueprint.route('/team/<int:teamid>', methods=['GET'])
@@ -215,6 +216,7 @@ def team(teamid):
 @team_blueprint.route('/team/<int:teamid>/edit', methods=['GET', 'POST'])
 def team_edit(teamid):
     mock = config_setting("TESTING")
+    customNames = config_setting("CUSTOM_PLAYER_NAMES")
     team = Team.query.get_or_404(teamid)
     if not team.can_edit(g.user):
         raise BadRequestError("Not your team.")
@@ -243,7 +245,7 @@ def team_edit(teamid):
                     field.data = None
         form.public_team.data = team.public_team
         return render_template('team_create.html', user=g.user, form=form,
-                               edit=True, is_admin=util.is_admin(g.user), MAXPLAYER=Team.MAXPLAYERS)
+                               edit=True, is_admin=util.is_admin(g.user), MAXPLAYER=Team.MAXPLAYERS, customNames=customNames)
 
     elif request.method == 'POST':
         if form.validate():

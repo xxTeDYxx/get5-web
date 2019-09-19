@@ -122,7 +122,7 @@ def season_edit(seasonid):
             season.set_data(g.user, data['season_title'], data['start_date'],
                             data['end_date'])
             db.session.commit()
-            return redirect('/season/{}/{}'.format(season.user_id, season.id))
+            return redirect('/season/{}'.format(season.id))
         else:
             flash_errors(form)
 

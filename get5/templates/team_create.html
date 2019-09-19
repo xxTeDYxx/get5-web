@@ -56,12 +56,14 @@
             {{ form[authNum](class="form-control", placeholder="Any steamid format") }}
           </div>
         </div>
+        {% if customNames %}
         <div class="form-group">
             {{ form[prefNum].label(class="col-sm-2 control-label") }}
-              <div class="col-sm-7">
-                {{ form[prefNum](class="form-control", placeholder="Optional Match Name") }}
-              </div>
+            <div class="col-sm-7">
+              {{ form[prefNum](class="form-control", placeholder="Optional Match Name") }}
             </div>
+        </div>
+        {% endif %}
     {% endfor %}
 
 
