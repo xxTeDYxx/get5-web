@@ -5,6 +5,7 @@ SECRET_KEY = '???'  # Secret key used for flask cookies
 DATABASE_KEY = '???'  # Used for encryption on database. MUST BE 16 BYTES.
 WEBPANEL_NAME = 'Get5' # Used for the title header on the webpage.
 JSON_AS_ASCII = False #UTF-8 Encoding Issue.
+CUSTOM_PLAYER_NAMES = True
 ##### Everything below this line is optional to change
 
 import os
