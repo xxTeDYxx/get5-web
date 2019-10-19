@@ -696,7 +696,7 @@ def check_private_or_public(user, match, team1, team2):
             raise BadRequestError("Please login before viewing this match.")
         # Get team lists, and check if logged in user is part of match.
         if not (user.id == match.user_id) or (config_setting(
-                'ADMINS_ACCESS_ALL_MATCHES') and util.lis_admin(user)) or util.is_super_admin(user):
+                'ADMINS_ACCESS_ALL_MATCHES') and util.is_admin(user)) or util.is_super_admin(user):
             isPlayer = False
             playerstats_steam = PlayerStats.query(PlayerStats.steam_id).filter_by(
             match_id=match.id)
