@@ -111,6 +111,19 @@ public void OnPluginStart() {
   RegConsoleCmd("get5_web_available", Command_Avaliable);
   /** Create and exec plugin's configuration file **/
   AutoExecConfig(true, "get5api");
+
+  g_APIKeyCvar =
+      CreateConVar("get5_web_api_key", "", "Match API key, this is automatically set through rcon");
+  HookConVarChange(g_APIKeyCvar, ApiInfoChanged);
+
+  g_APIURLCvar = CreateConVar("get5_web_api_url", "", "URL the get5 api is hosted at, IGNORE AS IT IS SYSTEM SET.");
+
+  HookConVarChange(g_APIURLCvar, ApiInfoChanged);
+
+  RegConsoleCmd("get5_web_avaliable",
+                Command_Avaliable);  // legacy version since I'm bad at spelling
+  RegConsoleCmd("get5_web_available", Command_Avaliable);
+  
 }
 
 public Action Command_Avaliable(int client, int args) {
