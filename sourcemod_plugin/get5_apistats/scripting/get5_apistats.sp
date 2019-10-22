@@ -59,9 +59,6 @@ int g_FTPPort;
 ConVar g_FTPEnableCvar;
 bool g_FTPEnable;
 
-ConVar g_CompressEnableCvar;
-bool g_CompressEnable;
-
 char g_fileName[PLATFORM_MAX_PATH];
 
 #define LOGO_DIR "resource/flash/econ/tournaments/teams"
@@ -71,7 +68,7 @@ public Plugin myinfo = {
   name = "Get5 Web API Integration",
   author = "splewis/phlexplexico",
   description = "Records match stats to a get5-web api",
-  version = "0.2",
+  version = "0.4",
   url = "https://github.com/phlexplexico/get5-web"
 };
 // clang-format on
@@ -95,9 +92,6 @@ public void OnPluginStart() {
   g_FTPEnableCvar = 
       CreateConVar("get5_api_ftp_enabled", "0", "0 Disables FTP Upload, 1 Enables.");
 
-  g_CompressEnableCvar =
-      CreateConVar("get5_enabled_7z_compression", "0", "0 Disables zipping files, 1 enables.");
-
   g_APIKeyCvar =
       CreateConVar("get5_web_api_key", "", "Match API key, this is automatically set through rcon", FCVAR_DONTRECORD);
   HookConVarChange(g_APIKeyCvar, ApiInfoChanged);
@@ -111,18 +105,6 @@ public void OnPluginStart() {
   RegConsoleCmd("get5_web_available", Command_Avaliable);
   /** Create and exec plugin's configuration file **/
   AutoExecConfig(true, "get5api");
-
-  g_APIKeyCvar =
-      CreateConVar("get5_web_api_key", "", "Match API key, this is automatically set through rcon");
-  HookConVarChange(g_APIKeyCvar, ApiInfoChanged);
-
-  g_APIURLCvar = CreateConVar("get5_web_api_url", "", "URL the get5 api is hosted at, IGNORE AS IT IS SYSTEM SET.");
-
-  HookConVarChange(g_APIURLCvar, ApiInfoChanged);
-
-  RegConsoleCmd("get5_web_avaliable",
-                Command_Avaliable);  // legacy version since I'm bad at spelling
-  RegConsoleCmd("get5_web_available", Command_Avaliable);
   
 }
 
@@ -517,17 +499,7 @@ public void UploadDemo(const char[] filename, char zippedFile[PLATFORM_MAX_PATH]
     g_FTPUsernameCvar.GetString(g_FTPUsername, sizeof(g_FTPUsername));
     g_FTPPasswordCvar.GetString(g_FTPPassword, sizeof(g_FTPPassword));
     
-
-    // Will either be a zipped file or default filename.
-    if(g_CompressEnable) {
-      Format(zippedFile, sizeof(zippedFile), "%s.zip", filename);
-      // Callback has no way of getting filename really.
-      Format(g_fileName, sizeof(g_fileName), "%s.zip", filename);
-      System2_Compress(ExecuteCallback, filename, zippedFile);
-    } else {
-      Format(zippedFile, sizeof(zippedFile), "%s", filename);
-    }
-
+    Format(zippedFile, sizeof(zippedFile), "%s", filename);
     Format(remoteDemoPath, sizeof(remoteDemoPath), "%s/%s", g_FTPHost, zippedFile);
     LogDebug("Our File is: %s and remote demo path of %s", zippedFile, remoteDemoPath);
     System2FTPRequest ftpRequest = new System2FTPRequest(FtpResponseCallback, remoteDemoPath);
@@ -566,13 +538,7 @@ public void FtpResponseCallback(bool success, const char[] error, System2FTPRequ
     } else{
       LogError("There was a problem: %s", error);
     }
-}  
-
-public void ExecuteCallback(bool success, const char[] command, System2ExecuteOutput output, any data) {
-    if (!success || output.ExitStatus != 0) {
-        LogError("Couldn't execute commands %s successfully", command);
-    }
-}  
+}
 
 public void Get5_OnMapPicked(MatchTeam team, const char[] map){
   char teamString[64];

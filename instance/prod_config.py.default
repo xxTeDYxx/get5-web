@@ -52,16 +52,20 @@ DEFAULT_MAPLIST = [
 
 # You may set the game server to allow whitelisted steam ids to specatate.
 # By default, NO users can spectate matches.
+# Change [] out with your own SteamID. Example ["STEAMID64"]
 SPECTATOR_IDS = []
 
 # You may set the server to allow allow whitelisted steamids to login.
 # By default any user can login and create teams/servers/matches.
+# Change [] out with your own SteamID. Example ["STEAMID64"]
 WHITELISTED_IDS = []
 
 # Admins will have extra access to create "public" teams, and if ADMINS_ACCESS_ALL_MATCHES
 # is set, they can access admin info for all matches (can pause, cancel, etc.) ANY match.
+# Change [] out with your own SteamID. Example ["STEAMID64"]
 ADMIN_IDS = []
 
 # Super admins will have the most access, as if ADMINS_ACCESS_ALL_MATCHES was set.
 # They'll be able to access EVERYTHING for ANY match, as well as FORFEIT matches.
+# Change [] out with your own SteamID. Example ["STEAMID64"]
 SUPER_ADMIN_IDS = []
