@@ -34,8 +34,8 @@ def getLeaderboard(seasonid=None):
     # Building our own object requires matches, map_stats for each match.
     # Just build a dictionary with each match and stats?
     for match in totalMatches:
-        map_stats = MapStats.query.filter_by(
-            match_id=match.id)
+        map_stats = MapStats.query.filter(
+            MapStats.match_id==match.id, MapStats.winner != None)
         # Get the losing team, and scores for round difference.
         for all_stats in map_stats:
             winningRounds = 0
