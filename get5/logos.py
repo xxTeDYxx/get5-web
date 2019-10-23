@@ -23,12 +23,12 @@ def initialize_logos():
         team_tag = os.path.splitext(team_tag_filename)[0]
         _logos.add(team_tag)
 
-        for filename in glob.glob(os.path.join(pano_logo_path, '*.svg')):
-            team_tag_filename = os.path.basename(filename)
-            # Remove the extension
-            team_tag = os.path.splitext(team_tag_filename)[0]
-            if not has_logo(team_tag):
-                _logos.add(team_tag)
+    for filename in glob.glob(os.path.join(pano_logo_path, '*.svg')):
+        team_tag_filename = os.path.basename(filename)
+        # Remove the extension
+        team_tag = os.path.splitext(team_tag_filename)[0]
+        if not has_logo(team_tag):
+            _logos.add(team_tag)
 
 
 def add_new_logo(tag):
