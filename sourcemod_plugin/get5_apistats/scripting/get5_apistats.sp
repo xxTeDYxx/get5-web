@@ -59,7 +59,6 @@ int g_FTPPort;
 ConVar g_FTPEnableCvar;
 bool g_FTPEnable;
 
-char g_fileName[PLATFORM_MAX_PATH];
 
 #define LOGO_DIR "resource/flash/econ/tournaments/teams"
 #define PANO_DIR "materials/panorama/images/tournaments/teams"
@@ -492,7 +491,6 @@ public void Get5_OnDemoFinished(const char[] filename){
 
 public void UploadDemo(const char[] filename, char zippedFile[PLATFORM_MAX_PATH]){
   char remoteDemoPath[PLATFORM_MAX_PATH];
-  g_CompressEnable = g_CompressEnableCvar.BoolValue;
   if(filename[0]){
     g_FTPHostCvar.GetString(g_FTPHost, sizeof(g_FTPHost));
     g_FTPPort = g_FTPPortCvar.IntValue;
