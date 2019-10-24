@@ -245,7 +245,7 @@ def team_edit(teamid):
                     field.data = None
         form.public_team.data = team.public_team
         return render_template('team_create.html', user=g.user, form=form,
-                               edit=True, is_admin=util.is_admin(g.user), MAXPLAYER=Team.MAXPLAYERS, customNames=customNames)
+                               edit=True, is_admin=(util.is_admin(g.user) or util.is_super_admin(g.user)), MAXPLAYER=Team.MAXPLAYERS, customNames=customNames)
 
     elif request.method == 'POST':
         if form.validate():
