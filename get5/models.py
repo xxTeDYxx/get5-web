@@ -264,7 +264,7 @@ class Team(db.Model):
 class TeamAuthNames(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     team_id = db.Column(db.Integer, db.ForeignKey('team.id'))
-    auth = db.Column(db.Integer)
+    auth = db.Column(db.String(17))
     name = db.Column(db.String(40))
 
     @staticmethod
