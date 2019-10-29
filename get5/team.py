@@ -1,6 +1,7 @@
 from get5 import app, db, flash_errors, config_setting, BadRequestError
-from models import User, Team
+from models import User, Team, TeamAuthNames
 
+import itertools
 import countries
 import logos
 import steamid
@@ -193,6 +194,11 @@ def team_create():
 
             team = Team.create(g.user, name, tag, flag, logo,
                                auths, data['public_team'] and (util.is_admin(g.user) or util.is_super_admin(g.user)), pref_names)
+            db.session.commit()
+
+            for auth,name in itertools.izip_longest(auths,pref_names):
+                if auth:
+                    TeamAuthNames.set_or_create(team.id, auth, name)
 
             db.session.commit()
             app.logger.info(
@@ -263,10 +269,15 @@ def team_edit(teamid):
                 # Reinit our logos.
                 logos.add_new_logo(newLogoDetail)
                 data['logo'] = newLogoDetail
-
+            allAuths = form.get_auth_list()
+            allNames = form.get_pref_list()
             team.set_data(data['name'], data['tag'], data['country_flag'],
-                          data['logo'], form.get_auth_list(),
-                          public_team, form.get_pref_list())
+                          data['logo'], allAuths,
+                          public_team, allNames)
+            for auth,name in itertools.izip_longest(allAuths,allNames):
+                if auth:
+                    teamNames = TeamAuthNames.set_or_create(teamid, auth, name)
+
 
             db.session.commit()
             return redirect('/teams/{}'.format(team.user_id))
@@ -284,8 +295,11 @@ def team_delete(teamid):
     if not team.can_delete(g.user):
         raise BadRequestError("Cannot delete this team.")
 
+    if TeamAuthNames.query.filter_by(team_id=teamid).delete():
+        db.session.commit()
     if Team.query.filter_by(id=teamid).delete():
         db.session.commit()
+    
 
     return redirect('/myteams')
 

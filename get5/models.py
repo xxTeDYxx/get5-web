@@ -261,6 +261,29 @@ class Team(db.Model):
         return 'Team(id={}, user_id={}, name={}, flag={}, logo={}, public={})'.format(
             self.id, self.user_id, self.name, self.flag, self.logo, self.public_team)
 
+class TeamAuthNames(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id'))
+    auth = db.Column(db.Integer)
+    name = db.Column(db.String(40))
+
+    @staticmethod
+    def set_or_create(team_id, auth, name):
+        rv = TeamAuthNames.query.filter_by(team_id=team_id,auth=auth).first()
+        if rv is None:
+            rv = TeamAuthNames()
+            rv.set_data(team_id, auth, name)
+            db.session.add(rv)
+        else:
+            rv.set_data(team_id, auth, name)
+        return rv
+
+    def set_data(self, team_id, auth, name):
+        self.team_id = team_id
+        self.auth = auth
+        self.name = name if name else ''
+
+
 
 class Season(db.Model):
     id = db.Column(db.Integer, primary_key=True)
