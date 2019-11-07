@@ -4,7 +4,7 @@ from io import BytesIO as StringIO
 import steamid
 import get5
 from get5 import app, db, BadRequestError, config_setting
-from models import User, Team, Match, GameServer, Season, Veto, match_audit, MapStats, PlayerStats
+from models import User, Team, Match, GameServer, Season, Veto, match_audit, MapStats, PlayerStats, MatchSpectator
 from collections import OrderedDict
 from datetime import datetime
 import util
@@ -277,6 +277,12 @@ def match_create():
                 server.in_use = True
 
                 db.session.commit()
+
+                # Implement normalized spectator list.
+                if specList:
+                    for singleAuth in specList:
+                        MatchSpectator.set_or_create(match.id, auth)
+
                 app.logger.info('User {} created match {}, assigned to server {}'
                                 .format(g.user.id, match.id, server.id))
 

@@ -641,6 +641,26 @@ class Match(db.Model):
         return 'Match(id={})'.format(self.id)
 
 
+class MatchSpectator(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    match_id = db.Column(db.Integer, db.ForeignKey('match.id'))
+    auth = db.Column(db.String(17))
+
+    @staticmethod
+    def set_or_create(match_id, auth):
+        rv = MatchSpectator.query.filter_by(match_id=match_id,auth=auth).first()
+        if rv is None:
+            rv = MatchSpectator()
+            rv.set_data(match_id, auth)
+            db.session.add(rv)
+        else:
+            rv.set_data(match_id, auth)
+        return rv
+
+    def set_data(self, match_id, auth, name):
+        self.match_id = match_id
+        self.auth = auth
+
 class MapStats(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     match_id = db.Column(db.Integer, db.ForeignKey('match.id'))
