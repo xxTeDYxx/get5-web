@@ -257,12 +257,12 @@ def team_edit(teamid):
         if form.validate():
             data = form.data
             public_team = team.public_team
-            if util.is_admin(g.user):
+            if (util.is_admin(g.user) or util.is_super_admin(g.user)):
                 public_team = data['public_team']
 
             # Update the logo. Passing validation we have the filename in the
             # list now.
-            if not mock and util.is_admin(g.user) and form.upload_logo.data:
+            if not mock and (util.is_admin(g.user) or util.is_super_admin(g.user)) and form.upload_logo.data:
                 filename = secure_filename(form.upload_logo.data.filename)
                 index_of_dot = filename.index('.')
                 newLogoDetail = filename[:index_of_dot]
