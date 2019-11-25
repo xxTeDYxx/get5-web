@@ -657,7 +657,7 @@ class MatchSpectator(db.Model):
             rv.set_data(match_id, auth)
         return rv
 
-    def set_data(self, match_id, auth, name):
+    def set_data(self, match_id, auth):
         self.match_id = match_id
         self.auth = auth
 
