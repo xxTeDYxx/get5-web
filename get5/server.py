@@ -108,7 +108,7 @@ def server_edit(serverid):
             server.ip_string = data['ip_string']
             server.port = data['port']
             server.rcon_password = encRcon
-            server.public_server = (data['public_server'] and util.is_admin(g.user))
+            server.public_server = (data['public_server'] and (util.is_admin(g.user) or util.is_super_admin(g.user)))
 
             if mock or util.check_server_connection(server, dbKey):
                 db.session.commit()
