@@ -548,6 +548,8 @@ def match_adduser(matchid):
             command = 'get5_addplayer {} {}'.format(new_auth, team)
             response = server.send_rcon_command(command, raise_errors=True)
             match_audit.create(g.user.id, matchid, datetime.now(), command)
+            if (team == "spec"):
+                MatchSpectator.set_or_create(matchid, new_auth)
             db.session.commit()
             flash(response)
         except util.RconError as e:
@@ -630,6 +632,7 @@ def delete_cancelled_matches():
         PlayerStats.query.filter_by(match_id=match.id).delete()
         MapStats.query.filter_by(match_id=match.id).delete()
         Veto.query.filter_by(match_id=match.id).delete()
+        MatchSpectator.query.filter_by(match_id=match.id).delete()
     matches.delete()
     db.session.commit()
     return redirect('/matches/' + str(g.user.id))
