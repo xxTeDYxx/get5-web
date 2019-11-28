@@ -43,7 +43,7 @@ def server_create():
     if request.method == 'POST':
         num_servers = g.user.servers.count()
         max_servers = config_setting('USER_MAX_SERVERS')
-        if max_servers >= 0 and num_servers >= max_servers and not (g.user.admin or g.user.super_admin:):
+        if max_servers >= 0 and num_servers >= max_servers and not (g.user.admin or g.user.super_admin):
             flash('You already have the maximum number of servers ({}) stored'.format(
                 num_servers))
 
