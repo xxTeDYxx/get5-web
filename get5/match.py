@@ -673,7 +673,7 @@ def map_stat_to_csv(matchid, mapid):
 
 
 def super_admintools_check(match):
-    if g.user is None:
+    if not g.user:
         raise BadRequestError('You do not have access to this page')
 
     if not util.is_super_admin(g.user):
@@ -687,7 +687,7 @@ def super_admintools_check(match):
 
 
 def admintools_check(match):
-    if g.user is None:
+    if not g.user:
         raise BadRequestError('You do not have access to this page')
 
     grant_admin_access = util.is_admin(g.user) and get5.config_setting(
