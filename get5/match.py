@@ -480,8 +480,9 @@ def match_rcon(matchid):
     owns_server = util.is_server_owner(g.user, server)
     is_sadmin = g.user.super_admin
     # Check to see if user owns server.
-    if not owns_server or not is_sadmin:
-        raise BadRequestError('You are not the server owner.')
+    if not owns_server:
+        if not is_sadmin:
+            raise BadRequestError('You are not the server owner.')
 
     if command:
         try:
