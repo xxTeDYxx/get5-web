@@ -142,7 +142,7 @@ def server_delete(serverid):
 
     GameServer.query.filter_by(id=serverid).delete()
     db.session.commit()
-    return redirect('myservers')
+    return redirect('/myservers')
 
 
 @server_blueprint.route("/myservers")
