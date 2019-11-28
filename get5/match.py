@@ -184,7 +184,7 @@ class MatchForm(Form):
             ourSeasons = Season.query.filter((Season.end_date >= datetime.now()) | (Season.end_date.is_(None))).order_by(-Season.id)
         else:
             ourSeasons = Season.query.filter((Season.end_date >= datetime.now()) | (Season.end_date.is_(None))).filter(Season.user_id == g.user.id).order_by(-Season.id)
-        for seasons in :
+        for seasons in ourSeasons:
             season_tuples.append((seasons.id, seasons.name))
         self.season_selection.choices += season_tuples
 
