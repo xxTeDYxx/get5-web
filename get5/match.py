@@ -304,7 +304,7 @@ def match_create():
 @match_blueprint.route('/match/<int:matchid>/forfeit/<int:teamwinner>')
 def match_forfeit(matchid, teamwinner):
     match = Match.query.get_or_404(matchid)
-    super_admintools_check(g.user, match)
+    super_admintools_check(match)
     if teamwinner == 1:
         winnerId = match.team1_id
     elif teamwinner == 2:
@@ -352,7 +352,7 @@ def match(matchid):
         server = None
     team1 = Team.query.get_or_404(match.team1_id)
     team2 = Team.query.get_or_404(match.team2_id)
-    check_private_or_public(g.user, match, team1, team2)
+    check_private_or_public(match, team1, team2)
 
     map_stat_list = match.map_stats.all()
     completed = match.winner
@@ -404,7 +404,7 @@ def match_scoreboard(matchid):
     match = Match.query.get_or_404(matchid)
     team1 = Team.query.get_or_404(match.team1_id)
     team2 = Team.query.get_or_404(match.team2_id)
-    check_private_or_public(g.user, match, team1, team2)
+    check_private_or_public(match, team1, team2)
     map_num = 0
     map_stat_list = match.map_stats.all()
     player_dict = {}
@@ -454,7 +454,7 @@ def match_config(matchid):
 def match_cancel(matchid):
     app.logger.info("Match server id is: {}".format(matchid))
     match = Match.query.get_or_404(matchid)
-    admintools_check(g.user, match)
+    admintools_check(match)
 
     match.cancelled = True
     server = GameServer.query.get(match.server_id)
@@ -505,7 +505,7 @@ def match_rcon(matchid):
 @match_blueprint.route('/match/<int:matchid>/pause')
 def match_pause(matchid):
     match = Match.query.get_or_404(matchid)
-    admintools_check(g.user, match)
+    admintools_check(match)
     server = GameServer.query.get_or_404(match.server_id)
 
     try:
@@ -520,7 +520,7 @@ def match_pause(matchid):
 @match_blueprint.route('/match/<int:matchid>/unpause')
 def match_unpause(matchid):
     match = Match.query.get_or_404(matchid)
-    admintools_check(g.user, match)
+    admintools_check(match)
     server = GameServer.query.get_or_404(match.server_id)
 
     try:
@@ -535,7 +535,8 @@ def match_unpause(matchid):
 @match_blueprint.route('/match/<int:matchid>/adduser')
 def match_adduser(matchid):
     match = Match.query.get_or_404(matchid)
-    admintools_check(g.user, match)
+    app.logger.info("Our user: {}".format(g.user))
+    admintools_check(match)
     server = GameServer.query.get_or_404(match.server_id)
     team = request.values.get('team')
     if not team:
@@ -564,7 +565,7 @@ def match_adduser(matchid):
 @match_blueprint.route('/match/<int:matchid>/backup', methods=['GET'])
 def match_backup(matchid):
     match = Match.query.get_or_404(matchid)
-    admintools_check(g.user, match)
+    admintools_check(match)
     server = GameServer.query.get_or_404(match.server_id)
     file = request.values.get('file')
 
@@ -671,11 +672,11 @@ def map_stat_to_csv(matchid, mapid):
 # Begin Helper Functions
 
 
-def super_admintools_check(user, match):
-    if user is None:
+def super_admintools_check(match):
+    if g.user is None:
         raise BadRequestError('You do not have access to this page')
 
-    if not util.is_super_admin(user):
+    if not util.is_super_admin(g.user):
         raise BadRequestError('You do not have access to this page')
 
     if match.finished():
@@ -685,13 +686,13 @@ def super_admintools_check(user, match):
         raise BadRequestError('Match is cancelled')
 
 
-def admintools_check(user, match):
-    if user is None:
+def admintools_check(match):
+    if g.user is None:
         raise BadRequestError('You do not have access to this page')
 
-    grant_admin_access = util.is_admin(user) and get5.config_setting(
+    grant_admin_access = util.is_admin(g.user) and get5.config_setting(
         'ADMINS_ACCESS_ALL_MATCHES')
-    if user.id != match.user_id and not grant_admin_access:
+    if g.user.id != match.user_id and not grant_admin_access:
         raise BadRequestError('You do not have access to this page')
 
     if match.finished():
@@ -700,24 +701,24 @@ def admintools_check(user, match):
     if match.cancelled:
         raise BadRequestError('Match is cancelled')
 
-def check_private_or_public(user, match, team1, team2):
+def check_private_or_public(match, team1, team2):
     if match.is_private_match():
-        if not user:
+        if not g.user:
             raise BadRequestError("Please login before viewing this match.")
         # Get team lists, and check if logged in user is part of match.
-        if (user.id == match.user_id) or (config_setting(
-                'ADMINS_ACCESS_ALL_MATCHES') and util.is_admin(user)) or util.is_super_admin(user):
+        if (g.user.id == match.user_id) or (config_setting(
+                'ADMINS_ACCESS_ALL_MATCHES') and util.is_admin(g.user)) or util.is_super_admin(g.user):
             isPlayer = False
             playerstats_steam = [r.steam_id for r in PlayerStats.query.filter(
                 PlayerStats.match_id == match.id)]
             playerList = list(
                 set(team1.auths + team2.auths + playerstats_steam))
             app.logger.info("Our list: {}".format(playerList))
-            if (config_setting('ADMINS_ACCESS_ALL_MATCHES') and util.is_admin(user)) or util.is_super_admin(user):
+            if (config_setting('ADMINS_ACCESS_ALL_MATCHES') and util.is_admin(g.user)) or util.is_super_admin(g.user):
                 isPlayer = True
             else:
                 for player in playerList:
-                    if user.steam_id == player:
+                    if g.user.steam_id == player:
                         isPlayer = True
                         break
             if not isPlayer:
