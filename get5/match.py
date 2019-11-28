@@ -180,7 +180,11 @@ class MatchForm(Form):
             self.season_selection.choices = []
         season_tuples = []
         season_tuples.append((0, 'No Season'))
-        for seasons in Season.query.filter((Season.end_date >= datetime.now()) | (Season.end_date.is_(None))).order_by(-Season.id):
+        if g.user.super_admin or g.user.admin:
+            ourSeasons = Season.query.filter((Season.end_date >= datetime.now()) | (Season.end_date.is_(None))).order_by(-Season.id)
+        else:
+            ourSeasons = Season.query.filter((Season.end_date >= datetime.now()) | (Season.end_date.is_(None))).filter(Season.user_id == g.user.id).order_by(-Season.id)
+        for seasons in :
             season_tuples.append((seasons.id, seasons.name))
         self.season_selection.choices += season_tuples
 
