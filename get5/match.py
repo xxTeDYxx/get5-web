@@ -200,7 +200,7 @@ def match_create():
         max_matches = config_setting('USER_MAX_MATCHES')
         season_id = None
 
-        if max_matches >= 0 and num_matches >= max_matches and not (util.is_admin(g.user) or util.is_super_admin(g.user)):
+        if max_matches >= 0 and num_matches >= max_matches and not (g.user.admin or g.user.super_admin):
             flash('You already have the maximum number of matches ({}) created'.format(
                 num_matches))
 
@@ -380,8 +380,8 @@ def match(matchid):
     if g.user:
         is_match_owner = (g.user.id == match.user_id)
         has_admin_access = (config_setting(
-            'ADMINS_ACCESS_ALL_MATCHES') and util.is_admin(g.user))
-        has_super_admin_access = util.is_super_admin(g.user)
+            'ADMINS_ACCESS_ALL_MATCHES') and g.user.admin)
+        has_super_admin_access = g.user.super_admin
         is_server_op = util.is_server_owner(g.user, server)
     return render_template(
         'match.html', user=g.user, admin_access=has_admin_access,
@@ -478,7 +478,7 @@ def match_rcon(matchid):
     command = request.values.get('command')
     server = GameServer.query.get_or_404(match.server_id)
     owns_server = util.is_server_owner(g.user, server)
-    is_sadmin = util.is_super_admin(g.user)
+    is_sadmin = g.user.super_admin
     # Check to see if user owns server.
     if not owns_server or not is_sadmin:
         raise BadRequestError('You are not the server owner.')
@@ -676,7 +676,7 @@ def super_admintools_check(match):
     if not g.user:
         raise BadRequestError('You do not have access to this page')
 
-    if not util.is_super_admin(g.user):
+    if not g.user.super_admin:
         raise BadRequestError('You do not have access to this page')
 
     if match.finished():
@@ -690,7 +690,7 @@ def admintools_check(match):
     if not g.user:
         raise BadRequestError('You do not have access to this page')
 
-    grant_admin_access = util.is_admin(g.user) and get5.config_setting(
+    grant_admin_access = g.user.admin and get5.config_setting(
         'ADMINS_ACCESS_ALL_MATCHES')
     if g.user.id != match.user_id and not grant_admin_access:
         raise BadRequestError('You do not have access to this page')
@@ -707,14 +707,14 @@ def check_private_or_public(match, team1, team2):
             raise BadRequestError("Please login before viewing this match.")
         # Get team lists, and check if logged in user is part of match.
         if (g.user.id == match.user_id) or (config_setting(
-                'ADMINS_ACCESS_ALL_MATCHES') and util.is_admin(g.user)) or util.is_super_admin(g.user):
+                'ADMINS_ACCESS_ALL_MATCHES') and g.user.admin) or g.user.super_admin:
             isPlayer = False
             playerstats_steam = [r.steam_id for r in PlayerStats.query.filter(
                 PlayerStats.match_id == match.id)]
             playerList = list(
                 set(team1.auths + team2.auths + playerstats_steam))
             app.logger.info("Our list: {}".format(playerList))
-            if (config_setting('ADMINS_ACCESS_ALL_MATCHES') and util.is_admin(g.user)) or util.is_super_admin(g.user):
+            if (config_setting('ADMINS_ACCESS_ALL_MATCHES') and g.user.admin) or g.user.super_admin:
                 isPlayer = True
             else:
                 for player in playerList:
