@@ -690,7 +690,7 @@ def admintools_check(match):
     if not g.user:
         raise BadRequestError('You do not have access to this page')
 
-    grant_admin_access = g.user.admin and get5.config_setting(
+    grant_admin_access = (g.user.admin or g.user.super_admin) and get5.config_setting(
         'ADMINS_ACCESS_ALL_MATCHES')
     if g.user.id != match.user_id and not grant_admin_access:
         raise BadRequestError('You do not have access to this page')
