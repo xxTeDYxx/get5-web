@@ -52,7 +52,7 @@ class User(db.Model):
         return self.matches.filter_by(cancelled=False).limit(limit)
 
     def __repr__(self):
-        return 'User(id={}, steam_id={}, name={}, admin={} super_admin={})'.format(
+        return 'User(id={}, steam_id={}, name={}, admin={}, super_admin={})'.format(
             self.id, self.steam_id, self.name, self.admin, self.super_admin)
 
 
