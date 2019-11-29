@@ -262,7 +262,7 @@ def team_edit(teamid):
 
             # Update the logo. Passing validation we have the filename in the
             # list now.
-            if not mock and (g.user.admin or util.g.user.super_admin) and form.upload_logo.data:
+            if not mock and (g.user.admin or g.user.super_admin) and form.upload_logo.data:
                 filename = secure_filename(form.upload_logo.data.filename)
                 index_of_dot = filename.index('.')
                 newLogoDetail = filename[:index_of_dot]
