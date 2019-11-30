@@ -74,7 +74,7 @@ def server_create():
             flash_errors(form)
 
     return render_template('server_create.html', user=g.user, form=form,
-                           edit=False, is_admin=(g.user.admin or g.user.super_admin))
+                           edit=False, is_admin=g.user.admin, is_sadmin=g.user.super_admin)
 
 
 @server_blueprint.route('/server/<int:serverid>/edit', methods=['GET', 'POST'])
