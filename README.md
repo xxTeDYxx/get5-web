@@ -5,9 +5,9 @@
 [![GitHub Downloads](https://img.shields.io/github/downloads/phlexplexico/get5-web/total.svg?label=Downloads)](https://github.com/phlexplexico/get5-web/releases/latest)
 ---
 
-**Status: Supported - End of Life Jan. 2020**
+**Status: NOT Supported - End of Life Jan. 2020**
 
-_As of January 1st, 2020, this application will no longer be supported with any updates. Issues will be created to help assist setup and point out any bugs. If someone would like to take over, please make a fork and make some PRs to fix any issues. Thank you everyone for finding this web panel, and I hope you still find use for this old technology. Some new development is coming down the pipe elsewhere, which I hope will help other developers make their own implementations of get5-web._
+_As of January 1st, 2020, this application will no longer be supported with any updates. Issues will be created to help assist setup and point out any bugs. If someone would like to take over, please make a fork and make some PRs to fix any issues. If you would even like, merge them back here with a link to your fork in the README. Thank you everyone for finding this web panel, and I hope you still find use for this old technology. Some new development is coming down the pipe elsewhere, which I hope will help other developers make their own implementations of get5-web._
 
 This is a web panel meant to be used in conjunction with the [get5](https://github.com/splewis/get5) CS:GO server plugin. It provides a more convenient way of managing matches and match servers. **This webpanel is intended for competitive 5v5 leagues and scrims, and nothing more.**
 
