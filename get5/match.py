@@ -30,7 +30,7 @@ class MultiCheckboxField(SelectMultipleField):
 def different_teams_validator(form, field):
     if form.team1_id.data == form.team2_id.data:
         raise ValidationError('Teams cannot be equal')
-
+        
 
 def mappool_validator(form, field):
     if 'preset' in form.series_type.data and len(form.veto_mappool.data) != 1:
@@ -136,6 +136,10 @@ class MatchForm(Form):
     enforce_teams = BooleanField('Enforce Auths on Team',	
                                  default=True)
 
+    min_player_ready = IntegerField('Minimum Players Ready',
+                                    default=5,
+                                    validators=[validators.required(), validators.NumberRange(1, 5)])
+    
     def add_teams(self, user):
         if self.team1_id.choices is None:
             self.team1_id.choices = []
@@ -270,7 +274,8 @@ def match_create():
                     season_id, form.data['side_type'],
                     form.data['veto_first'], form.data['server_id'],
                     team1_series_score, team2_series_score, specList,
-                    form.data['private_match'], form.data['enforce_teams'])
+                    form.data['private_match'], form.data['enforce_teams'], 
+                    form.data['min_player_ready'])
 
                 # Save plugin version data if we have it
                 if json_reply and 'plugin_version' in json_reply:

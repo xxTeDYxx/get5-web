@@ -399,12 +399,13 @@ class Match(db.Model):
     spectator_auths = db.Column(db.PickleType)
     private_match = db.Column(db.Boolean)
     enforce_teams = db.Column(db.Boolean, default=True)
+    min_player_ready = db.Column(db.Integer, default=5)
     @staticmethod
     def create(user, team1_id, team2_id, team1_string, team2_string,
                max_maps, skip_veto, title, veto_mappool, season_id,
                side_type, veto_first, server_id=None,
                team1_series_score=None, team2_series_score=None,
-               spectator_auths=None, private_match=False, enforce_teams=True):
+               spectator_auths=None, private_match=False, enforce_teams=True, min_player_ready=5):
         rv = Match()
         rv.user_id = user.id
         rv.team1_id = team1_id
@@ -429,6 +430,7 @@ class Match(db.Model):
         rv.spectator_auths = spectator_auths
         rv.private_match = private_match
         rv.enforce_teams = enforce_teams
+        rv.min_player_ready = min_player_ready
         db.session.add(rv)
         return rv
 
@@ -567,13 +569,17 @@ class Match(db.Model):
         d['match_title'] = self.title
         d['side_type'] = self.side_type
         d['veto_first'] = self.veto_first
-
         d['skip_veto'] = self.skip_veto
         if self.max_maps == 2:
             d['bo2_series'] = True
         else:
             d['maps_to_win'] = self.max_maps / 2 + 1
 
+        try:
+            d['min_players_to_ready'] = self.min_player_ready
+        except:
+            d['min_players_to_ready'] = 5
+            
         def add_team_data(teamkey, teamid, matchtext):
             team = Team.query.get(teamid)
             if not team:
