@@ -19,15 +19,15 @@ _IF YOU HAVE ANY ISSUES WITH THE WEBPANEL OR THE API_STATS PLUGIN, **PLEASE REPO
 
 ## How to use it:
 
-1a. Download the new get5_apistats.smx from the [releases](https://github.com/PhlexPlexico/get5-web/releases) page.
+1. Download the new get5_apistats.smx from the [releases](https://github.com/PhlexPlexico/get5-web/releases) page.
 
-1b. Create your game servers on the "Add a server" page by giving their ip, port, and rcon password
+2. Create your game servers on the "Add a server" page by giving their ip, port, and rcon password
 
-2. Create teams on the "Create a Team" page by listing the steamids for each of the players
+3. Create teams on the "Create a Team" page by listing the steamids for each of the players
 
-3. Go to the "Create a Match" page, selecting the teams, server, and rules for the match
+4. Go to the "Create a Match" page, selecting the teams, server, and rules for the match
 
-4. Optional - Create a season with a given date range to keep track for a subset of matches.
+5. Optional - Create a season with a given date range to keep track for a subset of matches.
 
 
 Once you do this, the site will send an rcon command to the game server `get5_loadmatch_url <webserver>/match/<matchid>/config`, which will load the match config onto the gameserver automatically for you. Stats and game status will automatically be updated on the webpage.
