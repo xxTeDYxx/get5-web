@@ -577,8 +577,10 @@ class Match(db.Model):
 
         try:
             d['min_players_to_ready'] = self.min_player_ready
+            d['players_per_team'] = self.min_player_ready
         except:
             d['min_players_to_ready'] = 5
+            d['players_per_team'] = 5
             
         def add_team_data(teamkey, teamid, matchtext):
             team = Team.query.get(teamid)

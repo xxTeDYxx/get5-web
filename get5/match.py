@@ -136,9 +136,9 @@ class MatchForm(Form):
     enforce_teams = BooleanField('Enforce Auths on Team',	
                                  default=True)
 
-    min_player_ready = IntegerField('Minimum Players Ready',
+    min_player_ready = IntegerField('Max # Players Per Team',
                                     default=5,
-                                    validators=[validators.required(), validators.NumberRange(1, 5)])
+                                    validators=[validators.required(), validators.NumberRange(1, 10)])
     
     def add_teams(self, user):
         if self.team1_id.choices is None:
