@@ -600,9 +600,9 @@ def match_backup(matchid):
             flash('Restored backup file {}'.format(file))
         else:
             flash('Failed to restore backup file {}'.format(file))
-            return redirect('match/{}/backup'.format(matchid))
+            return redirect('/match/{}/backup'.format(matchid))
 
-        return redirect('match/{}'.format(matchid))
+        return redirect('/match/{}'.format(matchid))
 
 
 @match_blueprint.route("/matches")
