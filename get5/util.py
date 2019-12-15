@@ -187,14 +187,4 @@ def is_server_owner(user, server):
     else:
         return False
 
-def is_super_admin(user):
-    if user is None:
-        return False
-
-    return user.super_admin
-
-def is_admin(user):
-    if user is None:
-        return False
-
-    return user.admin
+    return bool(user.admin)

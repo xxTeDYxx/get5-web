@@ -5,9 +5,9 @@
 [![GitHub Downloads](https://img.shields.io/github/downloads/phlexplexico/get5-web/total.svg?label=Downloads)](https://github.com/phlexplexico/get5-web/releases/latest)
 ---
 
-**Status: Supported**
+**Status: NOT Supported - End of Life Jan. 2020**
 
-
+_As of January 1st, 2020, this application will no longer be supported with any updates. Issues will be created to help assist setup and point out any bugs. If someone would like to take over, please make a fork and make some PRs to fix any issues. If you would even like, merge them back here with a link to your fork in the README. Thank you everyone for finding this web panel, and I hope you still find use for this old technology. Some new development is coming down the pipe elsewhere, which I hope will help other developers make their own implementations of get5-web._
 
 This is a web panel meant to be used in conjunction with the [get5](https://github.com/splewis/get5) CS:GO server plugin. It provides a more convenient way of managing matches and match servers. **This webpanel is intended for competitive 5v5 leagues and scrims, and nothing more.**
 
@@ -19,11 +19,16 @@ _IF YOU HAVE ANY ISSUES WITH THE WEBPANEL OR THE API_STATS PLUGIN, **PLEASE REPO
 
 ## How to use it:
 
-1a. Download the new get5_apistats.smx from the [releases](https://github.com/PhlexPlexico/get5-web/releases) page.
-1b. Create your game servers on the "Add a server" page by giving their ip, port, and rcon password
-2. Create teams on the "Create a Team" page by listing the steamids for each of the players
-3. Go to the "Create a Match" page, selecting the teams, server, and rules for the match
-4. Optional - Create a season with a given date range to keep track for a subset of matches.
+1. Download the new get5_apistats.smx from the [releases](https://github.com/PhlexPlexico/get5-web/releases) page.
+
+2. Create your game servers on the "Add a server" page by giving their ip, port, and rcon password
+
+3. Create teams on the "Create a Team" page by listing the steamids for each of the players
+
+4. Go to the "Create a Match" page, selecting the teams, server, and rules for the match
+
+5. Optional - Create a season with a given date range to keep track for a subset of matches.
+
 
 Once you do this, the site will send an rcon command to the game server `get5_loadmatch_url <webserver>/match/<matchid>/config`, which will load the match config onto the gameserver automatically for you. Stats and game status will automatically be updated on the webpage.
 
@@ -58,7 +63,9 @@ Please see the [installation instructions](https://github.com/PhlexPlexico/get5-
 ## How do the game server and web panel communicate?
 
 1. When a server is added the web server will send `get5_web_avaliable` command through rcon that will check for the appropriate get5 plugins to be installed on the server
+
 2. When a match is assigned to a server, the `get5_loadmatch_url` command is used through rcon to tell the websever a file to download the get5 match config from
+
 3. When stats begin to update (map start, round end, map end, series end), the game server plugins will send HTTP requests to the web server, using a per-match API token set in the `get5_web_api_key` cvar when the match was assigned to the server
 
 ## Other useful commands:

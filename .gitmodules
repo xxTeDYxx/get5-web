@@ -1,0 +1,4 @@
+[submodule "sourcemod_plugin/get5-webapi"]
+	path = sourcemod_plugin/get5-webapi
+	url = https://github.com/PhlexPlexico/get5-webapi
+	branch = master

@@ -1,6 +1,7 @@
 from get5 import app, db, flash_errors, config_setting, BadRequestError
-from models import User, Team
+from models import User, Team, TeamAuthNames
 
+import itertools
 import countries
 import logos
 import steamid
@@ -44,7 +45,7 @@ def valid_file(form, field):
     mock = config_setting("TESTING")
     if mock:
         return
-    elif not util.is_admin(g.user):
+    elif not g.user.admin:
         return
     filename = secure_filename(field.data.filename)
     # Safe method.
@@ -167,7 +168,7 @@ def team_create():
     if request.method == 'POST':
         num_teams = g.user.teams.count()
         max_teams = config_setting('USER_MAX_TEAMS')
-        if max_teams >= 0 and num_teams >= max_teams and not (util.is_admin(g.user) or util.is_super_admin(g.user)):
+        if max_teams >= 0 and num_teams >= max_teams and not (g.user.admin or g.user.super_admin):
             flash(
                 'You already have the maximum number of teams ({}) stored'.format(num_teams))
 
@@ -182,7 +183,7 @@ def team_create():
 
             # Update the logo. Passing validation we have the filename in the
             # list now.
-            if not mock and (util.is_admin(g.user) or util.is_super_admin(g.user)) and form.upload_logo.data:
+            if not mock and (g.user.admin or g.user.super_admin) and form.upload_logo.data:
                 filename = secure_filename(form.upload_logo.data.filename)
                 index_of_dot = filename.index('.')
                 newLogoDetail = filename[:index_of_dot]
@@ -192,7 +193,12 @@ def team_create():
                 data['logo'] = newLogoDetail
 
             team = Team.create(g.user, name, tag, flag, logo,
-                               auths, data['public_team'] and (util.is_admin(g.user) or util.is_super_admin(g.user)), pref_names)
+                               auths, data['public_team'] and (g.user.admin or g.user.super_admin), pref_names)
+            db.session.commit()
+
+            for auth,name in itertools.izip_longest(auths,pref_names):
+                if auth:
+                    TeamAuthNames.set_or_create(team.id, auth, name)
 
             db.session.commit()
             app.logger.info(
@@ -204,7 +210,7 @@ def team_create():
             flash_errors(form)
 
     return render_template('team_create.html', user=g.user, form=form,
-                           edit=False, is_admin=(util.is_admin(g.user) or util.is_super_admin(g.user)), MAXPLAYER=Team.MAXPLAYERS, customNames=customNames)
+                           edit=False, is_admin=(g.user.admin or g.user.super_admin), MAXPLAYER=Team.MAXPLAYERS, customNames=customNames)
 
 
 @team_blueprint.route('/team/<int:teamid>', methods=['GET'])
@@ -245,28 +251,33 @@ def team_edit(teamid):
                     field.data = None
         form.public_team.data = team.public_team
         return render_template('team_create.html', user=g.user, form=form,
-                               edit=True, is_admin=util.is_admin(g.user), MAXPLAYER=Team.MAXPLAYERS, customNames=customNames)
+                               edit=True, is_admin=(g.user.admin or g.user.super_admin), MAXPLAYER=Team.MAXPLAYERS, customNames=customNames)
 
     elif request.method == 'POST':
         if form.validate():
             data = form.data
             public_team = team.public_team
-            if util.is_admin(g.user):
+            if (g.user.admin or g.user.super_admin):
                 public_team = data['public_team']
 
             # Update the logo. Passing validation we have the filename in the
             # list now.
-            if not mock and util.is_admin(g.user) and form.upload_logo.data:
+            if not mock and (g.user.admin or g.user.super_admin) and form.upload_logo.data:
                 filename = secure_filename(form.upload_logo.data.filename)
                 index_of_dot = filename.index('.')
                 newLogoDetail = filename[:index_of_dot]
                 # Reinit our logos.
                 logos.add_new_logo(newLogoDetail)
                 data['logo'] = newLogoDetail
-
+            allAuths = form.get_auth_list()
+            allNames = form.get_pref_list()
             team.set_data(data['name'], data['tag'], data['country_flag'],
-                          data['logo'], form.get_auth_list(),
-                          public_team, form.get_pref_list())
+                          data['logo'], allAuths,
+                          public_team, allNames)
+            for auth,name in itertools.izip_longest(allAuths,allNames):
+                if auth:
+                    teamNames = TeamAuthNames.set_or_create(teamid, auth, name)
+
 
             db.session.commit()
             return redirect('/teams/{}'.format(team.user_id))
@@ -275,7 +286,7 @@ def team_edit(teamid):
 
     return render_template(
         'team_create.html', user=g.user, form=form, edit=True,
-        is_admin=util.is_admin(g.user), MAXPLAYER=Team.MAXPLAYERS)
+        is_admin=g.user.admin, MAXPLAYER=Team.MAXPLAYERS)
 
 
 @team_blueprint.route('/team/<int:teamid>/delete')
@@ -284,8 +295,11 @@ def team_delete(teamid):
     if not team.can_delete(g.user):
         raise BadRequestError("Cannot delete this team.")
 
+    if TeamAuthNames.query.filter_by(team_id=teamid).delete():
+        db.session.commit()
     if Team.query.filter_by(id=teamid).delete():
         db.session.commit()
+    
 
     return redirect('/myteams')
 
@@ -312,7 +326,7 @@ def teams_user(userid):
 
     else:
         # Render teams page
-        my_teams = (g.user is not None and ((userid == g.user.id) or util.is_super_admin(g.user)))
+        my_teams = (g.user is not None and ((userid == g.user.id) or g.user.super_admin))
         teams = user.teams.paginate(page, 20)
         return render_template(
             'teams.html', user=g.user, teams=teams, my_teams=my_teams,
@@ -342,7 +356,7 @@ def all_teams():
     else:
         # Render teams page
         teams = all_public_teams.paginate(page, 20)
-        editable = g.user is not None and util.is_super_admin(g.user)
+        editable = g.user is not None and g.user.super_admin
         return render_template(
             'teams.html', user=g.user, teams=teams, my_teams=editable,
             page=page, owner=None)

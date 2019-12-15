@@ -52,8 +52,8 @@ class User(db.Model):
         return self.matches.filter_by(cancelled=False).limit(limit)
 
     def __repr__(self):
-        return 'User(id={}, steam_id={}, name={}, admin={})'.format(
-            self.id, self.steam_id, self.name, self.admin)
+        return 'User(id={}, steam_id={}, name={}, admin={}, super_admin={})'.format(
+            self.id, self.steam_id, self.name, self.admin, self.super_admin)
 
 
 class GameServer(db.Model):
@@ -135,7 +135,7 @@ class Team(db.Model):
         rv = Team()
         rv.user_id = user.id
         rv.set_data(name, tag, flag, logo, auths,
-                    (public_team and util.is_admin(user)), preferred_names)
+                    (public_team and user.admin), preferred_names)
         db.session.add(rv)
         return rv
 
@@ -153,7 +153,7 @@ class Team(db.Model):
             return False
         if self.user_id == user.id:
             return True
-        if util.is_super_admin(user):
+        if user.super_admin:
             return True
         return False
 
@@ -261,6 +261,29 @@ class Team(db.Model):
         return 'Team(id={}, user_id={}, name={}, flag={}, logo={}, public={})'.format(
             self.id, self.user_id, self.name, self.flag, self.logo, self.public_team)
 
+class TeamAuthNames(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id'))
+    auth = db.Column(db.String(17))
+    name = db.Column(db.String(40))
+
+    @staticmethod
+    def set_or_create(team_id, auth, name):
+        rv = TeamAuthNames.query.filter_by(team_id=team_id,auth=auth).first()
+        if rv is None:
+            rv = TeamAuthNames()
+            rv.set_data(team_id, auth, name)
+            db.session.add(rv)
+        else:
+            rv.set_data(team_id, auth, name)
+        return rv
+
+    def set_data(self, team_id, auth, name):
+        self.team_id = team_id
+        self.auth = auth
+        self.name = name if name else ''
+
+
 
 class Season(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -294,7 +317,7 @@ class Season(db.Model):
             return False
         if self.user_id == user.id:
             return True
-        if util.is_super_admin(user):
+        if user.super_admin:
             return True
         return False
 
@@ -376,12 +399,13 @@ class Match(db.Model):
     spectator_auths = db.Column(db.PickleType)
     private_match = db.Column(db.Boolean)
     enforce_teams = db.Column(db.Boolean, default=True)
+    min_player_ready = db.Column(db.Integer, default=5)
     @staticmethod
     def create(user, team1_id, team2_id, team1_string, team2_string,
                max_maps, skip_veto, title, veto_mappool, season_id,
                side_type, veto_first, server_id=None,
                team1_series_score=None, team2_series_score=None,
-               spectator_auths=None, private_match=False, enforce_teams=True):
+               spectator_auths=None, private_match=False, enforce_teams=True, min_player_ready=5):
         rv = Match()
         rv.user_id = user.id
         rv.team1_id = team1_id
@@ -406,6 +430,7 @@ class Match(db.Model):
         rv.spectator_auths = spectator_auths
         rv.private_match = private_match
         rv.enforce_teams = enforce_teams
+        rv.min_player_ready = min_player_ready
         db.session.add(rv)
         return rv
 
@@ -544,13 +569,19 @@ class Match(db.Model):
         d['match_title'] = self.title
         d['side_type'] = self.side_type
         d['veto_first'] = self.veto_first
-
         d['skip_veto'] = self.skip_veto
         if self.max_maps == 2:
             d['bo2_series'] = True
         else:
             d['maps_to_win'] = self.max_maps / 2 + 1
 
+        try:
+            d['min_players_to_ready'] = self.min_player_ready
+            d['players_per_team'] = self.min_player_ready
+        except:
+            d['min_players_to_ready'] = 5
+            d['players_per_team'] = 5
+            
         def add_team_data(teamkey, teamid, matchtext):
             team = Team.query.get(teamid)
             if not team:
@@ -617,6 +648,26 @@ class Match(db.Model):
     def __repr__(self):
         return 'Match(id={})'.format(self.id)
 
+
+class MatchSpectator(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    match_id = db.Column(db.Integer, db.ForeignKey('match.id'))
+    auth = db.Column(db.String(17))
+
+    @staticmethod
+    def set_or_create(match_id, auth):
+        rv = MatchSpectator.query.filter_by(match_id=match_id,auth=auth).first()
+        if rv is None:
+            rv = MatchSpectator()
+            rv.set_data(match_id, auth)
+            db.session.add(rv)
+        else:
+            rv.set_data(match_id, auth)
+        return rv
+
+    def set_data(self, match_id, auth):
+        self.match_id = match_id
+        self.auth = auth
 
 class MapStats(db.Model):
     id = db.Column(db.Integer, primary_key=True)

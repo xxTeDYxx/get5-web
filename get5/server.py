@@ -43,7 +43,7 @@ def server_create():
     if request.method == 'POST':
         num_servers = g.user.servers.count()
         max_servers = config_setting('USER_MAX_SERVERS')
-        if max_servers >= 0 and num_servers >= max_servers and not (util.is_admin(g.user) or util.is_super_admin(g.user)):
+        if max_servers >= 0 and num_servers >= max_servers and not (g.user.admin or g.user.super_admin):
             flash('You already have the maximum number of servers ({}) stored'.format(
                 num_servers))
 
@@ -59,7 +59,7 @@ def server_create():
                                        data['display_name'],
                                        data['ip_string'], data['port'],
                                        encRcon,
-                                       data['public_server'] and util.is_admin(g.user))
+                                       data['public_server'] and (g.user.admin or g.user.super_admin))
 
             if mock or util.check_server_connection(server, dbKey):
                 db.session.commit()
@@ -74,15 +74,14 @@ def server_create():
             flash_errors(form)
 
     return render_template('server_create.html', user=g.user, form=form,
-                           edit=False, is_admin=util.is_admin(g.user))
+                           edit=False, is_admin=g.user.admin, is_sadmin=g.user.super_admin)
 
 
 @server_blueprint.route('/server/<int:serverid>/edit', methods=['GET', 'POST'])
 def server_edit(serverid):
     server = GameServer.query.get_or_404(serverid)
     is_owner = (g.user and (util.is_server_owner(g.user, server)))
-    is_sadmin = (g.user and util.is_super_admin(g.user))
-    app.logger.info("Owner: {} Sadmin: {}".format(is_owner, is_sadmin))
+    is_sadmin = (g.user and g.user.super_admin)
     if not is_owner:
         if not is_sadmin:
             raise BadRequestError('You do not have access to this server.')
@@ -108,7 +107,7 @@ def server_edit(serverid):
             server.ip_string = data['ip_string']
             server.port = data['port']
             server.rcon_password = encRcon
-            server.public_server = (data['public_server'] and util.is_admin(g.user))
+            server.public_server = (data['public_server'] and (g.user.admin or g.user.super_admin))
 
             if mock or util.check_server_connection(server, dbKey):
                 db.session.commit()
@@ -121,14 +120,14 @@ def server_edit(serverid):
             flash_errors(form)
 
     return render_template('server_create.html', user=g.user, form=form,
-                           edit=True, is_admin=util.is_admin(g.user), is_sadmin=util.is_super_admin(g.user))
+                           edit=True, is_admin=g.user.admin, is_sadmin=g.user.super_admin)
 
 
 @server_blueprint.route('/server/<int:serverid>/delete', methods=['GET'])
 def server_delete(serverid):
     server = GameServer.query.get_or_404(serverid)
     is_owner = g.user and (g.user.id == server.user_id)
-    is_sadmin = g.user and util.is_super_admin(g.user)
+    is_sadmin = g.user and g.user.super_admin
     if not is_owner:
         if not is_sadmin:
             raise BadRequestError('You do not have access to this server.')
@@ -142,7 +141,7 @@ def server_delete(serverid):
 
     GameServer.query.filter_by(id=serverid).delete()
     db.session.commit()
-    return redirect('myservers')
+    return redirect('/myservers')
 
 
 @server_blueprint.route("/myservers")
@@ -152,7 +151,7 @@ def myservers():
 
     servers = GameServer.query.filter_by(
         user_id=g.user.id).order_by(-GameServer.id).limit(50)
-    if util.is_super_admin(g.user):
+    if g.user.super_admin:
         servers = GameServer.query.order_by(-GameServer.id)
 
     return render_template('servers.html', user=g.user, servers=servers)

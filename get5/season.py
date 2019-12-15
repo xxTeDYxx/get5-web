@@ -58,7 +58,7 @@ def season_create():
     if request.method == 'POST':
         num_seasons = g.user.seasons.count()
         max_seasons = config_setting('USER_MAX_SEASONS')
-        if max_seasons >= 0 and num_seasons >= max_seasons and not (util.is_admin(g.user) or util.is_super_admin(g.user)):
+        if max_seasons >= 0 and num_seasons >= max_seasons and not (g.user.admin or g.user.super_admin):
             flash('You already have the maximum number of seasons ({}) created'.format(
                 num_seasons))
 
@@ -94,9 +94,11 @@ def season_matches(seasonid):
 def seasons_user(userid):
     user = User.query.get_or_404(userid)
     seasons = user.seasons.order_by(-Season.id)
+    seasoned_matches = Match.query.filter(Match.season_id.isnot(None), Match.cancelled==False)
     is_owner = (g.user is not None) and (userid == g.user.id)
     return render_template('seasons.html', user=g.user, seasons=seasons,
-                           my_seasons=is_owner, all_matches=False, season_owner=user)
+                           my_seasons=is_owner, all_matches=False, matches=seasoned_matches,
+                           season_owner=user)
 
 
 @season_blueprint.route('/season/<int:seasonid>/edit', methods=['GET', 'POST'])
